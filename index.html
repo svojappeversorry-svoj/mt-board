@@ -1069,6 +1069,7 @@ const STRINGS = {
     taskMoodSomeday:'Someday', taskMoodPriority:'Priority', taskMoodWaiting:'Waiting', taskMoodAlmostDone:'Almost done',
     // month favorites — custom category
     customCategoryPrompt:'Name this category (e.g. "🏖 Trip of the month"):',
+    expenseCurrencyTooltip:'Currency for this expense', addCurrencyTooltip:'Pick a currency to start tracking it',
   },
   ru: {
     authTagline:'Твоё пространство. Твои правила. Твоя история.', email:'Email', password:'Пароль',
@@ -1145,6 +1146,7 @@ const STRINGS = {
     taskMoodExcited:'В предвкушении', taskMoodDetermined:'Настроен(а) решительно', taskMoodTimeSensitive:'Горящий срок',
     taskMoodSomeday:'Когда-нибудь', taskMoodPriority:'Приоритет', taskMoodWaiting:'В ожидании', taskMoodAlmostDone:'Почти готово',
     customCategoryPrompt:'Название категории (например, «🏖 Поездка месяца»):',
+    expenseCurrencyTooltip:'Валюта этой траты', addCurrencyTooltip:'Выберите валюту, чтобы начать вести в ней учёт',
   },
 };
 let currentLanguage = load('wp-language-v1', 'en');
@@ -2237,7 +2239,7 @@ function buildMonthView(monthIdx, year){
       <ul class="month-expense-list" id="monthExpenseList"></ul>
       <div class="expense-add-form">
         <input type="number" id="expAmount" placeholder="${t('amountPlaceholder')}" step="0.01" min="0">
-        <select id="expCurrency"></select>
+        <select id="expCurrency" title="${t('expenseCurrencyTooltip')}"></select>
         <input type="date" id="expDate">
         <select id="expCategory"></select>
         <input type="text" id="expNote" placeholder="${t('notePlaceholder')}">
@@ -2246,7 +2248,7 @@ function buildMonthView(monthIdx, year){
       <div class="expense-currency-manage">
         <span class="hint-text">${t('currenciesInUse')}</span>
         <span id="expenseCurrencyChips"></span>
-        <select id="expAddCurrencySelect" class="settings-select"></select>
+        <select id="expAddCurrencySelect" class="settings-select" title="${t('addCurrencyTooltip')}"></select>
         <button type="button" class="add-btn-outline" id="expAddCurrencyBtn">${t('addCurrency')}</button>
       </div>
     </div>
@@ -2620,7 +2622,7 @@ function buildDateView(d){
           <ul class="month-expense-list" id="dayExpenseList"></ul>
           <div class="expense-add-form">
             <input type="number" id="dayExpAmount" placeholder="${t('amountPlaceholder')}" step="0.01" min="0">
-            <select id="dayExpCurrency"></select>
+            <select id="dayExpCurrency" title="${t('expenseCurrencyTooltip')}"></select>
             <select id="dayExpCategory"></select>
             <input type="text" id="dayExpNote" placeholder="${t('notePlaceholder')}">
             <button type="button" class="add-btn-outline" id="dayExpAddBtn">${t('addExpense')}</button>
