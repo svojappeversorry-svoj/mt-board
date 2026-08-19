@@ -753,57 +753,82 @@
     background-size:contain; background-repeat:no-repeat; }
 
   /* ===== MY SPACE (customizable dashboard) =====
-     Visual language deliberately reuses existing components (.note/.pin, .add-btn-outline,
-     .month-goal-*, .photo-thumb-*, .widget-catalog-*, .sticker-sheet look) — no new colors,
-     fonts or icon style are introduced here, only new layout/structure. */
+     Functional geometry only — deliberately NOT the app's tilted-paper/note look. Widget
+     containers are clean upright rounded rectangles (.myspace-card-shell) with a flat
+     per-widget pastel tint; no rotation, no torn-paper peek, no pin. Everything else
+     (buttons, inputs) still reuses existing component classes (.add-btn-outline,
+     .month-goal-*, .photo-thumb-*, .widget-catalog-*, .sticker-sheet look) so nothing new is
+     introduced beyond layout/structure. */
   .myspace-view{ display:none; }
-  .myspace-view.active{ display:block; padding: 18px 16px 100px; max-width:1200px; margin:0 auto; }
-  .myspace-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:6px; flex-wrap:wrap; }
+  .myspace-view.active{ display:block; padding: 18px 16px 100px; max-width:1300px; margin:0 auto; }
+  .myspace-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px; flex-wrap:wrap; }
   .myspace-head-title{ margin:6px 4px 0; }
-  .myspace-edit-btn{ font-family:var(--font-ui); font-weight:800; text-transform:uppercase; letter-spacing:0.4px; font-size:12.5px; padding:11px 20px; border-radius:100px; border:2px solid var(--line); background:var(--paper); color:var(--ink); cursor:pointer; box-shadow: 0 3px 8px rgba(28,18,22,0.12); }
+  .myspace-head-actions{ display:flex; align-items:center; gap:8px; }
+  .myspace-edit-btn{ font-family:var(--font-ui); font-weight:800; text-transform:uppercase; letter-spacing:0.4px; font-size:12px; padding:9px 16px; border-radius:100px; border:2px solid var(--line); background:var(--paper); color:var(--ink); cursor:pointer; box-shadow: 0 3px 8px rgba(28,18,22,0.12); }
   .myspace-edit-btn.is-editing{ background:var(--accent); border-color:var(--accent); color:#fff; }
-  .myspace-hint{ font-family:var(--font-hand); font-size:16px; color:var(--ink-dim); margin:0 4px 18px; }
+  /* small, unobtrusive "+" — replaces the old full-width Add Widget tile entirely */
+  .myspace-add-btn{ display:none; align-items:center; justify-content:center; width:36px; height:36px; border-radius:50%; border:2px solid var(--line); background:var(--paper); color:var(--ink); font-size:18px; line-height:1; cursor:pointer; box-shadow: 0 3px 8px rgba(28,18,22,0.12); }
+  .myspace-add-btn.visible{ display:flex; }
+  .myspace-hint{ font-family:var(--font-hand); font-size:15px; color:var(--ink-dim); margin:0 4px 16px; }
 
-  /* Same 2D grid, same edge/corner drag+resize, at every viewport width — phone through
-     desktop. There is deliberately no separate "mobile mode": columns just get narrower on
-     a small screen, exactly like a spreadsheet does, rather than swapping to a different
-     interaction model that would leave touch users with a worse feature set than mouse users. */
-  .myspace-grid{ display:grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 30px; gap:16px; align-items:stretch; }
+  /* One flowing grid, at every viewport width — column COUNT itself is responsive (set via
+     inline style from JS: 2 on a narrow phone, 4 from tablet-portrait up), so a phone
+     naturally gets a narrower, more vertical flow instead of a squeezed desktop layout. */
+  .myspace-grid{ display:grid; grid-template-columns: repeat(2, 1fr); grid-auto-rows: 22px; gap:20px; align-items:stretch; }
   .myspace-card{ position:relative; display:flex; flex-direction:column; min-width:0; min-height:0;
     grid-column: var(--gcs) / span var(--gcw); grid-row: var(--grs) / span var(--grh); }
-  .myspace-card > .note{ flex:1; display:flex; flex-direction:column; min-height:0; }
+  .myspace-card-shell{ flex:1; display:flex; flex-direction:column; min-height:0; background: var(--myspace-tint, var(--paper2));
+    border-radius: 14px; border:1px solid rgba(28,18,22,0.08); box-shadow: 0 1px 3px rgba(28,18,22,0.1); padding: 10px 12px; }
   .myspace-card-body{ flex:1; min-height:0; overflow:auto; position:relative; z-index:1; }
-  .myspace-card-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; }
-  .myspace-card-title{ font-family:var(--font-l); font-size:17px; color:var(--fill, var(--accent)); display:flex; align-items:center; gap:7px; }
-  .myspace-open-btn{ font-family:var(--font-mono); font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:0.3px; background:none; border:none; color:var(--ink-dim); cursor:pointer; text-decoration:underline; white-space:nowrap; padding:0; }
+  .myspace-card-head{ display:flex; align-items:center; justify-content:space-between; gap:6px; margin-bottom:6px; }
+  .myspace-card-title{ font-family:var(--font-ui); font-weight:800; font-size:12.5px; color:var(--ink); display:flex; align-items:center; gap:6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .myspace-open-btn{ font-family:var(--font-mono); font-weight:700; font-size:10px; text-transform:uppercase; letter-spacing:0.3px; background:none; border:none; color:var(--ink-dim); cursor:pointer; text-decoration:underline; white-space:nowrap; padding:0; flex-shrink:0; }
   .myspace-open-btn:hover{ color:var(--accent); }
   .myspace-mini-day, .myspace-mini-cal{ cursor:pointer; }
-  .myspace-mini-date, .myspace-mini-month{ font-family:var(--font-mono); font-size:11px; color:var(--ink-dim); margin-bottom:8px; }
-  .myspace-mini-today{ font-family:var(--font-ui); font-weight:700; font-size:13.5px; color:var(--ink); }
-  .myspace-mini-row{ display:flex; align-items:center; gap:10px; font-family:var(--font-ui); font-weight:700; font-size:13.5px; color:var(--ink); }
+  .myspace-mini-date, .myspace-mini-month{ font-family:var(--font-mono); font-size:10px; color:var(--ink-dim); margin-bottom:4px; }
+  .myspace-mini-today{ font-family:var(--font-ui); font-weight:700; font-size:12px; color:var(--ink); }
+  .myspace-mini-row{ display:flex; align-items:center; gap:8px; font-family:var(--font-ui); font-weight:700; font-size:12.5px; color:var(--ink); }
+
+  /* Dragged/resized cards are lifted out of normal flow visually (elevated, no transition of
+     their own — they must feel glued to the pointer) while every OTHER displaced card
+     animates smoothly (see the .myspace-flip-* transform choreography applied from JS). */
+  .myspace-card.is-dragging, .myspace-card.is-resizing{ z-index:30; }
+  .myspace-card.is-dragging .myspace-card-shell, .myspace-card.is-resizing .myspace-card-shell{ box-shadow: 0 10px 24px rgba(28,18,22,0.24); }
 
   .myspace-drag-handle{ display:none; }
   /* Touch targets sized to Apple's ~44pt comfortable-tap guidance, even though the visible
-     glyph/line stays small — "subtle now, redesigned later" per spec, but grabbable NOW on
-     a finger, not just a mouse pointer. */
-  .myspace-editing .myspace-drag-handle{ display:flex; align-items:center; justify-content:center; position:absolute; top:6px; left:6px; z-index:6; width:40px; height:38px; border-radius:10px; background:var(--paper2); border:2px solid var(--line); color:var(--ink-dim); cursor:grab; touch-action:none; font-size:16px; }
+     glyph/line stays small — subtle now, but grabbable NOW on a finger, not just a mouse. */
+  .myspace-editing .myspace-drag-handle{ display:flex; align-items:center; justify-content:center; position:absolute; top:4px; left:4px; z-index:6; width:34px; height:30px; border-radius:8px; background:rgba(255,255,255,0.6); border:1px solid var(--line); color:var(--ink-dim); cursor:grab; touch-action:none; font-size:14px; }
   .myspace-editing .myspace-drag-handle:active{ cursor:grabbing; }
   .myspace-remove-btn{ display:none; }
-  .myspace-editing .myspace-remove-btn{ display:flex; align-items:center; justify-content:center; position:absolute; top:-12px; right:-12px; width:32px; height:32px; border-radius:50%; background:var(--rose); color:#fff; border:2px solid #fff; font-size:12px; font-family:var(--font-mono); cursor:pointer; z-index:6; box-shadow:0 2px 6px rgba(28,18,22,0.3); touch-action:manipulation; }
+  .myspace-editing .myspace-remove-btn{ display:flex; align-items:center; justify-content:center; position:absolute; top:-10px; right:-10px; width:28px; height:28px; border-radius:50%; background:var(--rose); color:#fff; border:2px solid #fff; font-size:11px; font-family:var(--font-mono); cursor:pointer; z-index:6; box-shadow:0 2px 6px rgba(28,18,22,0.3); touch-action:manipulation; }
+  .myspace-card.is-mandatory .myspace-remove-btn{ display:none !important; }
   .myspace-resize-handle{ display:none; }
   .myspace-editing .myspace-resize-handle{ display:block; position:absolute; touch-action:none; z-index:5; }
-  /* Hit area is much wider than anything drawn — an invisible 34-40px-wide strip/corner
-     centered on the visual edge, so a finger doesn't need to land on a 1px line. */
-  .myspace-resize-e{ top:0; bottom:0; right:-17px; width:34px; cursor:ew-resize; }
-  .myspace-resize-s{ left:0; right:0; bottom:-17px; height:34px; cursor:ns-resize; }
-  .myspace-resize-se{ right:-20px; bottom:-20px; width:40px; height:40px; cursor:nwse-resize; }
-  .myspace-resize-se::after{ content:''; position:absolute; right:14px; bottom:14px; width:14px; height:14px; border-radius:50%; background:var(--paper); border:2px solid var(--accent); pointer-events:none; }
-  .myspace-editing .myspace-card > .note{ outline:2px dashed var(--line); outline-offset:4px; }
-  .myspace-card.is-dragging, .myspace-card.is-resizing{ z-index:20; opacity:0.85; }
+  /* Hit area is much wider than anything drawn — an invisible 30-36px-wide strip/corner
+     centered on the visual edge, so a finger doesn't need to land on a 1px line. All four
+     edges AND all four corners are covered, not just the bottom-right. */
+  /* Outward reach is capped at half the grid gap (gap:20px → 9px outward max) so two
+     ADJACENT cards' hit zones never overlap into each other's territory — grabbing near a
+     shared edge always resolves to exactly one card, never an ambiguous coin-flip between
+     neighbors. The rest of each strip's width reaches inward over the card's own content. */
+  .myspace-resize-n{ top:-9px; left:0; right:0; height:26px; cursor:ns-resize; }
+  .myspace-resize-s{ bottom:-9px; left:0; right:0; height:26px; cursor:ns-resize; }
+  .myspace-resize-w{ left:-9px; top:0; bottom:0; width:26px; cursor:ew-resize; }
+  .myspace-resize-e{ right:-9px; top:0; bottom:0; width:26px; cursor:ew-resize; }
+  .myspace-resize-nw{ top:-9px; left:-9px; width:26px; height:26px; cursor:nwse-resize; }
+  .myspace-resize-ne{ top:-9px; right:-9px; width:26px; height:26px; cursor:nesw-resize; }
+  .myspace-resize-sw{ bottom:-9px; left:-9px; width:26px; height:26px; cursor:nesw-resize; }
+  .myspace-resize-se{ bottom:-9px; right:-9px; width:26px; height:26px; cursor:nwse-resize; }
+  .myspace-resize-se::after{ content:''; position:absolute; right:10px; bottom:10px; width:10px; height:10px; border-radius:50%; background:var(--paper); border:2px solid var(--accent); pointer-events:none; }
+  .myspace-editing .myspace-card-shell{ outline:2px dashed rgba(28,18,22,0.18); outline-offset:3px; }
 
-  .myspace-add-tile{ display:none; }
-  .myspace-editing .myspace-add-tile{ display:flex; align-items:center; justify-content:center; min-height:120px; border:2px dashed var(--line); border-radius:16px; background:var(--paper2); color:var(--ink-dim); font-family:var(--font-ui); font-weight:800; text-transform:uppercase; font-size:12.5px; letter-spacing:0.4px; cursor:pointer; grid-column: span 2; grid-row: span 4; }
-  .myspace-add-tile:hover{ border-color:var(--accent); color:var(--accent); }
+  /* Per-widget color row, edit mode only — reuses the same round-swatch pattern as the
+     drawing palette elsewhere in the app (.color-dot), just smaller. */
+  .myspace-color-row{ display:none; }
+  .myspace-editing .myspace-color-row{ display:flex; gap:5px; margin-top:6px; flex-wrap:wrap; }
+  .myspace-color-dot{ width:16px; height:16px; border-radius:50%; border:2px solid transparent; cursor:pointer; flex-shrink:0; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+  .myspace-color-dot.active{ border-color: var(--ink); }
 
   .myspace-lib-sheet{ display:none; position:fixed; inset:0; z-index:70; background: rgba(58,35,20,0.45); align-items:flex-end; justify-content:center; }
   .myspace-lib-sheet.open{ display:flex; }
@@ -1150,6 +1175,9 @@ const STRINGS = {
     myspaceGoals:'Monthly Goals', myspaceExpenses:'Monthly Expenses',
     myspaceTasksDone:'{done}/{total} tasks done', myspaceNoTasks:'no tasks yet',
     myspaceLibCatWorkspaces:'Workspaces', myspaceBackHome:'My Space',
+    myspaceXDone:'{done}/{total} done',
+    myspaceColor_cream:'Cream', myspaceColor_yellow:'Yellow', myspaceColor_blue:'Blue', myspaceColor_green:'Green',
+    myspaceColor_pink:'Pink', myspaceColor_purple:'Purple', myspaceColor_red:'Red',
   },
   ru: {
     authTagline:'Твоё пространство. Твои правила. Твоя история.', email:'Email', password:'Пароль',
@@ -1234,6 +1262,9 @@ const STRINGS = {
     myspaceGoals:'Цели месяца', myspaceExpenses:'Расходы месяца',
     myspaceTasksDone:'{done}/{total} задач выполнено', myspaceNoTasks:'пока нет задач',
     myspaceLibCatWorkspaces:'Рабочие пространства', myspaceBackHome:'Моё пространство',
+    myspaceXDone:'{done}/{total} готово',
+    myspaceColor_cream:'Кремовый', myspaceColor_yellow:'Жёлтый', myspaceColor_blue:'Синий', myspaceColor_green:'Зелёный',
+    myspaceColor_pink:'Розовый', myspaceColor_purple:'Фиолетовый', myspaceColor_red:'Красный',
   },
 };
 let currentLanguage = load('wp-language-v1', 'en');
@@ -2044,7 +2075,10 @@ function refreshAllExpenseViews(){
   const dv = document.getElementById('dateView');
   if(dv && dv.classList.contains('active') && openDate) renderDateExpenseSection(dateKeyOf(openDate));
   const sv = document.getElementById('mySpaceView');
-  if(sv && sv.classList.contains('active') && mySpaceLayout.widgets.some(w=> w.id==='expenses')) renderMonthExpenseSection(myspaceCurrentMonthKey());
+  if(sv && sv.classList.contains('active')){
+    const body = sv.querySelector('.myspace-card[data-wid="expenses"] .myspace-card-body');
+    if(body){ body.innerHTML = myspaceExpensesHtml(); bindMyspaceExpenses(body); }
+  }
 }
 
 /* The currency-tracking list (expenseCurrencies) is one shared piece of state, but it's
@@ -3142,33 +3176,50 @@ function bindGenericWidget(def, key, root){
      that widget) can't delete a single byte of that data — it's just not being displayed.
    This key rides the same generic save()/load() layer as everything else, so it already
    gets the same per-device localStorage + debounced Supabase sync as every other setting. */
-const MYSPACE_COLS = 4;
-const MYSPACE_ROW_PX = 30;   // must match .myspace-grid{ grid-auto-rows }
-const MYSPACE_GAP_PX = 16;   // must match .myspace-grid{ gap }
+const MYSPACE_ROW_PX = 22;   // must match .myspace-grid{ grid-auto-rows }
+const MYSPACE_GAP_PX = 20;   // must match .myspace-grid{ gap }
 const MYSPACE_ROW_STEP = MYSPACE_ROW_PX + MYSPACE_GAP_PX;
+/* Column COUNT is itself responsive — fewer, wider columns on a narrow phone; more on
+   tablet/desktop — recomputed on every render and on window resize (see the listener near
+   the end of buildApp()). It's a `let`, not a `const`, specifically so every function below
+   that reads it always sees the current value. */
+function myspaceCurrentCols(){ return document.documentElement.clientWidth < 640 ? 2 : 4; }
+let MYSPACE_COLS = myspaceCurrentCols();
+
+/* Simple functional pastel palette — the widget owns its own color, nothing global. Reuses
+   existing theme tokens (already tuned per-theme) rather than inventing new hex values. */
+const MYSPACE_COLORS = { cream:'--paper2', yellow:'--gold-soft', blue:'--sky-soft', green:'--moss-soft', pink:'--bubble-soft', purple:'--plum-soft', red:'--rose-soft' };
+const MYSPACE_COLOR_ORDER = ['cream','yellow','blue','green','pink','purple','red'];
+
+/* My Day and Month are mandatory system widgets — always present on My Space, never
+   removable (their remove button is hidden via .is-mandatory in CSS, and the remove handler
+   refuses them too, in case the button is ever reachable some other way). They are still
+   fully movable/resizable/colorable like any other widget. */
+const MYSPACE_MANDATORY_IDS = ['myday','calendar'];
 
 const MYSPACE_LAUNCHERS = {
-  myday:    { id:'myday',    labelKey:'myspaceMyDay',    icon:'📔', category:'Workspaces', minW:2, minH:5, defaultW:2, defaultH:6 },
-  calendar: { id:'calendar', labelKey:'myspaceCalendar', icon:'📅', category:'Workspaces', minW:1, minH:4, defaultW:2, defaultH:5 },
-  mymedia:  { id:'mymedia',  labelKey:'myspaceMedia',    icon:'🖼️', category:'Workspaces', minW:2, minH:4, defaultW:4, defaultH:6 },
+  myday:    { id:'myday',    labelKey:'myspaceMyDay',    icon:'📔', category:'Workspaces', minW:1, minH:2, defaultW:1, defaultH:3 },
+  calendar: { id:'calendar', labelKey:'myspaceCalendar', icon:'📅', category:'Workspaces', minW:1, minH:2, defaultW:1, defaultH:3 },
+  mymedia:  { id:'mymedia',  labelKey:'myspaceMedia',    icon:'🖼️', category:'Workspaces', minW:1, minH:2, defaultW:2, defaultH:3 },
 };
 const MYSPACE_SUMMARY = {
-  goals:    { id:'goals',    labelKey:'myspaceGoals',    icon:'🎯', category:'Workspaces', minW:1, minH:5, defaultW:2, defaultH:6 },
-  expenses: { id:'expenses', labelKey:'myspaceExpenses', icon:'💶', category:'Workspaces', minW:1, minH:6, defaultW:2, defaultH:9 },
+  goals:    { id:'goals',    labelKey:'myspaceGoals',    icon:'🎯', category:'Workspaces', minW:1, minH:2, defaultW:1, defaultH:3 },
+  expenses: { id:'expenses', labelKey:'myspaceExpenses', icon:'💶', category:'Workspaces', minW:1, minH:2, defaultW:1, defaultH:3 },
 };
-/* system/custom Day-page widgets that need a taller default card because their content is a
-   list/text area rather than a single stat */
-const MYSPACE_ROOMY_IDS = ['tasks','notes','vibes','photos','dailyGoals','freeText','gratitude','dailyHighlight'];
+/* system/custom Day-page widgets that need a little more room because their content is a
+   list/text area rather than a single stat — still compact, just not as tiny */
+const MYSPACE_ROOMY_IDS = ['notes','vibes','photos','dailyGoals','freeText','gratitude','dailyHighlight'];
 
 function mySpaceWidgetDef(id){
   if(MYSPACE_LAUNCHERS[id]){ const d = MYSPACE_LAUNCHERS[id]; return { ...d, label:t(d.labelKey) }; }
   if(MYSPACE_SUMMARY[id]){ const d = MYSPACE_SUMMARY[id]; return { ...d, label:t(d.labelKey) }; }
   if(id === 'drawing') return null; // explicitly not offered on My Space (see product spec)
+  if(id === 'tasks') return { id, label:t('widgetTasks'), icon:'✅', category:'Productivity', minW:1, minH:2, defaultW:1, defaultH:3 };
   const dayDef = getWidgetDef(id);
   if(!dayDef) return null;
   const isRoomy = MYSPACE_ROOMY_IDS.includes(id) || dayDef.kind==='checklist' || dayDef.kind==='text';
   return { id, label:dayDef.label, icon:dayDef.icon, category: dayDef.isCustom ? 'Custom' : (dayDef.category||'Personal'),
-    isCustom:!!dayDef.isCustom, minW:1, minH: isRoomy?6:4, defaultW: isRoomy?2:1, defaultH: isRoomy?6:4 };
+    isCustom:!!dayDef.isCustom, minW:1, minH: isRoomy?3:2, defaultW: isRoomy?2:1, defaultH: isRoomy?4:3 };
 }
 function myspaceAllCatalogIds(){
   const ids = [...Object.keys(MYSPACE_LAUNCHERS), ...Object.keys(MYSPACE_SUMMARY)];
@@ -3180,7 +3231,7 @@ function myspaceRectsOverlap(a,b){ return a.x < b.x+b.w && a.x+a.w > b.x && a.y 
 function myspaceMaxY(widgets){ return widgets.reduce((m,w)=> Math.max(m, w.y+w.h), 0); }
 function myspaceFindFreeSpot(w, h, widgets){
   w = Math.min(w, MYSPACE_COLS);
-  for(let y=0; y<1000; y++){
+  for(let y=0; y<2000; y++){
     for(let x=0; x<=MYSPACE_COLS-w; x++){
       const rect = { x, y, w, h };
       if(!widgets.some(o=> myspaceRectsOverlap(rect, o))) return { x, y };
@@ -3188,25 +3239,63 @@ function myspaceFindFreeSpot(w, h, widgets){
   }
   return { x:0, y: myspaceMaxY(widgets) };
 }
+/* "Gravity" packing — the same technique used by every well-known drag-grid dashboard
+   (Gridster, react-grid-layout, Muuri): an overlap is resolved by pushing the lower-priority
+   widget DOWN, never sideways (sideways has no single well-defined answer once more than two
+   widgets are involved). `fixedId`, when given, is the widget the user is actively dragging/
+   resizing right now — it can push everything else out of the way, but is never itself moved
+   or compacted, since its rect IS the thing the user is actively setting. */
+function myspaceResolveLayout(widgets, fixedId){
+  let guard = 0, changed = true;
+  while(changed && guard++ < widgets.length*6){
+    changed = false;
+    for(const a of widgets){
+      for(const b of widgets){
+        if(a===b || b.id===fixedId) continue;
+        if(myspaceRectsOverlap(a,b) && b.y < a.y+a.h){ b.y = a.y+a.h; changed = true; }
+      }
+    }
+  }
+  myspaceCompactUp(widgets, fixedId);
+}
+/* Pulls every widget (except the fixed one, if any) as far up as it can go without
+   overlapping anything above it — closes gaps a widget leaves behind when it shrinks, moves
+   away, or gets removed, so the layout never accumulates dead space. */
+function myspaceCompactUp(widgets, fixedId){
+  const sorted = widgets.slice().sort((p,q)=> p.y-q.y || p.x-q.x);
+  const placed = [];
+  sorted.forEach(w=>{
+    if(w.id !== fixedId){
+      let minY = 0;
+      placed.forEach(o=>{
+        const overlapsX = w.x < o.x+o.w && w.x+w.w > o.x;
+        if(overlapsX) minY = Math.max(minY, o.y+o.h);
+      });
+      w.y = minY;
+    }
+    placed.push(w);
+  });
+}
 function myspaceDefaultLayout(){
-  return { widgets: [
-    { id:'myday',    x:0, y:0,  w:2, h:6, order:0 },
-    { id:'calendar', x:2, y:0,  w:2, h:6, order:1 },
-    { id:'mood',     x:0, y:6,  w:1, h:4, order:2 },
-    { id:'water',    x:1, y:6,  w:1, h:4, order:3 },
-    { id:'sleep',    x:2, y:6,  w:1, h:4, order:4 },
-    { id:'tasks',    x:3, y:6,  w:1, h:4, order:5 },
-    { id:'goals',    x:0, y:10, w:2, h:6, order:6 },
-    { id:'expenses', x:2, y:10, w:2, h:9, order:7 },
-    { id:'mymedia',  x:0, y:19, w:4, h:6, order:8 },
-  ]};
+  const ids = ['myday','calendar','mood','water','sleep','tasks','goals','expenses','mymedia'];
+  const widgets = [];
+  ids.forEach((id,i)=>{
+    const def = mySpaceWidgetDef(id);
+    const w = Math.min(def.defaultW||1, MYSPACE_COLS), h = def.defaultH||3;
+    const spot = myspaceFindFreeSpot(w, h, widgets);
+    widgets.push({ id, x:spot.x, y:spot.y, w, h, order:i, color:'cream' });
+  });
+  myspaceCompactUp(widgets, null);
+  return { widgets };
 }
 
 let mySpaceLayout = load('wp-myspace-layout-v1', null);
 function saveMySpaceLayout(){ save('wp-myspace-layout-v1', mySpaceLayout); }
 /* Defensive normalization, run once at load — same treatment as sanitizeWidgetConfig above.
    Drops orphaned ids (e.g. a custom widget deleted from another device before this layout
-   synced), clamps sizes/positions into range, never touches any widget's actual data. */
+   synced), clamps sizes/positions into range, guarantees the two mandatory widgets are
+   present, and resolves any overlap a corrupted/foreign save might contain. Never touches
+   any widget's actual data. */
 (function sanitizeMySpaceLayout(){
   if(!mySpaceLayout || typeof mySpaceLayout !== 'object' || !Array.isArray(mySpaceLayout.widgets)){
     mySpaceLayout = myspaceDefaultLayout();
@@ -3220,27 +3309,42 @@ function saveMySpaceLayout(){ save('wp-myspace-layout-v1', mySpaceLayout); }
     const def = mySpaceWidgetDef(w.id);
     if(!def) return;
     seen.add(w.id);
-    const minW = def.minW||1, minH = def.minH||3;
-    const ww = Math.max(minW, Math.min(MYSPACE_COLS, Math.round(w.w)||def.defaultW||2));
-    const hh = Math.max(minH, Math.round(w.h)||def.defaultH||4);
+    const minW = def.minW||1, minH = def.minH||2;
+    const ww = Math.max(minW, Math.min(MYSPACE_COLS, Math.round(w.w)||def.defaultW||1));
+    const hh = Math.max(minH, Math.round(w.h)||def.defaultH||3);
     const xx = Math.max(0, Math.min(MYSPACE_COLS-ww, Math.round(w.x)||0));
     const yy = Math.max(0, Math.round(w.y)||0);
-    cleaned.push({ id:w.id, x:xx, y:yy, w:ww, h:hh, order: typeof w.order==='number'?w.order:cleaned.length });
+    const color = MYSPACE_COLORS[w.color] ? w.color : 'cream';
+    cleaned.push({ id:w.id, x:xx, y:yy, w:ww, h:hh, color, order: typeof w.order==='number'?w.order:cleaned.length });
+  });
+  MYSPACE_MANDATORY_IDS.forEach(id=>{
+    if(cleaned.some(w=> w.id===id)) return;
+    const def = mySpaceWidgetDef(id);
+    const w = Math.min(def.defaultW||1, MYSPACE_COLS), h = def.defaultH||3;
+    const spot = myspaceFindFreeSpot(w, h, cleaned);
+    cleaned.unshift({ id, x:spot.x, y:spot.y, w, h, color:'cream', order:-1 });
   });
   cleaned.sort((a,b)=> a.order-b.order);
   cleaned.forEach((w,i)=> w.order = i);
+  myspaceResolveLayout(cleaned, null);
   mySpaceLayout = { widgets: cleaned };
 })();
 
 function myspaceCurrentMonthKey(){ return monthKeyOf(todayReal.getMonth(), APP_YEAR); }
 
-/* ---- per-widget card body: reuse existing render/bind functions wherever one already exists ---- */
+/* ---- per-widget card body: reuse existing render/bind functions wherever one already exists.
+   Per the "less on the dashboard, more inside the widget" rule, My Day/Calendar/Media/Goals/
+   Expenses/Tasks all get a compact SUMMARY view here — a one-or-two-line glance plus an
+   "Open →" that leads to the exact same full-featured page/record. Everything else (Mood,
+   Water, Sleep, Notes, Photos, custom widgets, ...) reuses the Day-page's own render/bind
+   functions as-is, since their normal content is already small. ---- */
 function myspaceCardBodyHtml(id){
   if(id === 'myday') return myspaceMyDayHtml();
   if(id === 'calendar') return myspaceCalendarHtml();
   if(id === 'mymedia') return myspaceMediaHtml();
   if(id === 'goals') return myspaceGoalsHtml();
   if(id === 'expenses') return myspaceExpensesHtml();
+  if(id === 'tasks') return myspaceTasksHtml();
   const key = dateKeyOf(todayReal);
   const dd = ensureDayData(key);
   return widgetBlockHtml(id, key, dd) || '';
@@ -3251,6 +3355,7 @@ function myspaceBindCard(id, root){
   if(id === 'mymedia') return bindMyspaceMedia(root);
   if(id === 'goals') return bindMyspaceGoals(root);
   if(id === 'expenses') return bindMyspaceExpenses(root);
+  if(id === 'tasks') return bindMyspaceTasks(root);
   const key = dateKeyOf(todayReal);
   bindWidgetBlock(id, key, root);
 }
@@ -3286,16 +3391,16 @@ function bindMyspaceCalendar(root){
   root.querySelectorAll('[data-open="calendar"]').forEach(el=> el.addEventListener('click', ()=> showMonthView(todayReal.getMonth(), APP_YEAR)));
 }
 function myspaceMediaHtml(){
-  const keys = allPhotoDateKeys().slice(-6).reverse();
+  const keys = allPhotoDateKeys().slice(-3).reverse();
   const recent = [];
   keys.forEach(k=> photosData[k].forEach(p=> recent.push(p)));
-  const shown = recent.slice(0,6);
+  const shown = recent.slice(0,3);
   return `<div class="myspace-card-head">
       <span class="myspace-card-title">${MYSPACE_LAUNCHERS.mymedia.icon} ${t('myspaceMedia')}</span>
       <button type="button" class="myspace-open-btn" data-open="mymedia">${t('myspaceOpen')} →</button>
     </div>
     ${shown.length ? `<div class="photo-thumb-row">${shown.map(p=>`<div class="photo-thumb-wrap"><img class="photo-thumb" src="${p.src}" data-view-date="${p.date}" data-view-id="${p.id}" alt=""></div>`).join('')}</div>`
-      : `<div class="month-goal-empty">${t('noPhotosYet')}</div>`}`;
+      : `<div class="myspace-mini-row">${t('noPhotosYet')}</div>`}`;
 }
 function bindMyspaceMedia(root){
   root.querySelectorAll('[data-open="mymedia"]').forEach(el=> el.addEventListener('click', showMediaView));
@@ -3304,69 +3409,60 @@ function bindMyspaceMedia(root){
     openPhotoViewer(img.dataset.viewDate, img.dataset.viewId);
   }));
 }
+/* Goals/Expenses/Tasks: quick-glance summary only, reading the exact same records the Month
+   and Day pages already own (wp-month-goals-v1-*, expenses, daysData) — no separate data, no
+   inline add-forms here. Full add/edit/list stays on the page "Open →" leads to. */
 function myspaceGoalsHtml(){
   currentMonthKey = myspaceCurrentMonthKey();
-  monthGoals = load('wp-month-goals-v1-'+currentMonthKey, []);
+  const goals = load('wp-month-goals-v1-'+currentMonthKey, []);
+  const done = goals.filter(g=> g.done).length;
   return `<div class="myspace-card-head">
       <span class="myspace-card-title">${MYSPACE_SUMMARY.goals.icon} ${t('myspaceGoals')}</span>
       <button type="button" class="myspace-open-btn" data-open="calendar">${t('myspaceOpen')} →</button>
     </div>
-    <ul class="month-goals-list" id="monthGoalsList"></ul>
-    <div class="month-goal-add-row">
-      <input type="text" id="monthGoalInput" placeholder="${t('goalPlaceholder')}" maxlength="80">
-      <button type="button" class="add-btn-outline" id="monthGoalAddBtn">${t('add')}</button>
+    <div class="myspace-mini-cal" data-open="calendar">
+      <div class="myspace-mini-row">${goals.length ? t('myspaceXDone',{done,total:goals.length}) : t('noGoalsYet')}</div>
     </div>`;
 }
 function bindMyspaceGoals(root){
-  renderMonthGoals();
-  root.querySelector('#monthGoalAddBtn').addEventListener('click', addMonthGoal);
-  root.querySelector('#monthGoalInput').addEventListener('keydown', e=>{ if(e.key==='Enter') addMonthGoal(); });
   root.querySelectorAll('[data-open="calendar"]').forEach(el=> el.addEventListener('click', ()=> showMonthView(todayReal.getMonth(), APP_YEAR)));
 }
 function myspaceExpensesHtml(){
   currentMonthKey = myspaceCurrentMonthKey();
+  const items = expensesForMonth(currentMonthKey);
+  const totalsByCcy = {};
+  items.forEach(e=> totalsByCcy[e.currency] = (totalsByCcy[e.currency]||0)+e.amount);
+  const ccys = Object.keys(totalsByCcy);
   return `<div class="myspace-card-head">
       <span class="myspace-card-title">${MYSPACE_SUMMARY.expenses.icon} ${t('myspaceExpenses')}</span>
       <button type="button" class="myspace-open-btn" data-open="calendar">${t('myspaceOpen')} →</button>
     </div>
-    <div class="expense-currency-totals" id="expenseCurrencyTotals"></div>
-    <div class="expense-combined-total">
-      <span>${t('totalIn')}</span>
-      <select id="expenseDisplayCcy"></select>
-      <span class="expense-combined-value" id="expenseCombinedValue">—</span>
-    </div>
-    <div class="expense-fx-status" id="expenseFxStatus"></div>
-    <ul class="month-expense-list" id="monthExpenseList"></ul>
-    <div class="expense-add-form">
-      <input type="number" id="expAmount" placeholder="${t('amountPlaceholder')}" step="0.01" min="0">
-      <select id="expCurrency" title="${t('expenseCurrencyTooltip')}"></select>
-      <input type="date" id="expDate">
-      <select id="expCategory"></select>
-      <input type="text" id="expNote" placeholder="${t('notePlaceholder')}">
-      <button type="button" class="add-btn-outline" id="expAddBtn">${t('addExpense')}</button>
-    </div>
-    <div class="expense-currency-manage">
-      <span class="hint-text">${t('currenciesInUse')}</span>
-      <span id="expenseCurrencyChips"></span>
-      <select id="expAddCurrencySelect" class="settings-select" title="${t('addCurrencyTooltip')}"></select>
-      <button type="button" class="add-btn-outline" id="expAddCurrencyBtn">${t('addCurrency')}</button>
+    <div class="myspace-mini-cal" data-open="calendar">
+      ${ccys.length ? ccys.map(c=> `<div class="myspace-mini-row">${fmtMoney(totalsByCcy[c], c)}</div>`).join('') : `<div class="myspace-mini-row">${t('noExpensesYet')}</div>`}
     </div>`;
 }
 function bindMyspaceExpenses(root){
-  renderMonthExpenseSection(currentMonthKey);
-  root.querySelector('#expAddBtn').addEventListener('click', addMonthExpenseNew);
-  root.querySelector('#expAmount').addEventListener('keydown', e=>{ if(e.key==='Enter') addMonthExpenseNew(); });
-  root.querySelector('#expNote').addEventListener('keydown', e=>{ if(e.key==='Enter') addMonthExpenseNew(); });
-  root.querySelector('#expAddCurrencyBtn').addEventListener('click', ()=> addCurrencyFlow('expAddCurrencySelect'));
-  root.querySelector('#expenseDisplayCcy').addEventListener('change', (e)=>{
-    expenseDisplayCcy = e.target.value; save('wp-expense-display-ccy-v1', expenseDisplayCcy);
-    refreshCombinedTotal(expensesForMonth(currentMonthKey));
-  });
   root.querySelectorAll('[data-open="calendar"]').forEach(el=> el.addEventListener('click', ()=> showMonthView(todayReal.getMonth(), APP_YEAR)));
+}
+function myspaceTasksHtml(){
+  const key = dateKeyOf(todayReal);
+  const dd = ensureDayData(key);
+  const done = dd.todos.filter(x=> x.done).length, total = dd.todos.length;
+  return `<div class="myspace-card-head">
+      <span class="myspace-card-title">✅ ${t('widgetTasks')}</span>
+      <button type="button" class="myspace-open-btn" data-open="myday">${t('myspaceOpen')} →</button>
+    </div>
+    <div class="myspace-mini-day" data-open="myday">
+      <div class="myspace-mini-row">${total ? t('myspaceXDone',{done,total}) : t('myspaceNoTasks')}</div>
+    </div>`;
+}
+function bindMyspaceTasks(root){
+  root.querySelectorAll('[data-open="myday"]').forEach(el=> el.addEventListener('click', ()=> showDateView(todayReal)));
 }
 
 /* ---- shell / grid / edit mode ---- */
 let mySpaceEditing = false;
+let myspaceLastCols = null;
 function showMySpaceView(){
   hideAllViews();
   document.getElementById('mySpaceView').classList.add('active');
@@ -3375,32 +3471,45 @@ function showMySpaceView(){
 function myspaceCardShellHtml(w){
   const def = mySpaceWidgetDef(w.id);
   if(!def) return '';
+  const isMandatory = MYSPACE_MANDATORY_IDS.includes(w.id);
+  const tintVar = MYSPACE_COLORS[w.color] || MYSPACE_COLORS.cream;
   const style = `--gcs:${w.x+1}; --gcw:${w.w}; --grs:${w.y+1}; --grh:${w.h}; order:${w.order};`;
-  return `<div class="myspace-card" data-wid="${w.id}" style="${style}">
-    <div class="note" style="--peek: var(--gold-soft); --peek-rot:-1.6deg; --pin-color:var(--gold);">
-      <div class="pin"></div>
+  return `<div class="myspace-card ${isMandatory?'is-mandatory':''}" data-wid="${w.id}" style="${style}">
+    <div class="myspace-card-shell" style="--myspace-tint: var(${tintVar});">
       <div class="myspace-card-body">${myspaceCardBodyHtml(w.id)}</div>
+      <div class="myspace-color-row">
+        ${MYSPACE_COLOR_ORDER.map(c=> `<button type="button" class="myspace-color-dot ${((w.color||'cream')===c)?'active':''}" data-color="${c}" style="background:var(${MYSPACE_COLORS[c]});" title="${t('myspaceColor_'+c)}"></button>`).join('')}
+      </div>
     </div>
     <button type="button" class="myspace-drag-handle" title="${t('myspaceDrag')}">⠿</button>
     <button type="button" class="myspace-remove-btn" data-remove="${w.id}" aria-label="${t('remove')}">✕</button>
-    <div class="myspace-resize-handle myspace-resize-e" data-resize="e"></div>
+    <div class="myspace-resize-handle myspace-resize-n" data-resize="n"></div>
     <div class="myspace-resize-handle myspace-resize-s" data-resize="s"></div>
+    <div class="myspace-resize-handle myspace-resize-w" data-resize="w"></div>
+    <div class="myspace-resize-handle myspace-resize-e" data-resize="e"></div>
+    <div class="myspace-resize-handle myspace-resize-nw" data-resize="nw"></div>
+    <div class="myspace-resize-handle myspace-resize-ne" data-resize="ne"></div>
+    <div class="myspace-resize-handle myspace-resize-sw" data-resize="sw"></div>
     <div class="myspace-resize-handle myspace-resize-se" data-resize="se"></div>
   </div>`;
 }
 function buildMySpaceView(){
+  MYSPACE_COLS = myspaceCurrentCols();
+  myspaceReclampForCols();
+  myspaceLastCols = MYSPACE_COLS;
   const el = document.getElementById('mySpaceView');
   const widgets = mySpaceLayout.widgets.slice().sort((a,b)=> a.order-b.order);
   el.innerHTML = `
     <div class="myspace-head">
       <h2 class="page-title myspace-head-title">${t('myspaceTitle')}</h2>
-      <button type="button" class="myspace-edit-btn ${mySpaceEditing?'is-editing':''}" id="mySpaceEditBtn">${mySpaceEditing? t('myspaceDone') : t('myspaceEdit')}</button>
+      <div class="myspace-head-actions">
+        <button type="button" class="myspace-add-btn ${mySpaceEditing?'visible':''}" id="mySpaceAddBtn" title="${t('myspaceAddWidget')}" aria-label="${t('myspaceAddWidget')}">+</button>
+        <button type="button" class="myspace-edit-btn ${mySpaceEditing?'is-editing':''}" id="mySpaceEditBtn">${mySpaceEditing? t('myspaceDone') : t('myspaceEdit')}</button>
+      </div>
     </div>
     ${mySpaceEditing ? `<div class="myspace-hint">${t('myspaceEditHint')}</div>` : ''}
-    ${!widgets.length && !mySpaceEditing ? `<div class="month-goal-empty">${t('noWidgetsEnabled')}</div>` : ''}
-    <div class="myspace-grid ${mySpaceEditing?'myspace-editing':''}" id="mySpaceGrid">
+    <div class="myspace-grid ${mySpaceEditing?'myspace-editing':''}" id="mySpaceGrid" style="grid-template-columns: repeat(${MYSPACE_COLS}, 1fr);">
       ${widgets.map(w=> myspaceCardShellHtml(w)).join('')}
-      <button type="button" class="myspace-add-tile" id="mySpaceAddTile">+ ${t('myspaceAddWidget')}</button>
     </div>
   `;
   widgets.forEach(w=>{
@@ -3410,23 +3519,99 @@ function buildMySpaceView(){
   document.getElementById('mySpaceEditBtn').addEventListener('click', ()=>{
     mySpaceEditing = !mySpaceEditing;
     saveMySpaceLayout();
-    buildMySpaceView();
+    myspaceAnimatedRebuild();
   });
-  document.getElementById('mySpaceAddTile').addEventListener('click', openMySpaceLibrary);
+  document.getElementById('mySpaceAddBtn').addEventListener('click', openMySpaceLibrary);
   if(mySpaceEditing) myspaceBindEditHandlers(el);
 }
-function myspaceCurrentRects(excludeId){
-  return mySpaceLayout.widgets.filter(w=> w.id!==excludeId).map(w=> ({ x:w.x, y:w.y, w:w.w, h:w.h }));
+/* Layout persists across breakpoints/devices, but a column count that was valid on a MacBook
+   might not fit on a phone — re-clamp width/x into the CURRENT column count and re-resolve
+   before every render, so the board is always valid no matter which device rendered it last. */
+function myspaceReclampForCols(){
+  mySpaceLayout.widgets.forEach(w=>{
+    const def = mySpaceWidgetDef(w.id);
+    const minW = (def && def.minW) || 1;
+    w.w = Math.max(minW, Math.min(MYSPACE_COLS, w.w));
+    w.x = Math.max(0, Math.min(MYSPACE_COLS-w.w, w.x));
+  });
+  myspaceResolveLayout(mySpaceLayout.widgets, null);
+}
+/* FLIP animation (First-Last-Invert-Play): capture where every OTHER card currently sits,
+   apply the new layout instantly, then re-play the visual difference as a short eased
+   transform transition, so displaced widgets visibly SLIDE into their new spot instead of
+   teleporting. The actively-dragged/resized card is excluded — it keeps following the
+   pointer directly via its own transform, updated separately on every move event. */
+function myspaceFlipCards(cards, firstRects){
+  cards.forEach(c=>{
+    const first = firstRects.get(c);
+    if(!first) return;
+    const last = c.getBoundingClientRect();
+    const dx = first.left-last.left, dy = first.top-last.top;
+    if(Math.abs(dx)>0.5 || Math.abs(dy)>0.5){
+      c.style.transition = 'none';
+      c.style.transform = `translate(${dx}px, ${dy}px)`;
+      c.getBoundingClientRect(); // force layout so the starting transform commits before animating away
+      requestAnimationFrame(()=>{
+        c.style.transition = 'transform 190ms ease';
+        c.style.transform = '';
+      });
+    }
+  });
+}
+function myspaceReflowAndAnimate(grid, fixedId){
+  const cards = Array.from(grid.querySelectorAll('.myspace-card')).filter(c=> c.dataset.wid !== fixedId);
+  const firstRects = new Map(cards.map(c=> [c, c.getBoundingClientRect()]));
+  myspaceResolveLayout(mySpaceLayout.widgets, fixedId);
+  cards.forEach(c=>{
+    const w = mySpaceLayout.widgets.find(x=> x.id===c.dataset.wid);
+    if(!w) return;
+    c.style.setProperty('--gcs', w.x+1);
+    c.style.setProperty('--gcw', w.w);
+    c.style.setProperty('--grs', w.y+1);
+    c.style.setProperty('--grh', w.h);
+  });
+  myspaceFlipCards(cards, firstRects);
+}
+/* Same FLIP technique wrapped around a full buildMySpaceView() rebuild — used for actions
+   that aren't a live drag (add / remove / Edit toggle), so the whole board animates into its
+   new arrangement instead of jumping. */
+function myspaceAnimatedRebuild(){
+  const grid = document.getElementById('mySpaceGrid');
+  if(!grid){ buildMySpaceView(); return; }
+  const firstRects = new Map();
+  grid.querySelectorAll('.myspace-card').forEach(c=> firstRects.set(c.dataset.wid, c.getBoundingClientRect()));
+  buildMySpaceView();
+  const newGrid = document.getElementById('mySpaceGrid');
+  if(!newGrid) return;
+  const byWid = new Map();
+  newGrid.querySelectorAll('.myspace-card').forEach(c=>{
+    const first = firstRects.get(c.dataset.wid);
+    if(first) byWid.set(c, first);
+  });
+  myspaceFlipCards(Array.from(byWid.keys()), byWid);
 }
 function myspaceBindEditHandlers(root){
   const grid = root.querySelector('#mySpaceGrid');
   grid.querySelectorAll('.myspace-remove-btn').forEach(btn=>{
     btn.addEventListener('click', (e)=>{
       e.stopPropagation();
+      if(MYSPACE_MANDATORY_IDS.includes(btn.dataset.remove)) return; // defense in depth — button is hidden for these anyway
       mySpaceLayout.widgets = mySpaceLayout.widgets.filter(w=> w.id !== btn.dataset.remove);
+      myspaceCompactUp(mySpaceLayout.widgets, null);
       mySpaceLayout.widgets.forEach((w,i)=> w.order=i);
       saveMySpaceLayout();
-      buildMySpaceView();
+      myspaceAnimatedRebuild();
+    });
+  });
+  grid.querySelectorAll('.myspace-color-dot').forEach(dot=>{
+    dot.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const card = dot.closest('.myspace-card');
+      const item = mySpaceLayout.widgets.find(w=> w.id===card.dataset.wid);
+      item.color = dot.dataset.color;
+      saveMySpaceLayout();
+      card.querySelector('.myspace-card-shell').style.setProperty('--myspace-tint', `var(${MYSPACE_COLORS[item.color]})`);
+      card.querySelectorAll('.myspace-color-dot').forEach(d=> d.classList.toggle('active', d===dot));
     });
   });
   grid.querySelectorAll('.myspace-card').forEach(card=>{
@@ -3441,11 +3626,14 @@ function myspaceBindEditHandlers(root){
    handles (set in CSS) stops Safari from starting a page-scroll or pinch-zoom gesture the
    moment a handle receives the pointerdown, and setPointerCapture keeps every following
    pointermove routed to this handler even if the finger/cursor drifts off the small handle
-   element — so the drag can't get "dropped" mid-gesture. Every move updates the CSS grid
-   position/size directly (no re-render, no debounce), so the card visibly follows the
-   finger/cursor continuously, in real time, exactly like the sticker-placement code already
-   in this file does. The array (and therefore localStorage/cloud sync) is only written once,
-   on release — cheap, and avoids fighting the collision check 60 times a second. */
+   element — so the drag can't get "dropped" mid-gesture.
+   The dragged card's OWN box is driven purely by a live pixel transform, exactly like the
+   Mood slider's native <input type="range"> tracks the pointer directly — no rounding, no
+   waiting for release. Every OTHER widget the drag would now overlap gets pushed out of the
+   way and FLIP-animated into its new spot the moment the pointer crosses into a new grid
+   cell (not on every pixel — sub-cell movement can't change anyone else's position anyway),
+   so the whole board visibly "flows" around the dragged widget in real time. The array (and
+   therefore localStorage/cloud sync) is only written once, on release. */
 function myspaceMakeDraggable(card, handle, grid){
   handle.addEventListener('pointerdown', (e)=>{
     e.preventDefault();
@@ -3453,23 +3641,22 @@ function myspaceMakeDraggable(card, handle, grid){
     const wid = card.dataset.wid;
     const item = mySpaceLayout.widgets.find(w=> w.id===wid);
     const origX = item.x, origY = item.y;
-    let lastValid = { x:origX, y:origY };
+    let lastCellX = origX, lastCellY = origY;
     const startX = e.clientX, startY = e.clientY;
     const gridRect = grid.getBoundingClientRect();
     const colUnit = (gridRect.width + MYSPACE_GAP_PX) / MYSPACE_COLS;
     card.classList.add('is-dragging');
     function onMove(ev){
       const rawDx = ev.clientX-startX, rawDy = ev.clientY-startY;
-      // Continuous: the card visually tracks the pointer pixel-for-pixel via a transform
-      // (a compositor-only property — no layout/reflow cost) on EVERY move event, completely
-      // independent of the grid snapping happening underneath. It never jumps between fixed
-      // positions and never waits for release to move.
       card.style.transform = `translate(${rawDx}px, ${rawDy}px)`;
       const dx = Math.round(rawDx/colUnit), dy = Math.round(rawDy/MYSPACE_ROW_STEP);
       const nx = Math.max(0, Math.min(MYSPACE_COLS-item.w, origX+dx));
       const ny = Math.max(0, origY+dy);
-      const rect = { x:nx, y:ny, w:item.w, h:item.h };
-      if(!myspaceCurrentRects(wid).some(o=> myspaceRectsOverlap(rect, o))) lastValid = { x:nx, y:ny };
+      if(nx!==lastCellX || ny!==lastCellY){
+        lastCellX = nx; lastCellY = ny;
+        item.x = nx; item.y = ny;
+        myspaceReflowAndAnimate(grid, wid);
+      }
     }
     function onUp(ev){
       handle.releasePointerCapture(ev.pointerId);
@@ -3477,7 +3664,6 @@ function myspaceMakeDraggable(card, handle, grid){
       document.removeEventListener('pointerup', onUp);
       card.classList.remove('is-dragging');
       card.style.transform = '';
-      item.x = lastValid.x; item.y = lastValid.y;
       mySpaceLayout.widgets.sort((a,b)=> (a.y-b.y) || (a.x-b.x)).forEach((w,i)=> w.order=i);
       saveMySpaceLayout();
       buildMySpaceView();
@@ -3486,6 +3672,13 @@ function myspaceMakeDraggable(card, handle, grid){
     document.addEventListener('pointerup', onUp);
   });
 }
+/* Same principle for resize, now from all 4 edges AND all 4 corners: the box's rendered
+   width/height/position tracks the pointer pixel-for-pixel every move event (a 'w' or 'n'
+   drag also has to visually shift the box, since the OPPOSITE edge is the one staying put —
+   handled with a translate so it reads as pulling that specific edge/corner, not the whole
+   widget). Whichever other widgets that would now overlap get pushed down and FLIP-animated
+   out of the way the moment the pointer crosses into a new column/row — same live reflow as
+   dragging. Only the committed span (saved on release) snaps to whole columns/rows. */
 function myspaceMakeResizable(card, handleEl, grid){
   handleEl.addEventListener('pointerdown', (e)=>{
     e.preventDefault(); e.stopPropagation();
@@ -3493,41 +3686,56 @@ function myspaceMakeResizable(card, handleEl, grid){
     const wid = card.dataset.wid;
     const item = mySpaceLayout.widgets.find(w=> w.id===wid);
     const def = mySpaceWidgetDef(wid);
-    const minW = def.minW||1, minH = def.minH||3;
-    const dir = handleEl.dataset.resize; // 'e' | 's' | 'se' — which edge(s) this handle drives
+    const minW = def.minW||1, minH = def.minH||2;
+    const dir = handleEl.dataset.resize; // 'n'|'s'|'e'|'w'|'ne'|'nw'|'se'|'sw'
     const startX = e.clientX, startY = e.clientY;
-    const origW = item.w, origH = item.h;
+    const orig = { x:item.x, y:item.y, w:item.w, h:item.h };
     const gridRect = grid.getBoundingClientRect();
     const colUnit = (gridRect.width + MYSPACE_GAP_PX) / MYSPACE_COLS;
-    const origPxW = origW*colUnit - MYSPACE_GAP_PX;
-    const origPxH = origH*MYSPACE_ROW_PX + (origH-1)*MYSPACE_GAP_PX;
-    const minPxW = minW*colUnit - MYSPACE_GAP_PX;
-    const minPxH = minH*MYSPACE_ROW_PX + (minH-1)*MYSPACE_GAP_PX;
-    const maxPxW = (MYSPACE_COLS-item.x)*colUnit - MYSPACE_GAP_PX;
-    let lastValid = { w:origW, h:origH };
+    const origPxW = orig.w*colUnit - MYSPACE_GAP_PX;
+    const origPxH = orig.h*MYSPACE_ROW_PX + (orig.h-1)*MYSPACE_GAP_PX;
+    let lastCell = { x:orig.x, y:orig.y, w:orig.w, h:orig.h };
     card.classList.add('is-resizing');
     function onMove(ev){
-      // Continuous: the box's actual rendered width/height tracks the pointer pixel-for-pixel
-      // on every move event — no rounding, no waiting for release, never jumping between a
-      // fixed set of sizes. 1fr grid tracks don't resize to fit an overflowing child, so this
-      // safely overlaps neighboring cells as a live preview without disturbing the rest of the
-      // grid; only the *committed* span (used for the collision check and for what eventually
-      // gets saved) snaps to whole columns/rows, and only once, on release.
-      if(dir==='e' || dir==='se') card.style.width = Math.max(minPxW, Math.min(maxPxW, origPxW + (ev.clientX-startX))) + 'px';
-      if(dir==='s' || dir==='se') card.style.height = Math.max(minPxH, origPxH + (ev.clientY-startY)) + 'px';
-      let nw = origW, nh = origH;
-      if(dir==='e' || dir==='se') nw = Math.max(minW, Math.min(MYSPACE_COLS-item.x, origW + Math.round((ev.clientX-startX)/colUnit)));
-      if(dir==='s' || dir==='se') nh = Math.max(minH, origH + Math.round((ev.clientY-startY)/MYSPACE_ROW_STEP));
-      const rect = { x:item.x, y:item.y, w:nw, h:nh };
-      if(!myspaceCurrentRects(wid).some(o=> myspaceRectsOverlap(rect, o))) lastValid = { w:nw, h:nh };
+      const dx = ev.clientX-startX, dy = ev.clientY-startY;
+      let tx = 0, ty = 0, pxW = origPxW, pxH = origPxH;
+      if(dir.includes('e')) pxW = origPxW + dx;
+      if(dir.includes('w')){ pxW = origPxW - dx; tx = dx; }
+      if(dir.includes('s')) pxH = origPxH + dy;
+      if(dir.includes('n')){ pxH = origPxH - dy; ty = dy; }
+      card.style.transform = `translate(${tx}px, ${ty}px)`;
+      card.style.width = Math.max(40, pxW) + 'px';
+      card.style.height = Math.max(28, pxH) + 'px';
+
+      let nx=orig.x, ny=orig.y, nw=orig.w, nh=orig.h;
+      if(dir.includes('e')) nw = Math.max(minW, Math.min(MYSPACE_COLS-orig.x, orig.w + Math.round(dx/colUnit)));
+      if(dir.includes('w')){
+        const dCols = Math.round(dx/colUnit);
+        let px = orig.x+dCols, pw = orig.w-dCols;
+        if(px<0){ pw += px; px = 0; }
+        if(pw<minW){ px += (pw-minW); pw = minW; if(px<0) px=0; }
+        nx = px; nw = pw;
+      }
+      if(dir.includes('s')) nh = Math.max(minH, orig.h + Math.round(dy/MYSPACE_ROW_STEP));
+      if(dir.includes('n')){
+        const dRows = Math.round(dy/MYSPACE_ROW_STEP);
+        let py = orig.y+dRows, ph = orig.h-dRows;
+        if(py<0){ ph += py; py = 0; }
+        if(ph<minH){ py += (ph-minH); ph = minH; if(py<0) py=0; }
+        ny = py; nh = ph;
+      }
+      if(nx!==lastCell.x || ny!==lastCell.y || nw!==lastCell.w || nh!==lastCell.h){
+        lastCell = { x:nx, y:ny, w:nw, h:nh };
+        item.x = nx; item.y = ny; item.w = nw; item.h = nh;
+        myspaceReflowAndAnimate(grid, wid);
+      }
     }
     function onUp(ev){
       handleEl.releasePointerCapture(ev.pointerId);
       document.removeEventListener('pointermove', onMove);
       document.removeEventListener('pointerup', onUp);
       card.classList.remove('is-resizing');
-      card.style.width = ''; card.style.height = '';
-      item.w = lastValid.w; item.h = lastValid.h;
+      card.style.width = ''; card.style.height = ''; card.style.transform = '';
       saveMySpaceLayout();
       buildMySpaceView();
     }
@@ -3549,11 +3757,11 @@ function myspaceAddWidget(id){
   if(mySpaceLayout.widgets.some(w=> w.id===id)) return;
   const def = mySpaceWidgetDef(id);
   if(!def) return;
-  const w = Math.min(def.defaultW||2, MYSPACE_COLS), h = def.defaultH||4;
+  const w = Math.min(def.defaultW||1, MYSPACE_COLS), h = def.defaultH||3;
   const spot = myspaceFindFreeSpot(w, h, mySpaceLayout.widgets);
-  mySpaceLayout.widgets.push({ id, x:spot.x, y:spot.y, w, h, order: mySpaceLayout.widgets.length });
+  mySpaceLayout.widgets.push({ id, x:spot.x, y:spot.y, w, h, color:'cream', order: mySpaceLayout.widgets.length });
   saveMySpaceLayout();
-  buildMySpaceView();
+  myspaceAnimatedRebuild();
 }
 function openMySpaceLibrary(){
   document.getElementById('mySpaceLibTitle').textContent = t('myspaceAddWidget');
@@ -3806,6 +4014,15 @@ document.getElementById('mySpaceLibSheet').addEventListener('click', (e)=>{ if(e
 document.getElementById('yearBackToSpaceBtn').addEventListener('click', showMySpaceView);
 const brandEl = document.querySelector('.brand');
 if(brandEl){ brandEl.style.cursor = 'pointer'; brandEl.addEventListener('click', showMySpaceView); }
+/* My Space's column COUNT is responsive (2 on a narrow phone, 4 from tablet-portrait up), so
+   a MacBook window being resized across that boundary — or a phone/iPad rotating — needs a
+   rebuild to pick up the new column count. Only rebuilds when the column count actually
+   changes, not on every pixel of a fluid resize. */
+window.addEventListener('resize', ()=>{
+  const view = document.getElementById('mySpaceView');
+  if(!view || !view.classList.contains('active')) return;
+  if(myspaceCurrentCols() !== myspaceLastCols) buildMySpaceView();
+});
 
 /* ============ START ============ */
 showMySpaceView();
