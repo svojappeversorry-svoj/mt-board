@@ -1950,8 +1950,13 @@ function refreshAllExpenseViews(){
   if(dv && dv.classList.contains('active') && openDate) renderDateExpenseSection(dateKeyOf(openDate));
 }
 
-function renderCurrencyChips(){
-  const el = document.getElementById('expenseCurrencyChips');
+/* The currency-tracking list (expenseCurrencies) is one shared piece of state, but it's
+   managed from two different places in the UI — the Month view's expense section AND the
+   Day view's expense section — so a currency added while looking at a single day doesn't
+   require a trip to the month page. Both panels use their own element ids (dayExp* vs exp*)
+   so updating one never clobbers the other via a duplicate-id getElementById collision. */
+function renderCurrencyChipsInto(chipsElId, addSelectId, addBtnId){
+  const el = document.getElementById(chipsElId);
   if(!el) return;
   const shown = expenseCurrencies.filter(c=> ALLOWED_CURRENCIES.includes(c));
   el.innerHTML = shown.map(c=> `<span class="currency-chip">${c}<button type="button" class="currency-chip-del" data-ccy="${c}" ${shown.length<=1?'disabled':''}>✕</button></span>`).join('');
@@ -1965,8 +1970,8 @@ function renderCurrencyChips(){
   // the "add currency" control is a plain <select> of the remaining allowed codes —
   // never free-text entry, so a currency can only ever be one of the 5 supported ones.
   const remaining = ALLOWED_CURRENCIES.filter(c=> !expenseCurrencies.includes(c));
-  const addSelect = document.getElementById('expAddCurrencySelect');
-  const addBtn = document.getElementById('expAddCurrencyBtn');
+  const addSelect = document.getElementById(addSelectId);
+  const addBtn = document.getElementById(addBtnId);
   if(addSelect && addBtn){
     if(remaining.length){
       addSelect.innerHTML = remaining.map(c=> `<option value="${c}">${c}</option>`).join('');
@@ -1976,8 +1981,12 @@ function renderCurrencyChips(){
     }
   }
 }
-function addCurrencyFlow(){
-  const addSelect = document.getElementById('expAddCurrencySelect');
+function renderCurrencyChips(){
+  renderCurrencyChipsInto('expenseCurrencyChips', 'expAddCurrencySelect', 'expAddCurrencyBtn');
+  renderCurrencyChipsInto('dayExpenseCurrencyChips', 'dayExpAddCurrencySelect', 'dayExpAddCurrencyBtn');
+}
+function addCurrencyFlow(selectId){
+  const addSelect = document.getElementById(selectId);
   const clean = addSelect && addSelect.value;
   if(!clean || !ALLOWED_CURRENCIES.includes(clean) || expenseCurrencies.includes(clean)) return;
   expenseCurrencies.push(clean);
@@ -2062,6 +2071,7 @@ function renderDateExpenseSection(dateKey){
   renderExpenseList('dayExpenseList', items, { showDate:false });
   fillCurrencySelect(document.getElementById('dayExpCurrency'));
   fillCategorySelect(document.getElementById('dayExpCategory'));
+  renderCurrencyChips();
 }
 function addDayExpense(dateKey){
   const amount = parseFloat(document.getElementById('dayExpAmount').value);
@@ -2281,7 +2291,7 @@ function buildMonthView(monthIdx, year){
   document.getElementById('expAddBtn').addEventListener('click', addMonthExpenseNew);
   document.getElementById('expAmount').addEventListener('keydown', e=>{ if(e.key==='Enter') addMonthExpenseNew(); });
   document.getElementById('expNote').addEventListener('keydown', e=>{ if(e.key==='Enter') addMonthExpenseNew(); });
-  document.getElementById('expAddCurrencyBtn').addEventListener('click', addCurrencyFlow);
+  document.getElementById('expAddCurrencyBtn').addEventListener('click', ()=> addCurrencyFlow('expAddCurrencySelect'));
   document.getElementById('expenseDisplayCcy').addEventListener('change', (e)=>{
     expenseDisplayCcy = e.target.value;
     save('wp-expense-display-ccy-v1', expenseDisplayCcy);
@@ -2627,6 +2637,12 @@ function buildDateView(d){
             <input type="text" id="dayExpNote" placeholder="${t('notePlaceholder')}">
             <button type="button" class="add-btn-outline" id="dayExpAddBtn">${t('addExpense')}</button>
           </div>
+          <div class="expense-currency-manage">
+            <span class="hint-text">${t('currenciesInUse')}</span>
+            <span id="dayExpenseCurrencyChips"></span>
+            <select id="dayExpAddCurrencySelect" class="settings-select" title="${t('addCurrencyTooltip')}"></select>
+            <button type="button" class="add-btn-outline" id="dayExpAddCurrencyBtn">${t('addCurrency')}</button>
+          </div>
         </div>
       </div>
     </div>
@@ -2647,6 +2663,7 @@ function buildDateView(d){
   document.getElementById('dayExpAddBtn').addEventListener('click', ()=> addDayExpense(key));
   document.getElementById('dayExpAmount').addEventListener('keydown', e=>{ if(e.key==='Enter') addDayExpense(key); });
   document.getElementById('dayExpNote').addEventListener('keydown', e=>{ if(e.key==='Enter') addDayExpense(key); });
+  document.getElementById('dayExpAddCurrencyBtn').addEventListener('click', ()=> addCurrencyFlow('dayExpAddCurrencySelect'));
 }
 
 /* ============ SETTINGS & ACCOUNT CENTER ============
