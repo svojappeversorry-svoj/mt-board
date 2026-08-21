@@ -1313,13 +1313,21 @@ function seedInitialExpenses(){
     ["2026-08-21","taxi bar tivat","transport",55.00]
   ];
   const dayCounters = {};
-  return raw.map(([date, merchant, category, amount]) => {
+  return raw.map(([date, merchant, category, amount], i) => {
     dayCounters[date] = (dayCounters[date] || 8);
     const hour = Math.min(dayCounters[date]++, 22);
     const time = pad2(hour) + ":00";
     const now = Date.now();
     return {
-      id: newId(),
+      // Deterministic, not newId()/random -- this makes seeding idempotent. If two
+      // devices both signed in before the first device's seed had finished syncing
+      // to the cloud, each independently saw an empty list and seeded again; with a
+      // random id every run produced a brand-new record, so the id-based merge on
+      // login (mergeRecordArrayById) couldn't recognize them as duplicates and both
+      // copies survived. A fixed id per trip-expense means every run of this
+      // function reproduces the exact same 22 ids, so a second run's records are
+      // always recognized as already present and never get re-added.
+      id: 'seed-montenegro-' + i,
       user: "shared",
       amount, currency: "EUR", category, merchant,
       date, time, note: "",
