@@ -1374,8 +1374,43 @@ function loadData(){
     save('wp-expense-seed-v1-done', true);
   }
 
+  // Self-healing cleanup: earlier versions of the seeding above used a random id each
+  // time, so devices that opened the app before their seed had synced to the cloud each
+  // created their own copy of the same 22 trip expenses. This collapses any expense whose
+  // date+merchant+category+amount exactly matches one of the known trip line items down to
+  // a single record (keeping the canonical seed-montenegro-* one when present), so any
+  // leftover duplicates from that old bug disappear the moment this code runs, with no
+  // manual cleanup needed. It never touches expenses that don't match a seed line item.
+  DB.expenses = dedupeMontenegroSeed(DB.expenses);
+
   persist();
   return DB;
+}
+
+function dedupeMontenegroSeed(list){
+  if(!Array.isArray(list) || !list.length) return list;
+  const seedSignatures = new Set(
+    seedInitialExpenses().map(e => [e.date, e.merchant, e.category, e.amount].join('|'))
+  );
+  const groups = {};
+  list.forEach((e, idx) => {
+    const sig = [e.date, e.merchant, e.category, e.amount].join('|');
+    if(!seedSignatures.has(sig)) return;
+    (groups[sig] = groups[sig] || []).push({ e, idx });
+  });
+  const dropIdx = new Set();
+  Object.values(groups).forEach(entries => {
+    if(entries.length < 2) return;
+    entries.sort((a, b) => {
+      const aCanon = (a.e.id && a.e.id.startsWith('seed-montenegro-')) ? 0 : 1;
+      const bCanon = (b.e.id && b.e.id.startsWith('seed-montenegro-')) ? 0 : 1;
+      if(aCanon !== bCanon) return aCanon - bCanon;
+      return (a.e.createdAt || 0) - (b.e.createdAt || 0);
+    });
+    entries.slice(1).forEach(x => dropIdx.add(x.idx));
+  });
+  if(!dropIdx.size) return list;
+  return list.filter((_, idx) => !dropIdx.has(idx));
 }
 
 function persist(){
@@ -2226,7 +2261,7 @@ function renderDashboard(){
 
   // Everyone's recent expenses -- there's no privacy split anymore.
   const recent = DB.expenses.slice()
-    .sort((a,b) => (b.date+b.time).localeCompare(a.date+a.time) || b.createdAt.localeCompare(a.createdAt))
+    .sort((a,b) => (b.date+b.time).localeCompare(a.date+a.time) || (b.createdAt - a.createdAt))
     .slice(0,8);
   const listEl = $("#dash-recent-list");
   if(recent.length === 0){
@@ -2523,7 +2558,7 @@ function renderHistory(){
     });
   }
 
-  expenses.sort((a,b) => (b.date+b.time).localeCompare(a.date+a.time) || b.createdAt.localeCompare(a.createdAt));
+  expenses.sort((a,b) => (b.date+b.time).localeCompare(a.date+a.time) || (b.createdAt - a.createdAt));
 
   if(expenses.length === 0){
     list.innerHTML = `<div class="empty-state"><span class="em">🔎</span><div class="t1">${t("empty_search_title")}</div><div class="t2">${t("empty_search_sub")}</div></div>`;
