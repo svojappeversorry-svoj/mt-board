@@ -215,6 +215,14 @@
     cursor:pointer;
   }
   .expense-item:last-child{ border-bottom:none; }
+  .expense-checkbox{
+    width:22px; height:22px; flex-shrink:0; border-radius:7px;
+    border:2px solid var(--border); background:var(--card);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .expense-checkbox.checked{ background:var(--accent); border-color:var(--accent); }
+  .expense-checkbox.checked::after{ content:"✓"; color:#fff; font-size:13px; font-weight:800; }
+  #hist-select-toggle-btn.active-select{ background:var(--accent); color:#fff; border-color:var(--accent); }
   .expense-icon{
     width:44px; height:44px;
     border-radius: 14px;
@@ -257,6 +265,7 @@
   .btn-primary:active{ transform: scale(0.96); }
   .btn-ghost{ background: var(--accent-soft); color: var(--accent-dark); }
   .btn-danger{ background: var(--danger-light); color: var(--danger); }
+  .btn-danger:disabled{ opacity:0.5; cursor:default; }
   .btn-outline{ background:#fff; border:1.5px solid var(--border); color: var(--text); }
   .btn-block{ width:100%; }
 
@@ -773,7 +782,10 @@
 
   <!-- ============ HISTORY ============ -->
   <section id="screen-history" class="screen">
-    <div class="topbar"><div class="greeting" data-i18n="history_title">История</div></div>
+    <div class="topbar">
+      <div class="greeting" data-i18n="history_title">История</div>
+      <button class="settings-btn" id="hist-select-toggle-btn" type="button" title="Select">☑</button>
+    </div>
     <div class="page">
       <div class="search-bar">
         <span>🔍</span>
@@ -788,6 +800,12 @@
       <div class="filter-row" id="hist-cat-filter"></div>
       <button class="btn btn-outline" style="width:100%; margin-bottom:14px;" data-action="open-calendar" data-i18n="btn_open_calendar">📅 Открыть по дате</button>
       <div id="hist-list"></div>
+    </div>
+    <div class="save-bar" id="hist-bulk-bar" style="display:none;">
+      <div style="display:flex; gap:10px; align-items:center;">
+        <button class="btn btn-outline" style="flex:1;" id="hist-bulk-cancel-btn" data-i18n="btn_cancel">Отмена</button>
+        <button class="btn btn-danger" style="flex:1;" id="hist-bulk-delete-btn"><span data-i18n="btn_delete">Удалить</span> (<span id="hist-bulk-count">0</span>)</button>
+      </div>
     </div>
   </section>
 
@@ -1149,8 +1167,18 @@ function mergeRecordArrayById(localVal, cloudVal){
   return toAdd.length ? cloudVal.concat(toAdd) : null;
 }
 const EXPENSE_DATA_KEYS = ['wp-expenses-v1','wp-expense-categories-v1','wp-expense-usage-v1','wp-expense-budgets-v1','wp-expense-app-settings-v1','wp-expense-seed-v1-done'];
+// Shared with the main SVOJ app (same localStorage origin): once a device has done this
+// merge dance once, it must never do it again. Otherwise a browser/device that hasn't
+// been opened in a while still has its OLD (pre-deletion) copy of wp-expenses-v1 sitting
+// in plain localStorage; comparing that stale copy against the fresh cloud data on every
+// single sign-in makes any expense deleted elsewhere since then look "local-only" and
+// resurrects it back into the cloud. Gating the merge behind a one-time flag keeps the
+// legitimate case (data recorded before ever signing in on this device) while making
+// cloud authoritative on every sign-in after that, so deletions actually stick.
+const CLOUD_MIGRATED_FLAG_KEY = 'wp-cloud-migrated-v1';
 async function migrateLocalToCloud(uid){
   if(!sb) return;
+  const alreadyMigratedOnce = localStorage.getItem(CLOUD_MIGRATED_FLAG_KEY) === '1';
   const toPush = [];
   EXPENSE_DATA_KEYS.forEach(k=>{
     const localVal = localLoad(k, undefined);
@@ -1160,6 +1188,7 @@ async function migrateLocalToCloud(uid){
       cloudCache[k] = localVal;
       return;
     }
+    if(alreadyMigratedOnce) return;
     if(k === 'wp-expenses-v1'){
       const merged = mergeRecordArrayById(localVal, cloudCache[k]);
       if(merged){
@@ -1170,6 +1199,7 @@ async function migrateLocalToCloud(uid){
     }
   });
   if(toPush.length) await sb.from('app_data').upsert(toPush, { onConflict:'user_id,data_key' });
+  try{ localStorage.setItem(CLOUD_MIGRATED_FLAG_KEY, '1'); }catch(e){}
 }
 
 /* ============ AUTH ============
@@ -1383,8 +1413,28 @@ function loadData(){
   // manual cleanup needed. It never touches expenses that don't match a seed line item.
   DB.expenses = dedupeMontenegroSeed(DB.expenses);
 
+  // General-purpose safety net: two expenses with 100%-identical date, time, amount,
+  // currency, category, merchant, note and payer are never two real separate purchases --
+  // that exact a match only happens when a stale device brings a deleted record back (see
+  // migrateLocalToCloud's CLOUD_MIGRATED_FLAG_KEY guard). Keeps the older (createdAt) copy.
+  DB.expenses = dedupeExactDuplicateExpenses(DB.expenses);
+
   persist();
   return DB;
+}
+
+function dedupeExactDuplicateExpenses(list){
+  if(!Array.isArray(list) || !list.length) return list;
+  const sigOf = e => [e.date, e.time || '', e.amount, e.currency, e.category, e.merchant || '', e.note || '', e.user || ''].join('|');
+  const bestBySig = new Map();
+  list.forEach((e, idx) => {
+    const sig = sigOf(e);
+    const prev = bestBySig.get(sig);
+    if(!prev || (e.createdAt || 0) < (prev.e.createdAt || 0)) bestBySig.set(sig, { e, idx });
+  });
+  const keepIdx = new Set(Array.from(bestBySig.values()).map(x => x.idx));
+  if(keepIdx.size === list.length) return list;
+  return list.filter((_, idx) => keepIdx.has(idx));
 }
 
 function dedupeMontenegroSeed(list){
@@ -2114,6 +2164,8 @@ const state = {
   historyFilterWho: "all",
   historyFilterCat: "all",
   historySearch: "",
+  historySelectMode: false,
+  historySelectedIds: new Set(),
   displayCurrency: "EUR",  // controls how combined totals are shown on Dashboard
   statsWho: "all",         // "all" | "eva" | "mark" | "shared"
   statsPeriod: "today",
@@ -2173,6 +2225,7 @@ function shadeColor(hex, percent){
 }
 
 function showScreen(name){
+  if(name !== "history") exitHistorySelectMode();
   state.currentScreen = name;
   $all(".screen").forEach(s => s.classList.remove("active"));
   const el = document.getElementById("screen-" + name);
@@ -2286,13 +2339,17 @@ function bindEmptyStateButton(container){
   if(btn) btn.addEventListener("click", () => openAddScreen());
 }
 
-function expenseItemHTML(e){
+function expenseItemHTML(e, selectMode){
   const cat = getCategoryById(e.category);
   const icon = cat ? cat.icon : "📦";
   const who = USERS[e.user] || USERS["shared"]; // expenses added via the main SVOJ app have no "user" field
   const label = e.merchant || catName(cat);
   const todayLabelWord = getLang() === "en" ? "TODAY" : "СЕГОДНЯ";
+  const checkbox = selectMode
+    ? `<div class="expense-checkbox${state.historySelectedIds.has(e.id) ? " checked" : ""}" data-checkbox-id="${e.id}"></div>`
+    : "";
   return `<div class="expense-item" data-id="${e.id}">
+    ${checkbox}
     <div class="expense-icon">${icon}</div>
     <div class="expense-mid">
       <div class="merchant">${escapeHTML(label)}</div>
@@ -2318,7 +2375,58 @@ function escapeHTML(str){
 
 function bindExpenseItemClicks(container){
   container.querySelectorAll(".expense-item").forEach(el => {
-    el.addEventListener("click", () => openExpenseDetail(el.dataset.id));
+    el.addEventListener("click", () => {
+      if(state.historySelectMode) toggleHistorySelect(el.dataset.id);
+      else openExpenseDetail(el.dataset.id);
+    });
+  });
+}
+
+/* ---- History bulk select / delete ---- */
+function toggleHistorySelectMode(){
+  state.historySelectMode = !state.historySelectMode;
+  if(!state.historySelectMode) state.historySelectedIds.clear();
+  renderHistory();
+}
+function exitHistorySelectMode(){
+  state.historySelectMode = false;
+  state.historySelectedIds.clear();
+}
+function toggleHistorySelect(id){
+  if(state.historySelectedIds.has(id)) state.historySelectedIds.delete(id);
+  else state.historySelectedIds.add(id);
+  renderHistory();
+}
+function updateHistoryBulkBar(){
+  const bar = $("#hist-bulk-bar");
+  if(!bar) return;
+  const count = state.historySelectedIds.size;
+  bar.style.display = state.historySelectMode ? "block" : "none";
+  const countEl = $("#hist-bulk-count");
+  if(countEl) countEl.textContent = String(count);
+  const delBtn = $("#hist-bulk-delete-btn");
+  if(delBtn) delBtn.disabled = count === 0;
+  const toggleBtn = $("#hist-select-toggle-btn");
+  if(toggleBtn) toggleBtn.classList.toggle("active-select", state.historySelectMode);
+}
+function bulkDeleteSelectedExpenses(){
+  const ids = new Set(state.historySelectedIds);
+  if(!ids.size) return;
+  const n = ids.size;
+  askConfirm({
+    emoji: "🗑️",
+    title: getLang() === "en"
+      ? `Delete ${n} selected expense${n===1?"":"s"}?`
+      : `Удалить ${n} выбранных ${pluralExpenses(n).split(" ")[1]}?`,
+    message: t("confirm_delete_expense_msg"),
+    okLabel: t("btn_delete"),
+    onConfirm: () => {
+      DB.expenses = DB.expenses.filter(e => !ids.has(e.id));
+      persist();
+      exitHistorySelectMode();
+      renderHistory();
+      showToast(t("toast_deleted"));
+    }
   });
 }
 
@@ -2560,6 +2668,8 @@ function renderHistory(){
 
   expenses.sort((a,b) => (b.date+b.time).localeCompare(a.date+a.time) || (b.createdAt - a.createdAt));
 
+  updateHistoryBulkBar();
+
   if(expenses.length === 0){
     list.innerHTML = `<div class="empty-state"><span class="em">🔎</span><div class="t1">${t("empty_search_title")}</div><div class="t2">${t("empty_search_sub")}</div></div>`;
     return;
@@ -2575,7 +2685,7 @@ function renderHistory(){
   let html = "";
   order.forEach(date => {
     html += `<div class="date-group-label">${formatDateLabel(date)}</div><div class="card" style="padding:6px 14px;">`;
-    html += groups[date].map(expenseItemHTML).join("");
+    html += groups[date].map(e => expenseItemHTML(e, state.historySelectMode)).join("");
     html += `</div>`;
   });
   list.innerHTML = html;
@@ -3074,6 +3184,9 @@ function bindStaticEvents(){
 
   // History (always scoped to the current user -- see renderHistory)
   $("#hist-search").addEventListener("input", (e) => { state.historySearch = e.target.value; renderHistory(); });
+  $("#hist-select-toggle-btn").addEventListener("click", toggleHistorySelectMode);
+  $("#hist-bulk-cancel-btn").addEventListener("click", () => { exitHistorySelectMode(); renderHistory(); });
+  $("#hist-bulk-delete-btn").addEventListener("click", bulkDeleteSelectedExpenses);
   $('[data-action="open-calendar"]').addEventListener("click", openCalendar);
 
   // Dashboard display-currency toggle

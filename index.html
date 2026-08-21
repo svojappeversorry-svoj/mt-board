@@ -1378,8 +1378,18 @@ const MERGE_ON_LOGIN = {
   'wp-widget-daily-v1': mergeByDateKeyObject,
   'wp-expenses-v1': mergeRecordArrayById,
 };
+// Once a device has done this merge dance once, it must never do it again. Otherwise a
+// browser/device that hasn't been opened in a while still has its OLD copy of a record
+// array (e.g. wp-expenses-v1) sitting in plain localStorage; comparing that stale copy
+// against the fresh cloud data on every single sign-in makes anything deleted elsewhere
+// since then look "local-only" and resurrects it back into the cloud. Gating the merge
+// behind a one-time flag keeps the legitimate case (data recorded before ever signing in
+// on this device) while making cloud authoritative on every sign-in after that, so
+// deletions actually stick. Shared flag name with expenses.html (same localStorage origin).
+const CLOUD_MIGRATED_FLAG_KEY = 'wp-cloud-migrated-v1';
 async function migrateLocalToCloud(uid){
   if(!sb) return;
+  const alreadyMigratedOnce = localStorage.getItem(CLOUD_MIGRATED_FLAG_KEY) === '1';
   const toPush = [];
   for(let i=0;i<localStorage.length;i++){
     const k = localStorage.key(i);
@@ -1391,6 +1401,7 @@ async function migrateLocalToCloud(uid){
       cloudCache[k] = localVal;
       continue;
     }
+    if(alreadyMigratedOnce) continue;
     const merger = MERGE_ON_LOGIN[k];
     if(merger){
       const merged = merger(localVal, cloudCache[k]);
@@ -1402,6 +1413,7 @@ async function migrateLocalToCloud(uid){
     }
   }
   if(toPush.length) await sb.from('app_data').upsert(toPush, { onConflict:'user_id,data_key' });
+  try{ localStorage.setItem(CLOUD_MIGRATED_FLAG_KEY, '1'); }catch(e){}
 }
 
 /* ============ AUTH SCREEN WIRING ============ */
