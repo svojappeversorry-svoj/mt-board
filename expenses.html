@@ -365,9 +365,12 @@
   }
   .who-btn .em{ font-size:18px; }
   .who-btn:active{ transform: scale(0.96); }
-  .who-btn.active[data-who="eva"]{ background: var(--eva-soft); border-color: var(--eva-accent); color: var(--eva-accent-dark); }
-  .who-btn.active[data-who="mark"]{ background: var(--mark-soft); border-color: var(--mark-accent); color: var(--mark-accent-dark); }
-  .who-btn.active[data-who="shared"]{ background: var(--shared-soft); border-color: var(--shared-accent); color: var(--shared-accent-dark); }
+  .who-btn.active{
+    background: color-mix(in srgb, var(--who-color, var(--accent)) 18%, white);
+    border-color: var(--who-color, var(--accent));
+    color: color-mix(in srgb, var(--who-color, var(--accent)) 65%, black);
+  }
+  .who-btn-add{ flex:0 0 44px; font-size:18px; }
 
   .form-section{ padding: 4px 20px; }
   .form-label{ font-size:13px; font-weight:700; color:var(--muted); margin: 18px 2px 10px; text-transform:uppercase; letter-spacing:0.05em; }
@@ -684,23 +687,20 @@
         <div class="label" id="dash-month-label">ОБЩЕЕ ЗА АВГУСТ</div>
         <div class="amount" id="dash-total-combined">€0</div>
         <div class="summary-count" style="margin-top:-10px; margin-bottom:14px;" data-i18n="dash_combined_sub">общий расход обоих</div>
-        <div class="summary-split">
-          <div class="split-item">
-            <div class="who">🌸 <span data-i18n="user_eva">Ева</span></div>
-            <div class="amt" id="dash-combined-eva">€0</div>
-          </div>
-          <div class="split-item">
-            <div class="who">💙 <span data-i18n="user_mark">Марко</span></div>
-            <div class="amt" id="dash-combined-mark">€0</div>
-          </div>
-          <div class="split-item">
-            <div class="who">🤝 <span data-i18n="user_shared">Общее</span></div>
-            <div class="amt" id="dash-combined-shared">€0</div>
-          </div>
-        </div>
+        <div class="summary-split" id="dash-split-container"></div>
       </div>
 
       <button class="big-add-btn" data-action="open-add" data-i18n="add_expense_btn">＋ Добавить расход</button>
+      <button class="btn btn-outline btn-block" style="margin-top:10px;" data-action="open-add-income" data-i18n="add_income_btn">＋ Добавить доход</button>
+
+      <div class="section-title" data-i18n="section_income">Доход</div>
+      <div class="card">
+        <div class="settings-row">
+          <div class="srow-label" data-i18n="income_month_total">Доход за месяц</div>
+          <div style="font-weight:800; font-size:15px; color: var(--income-color, #2E9E6D);" id="dash-income-total">€0</div>
+        </div>
+      </div>
+      <div class="card" id="dash-income-list"></div>
 
       <div class="section-title" data-i18n="section_budget">Бюджет</div>
       <div class="card">
@@ -748,11 +748,7 @@
     </div>
 
     <div class="form-label" style="padding:0 20px; margin-top:14px;" data-i18n="who_label">Кто платил</div>
-    <div class="who-toggle" id="add-who-toggle">
-      <button class="who-btn" data-who="eva"><span class="em">🌸</span><span data-i18n="user_eva">Ева</span></button>
-      <button class="who-btn" data-who="mark"><span class="em">💙</span><span data-i18n="user_mark">Марко</span></button>
-      <button class="who-btn" data-who="shared"><span class="em">🤝</span><span data-i18n="user_shared">Общее</span></button>
-    </div>
+    <div class="who-toggle" id="add-who-toggle"></div>
 
     <div class="form-section">
       <div class="form-label" data-i18n="label_category">Категория</div>
@@ -791,12 +787,7 @@
         <span>🔍</span>
         <input type="text" id="hist-search" placeholder="Поиск по магазину, категории, комментарию" data-i18n-ph="placeholder_search">
       </div>
-      <div class="filter-row" id="hist-who-filter">
-        <button class="filter-chip active" data-who="all" data-i18n="all_who_chip">Все</button>
-        <button class="filter-chip" data-who="eva">🌸 <span data-i18n="user_eva">Ева</span></button>
-        <button class="filter-chip" data-who="mark">💙 <span data-i18n="user_mark">Марко</span></button>
-        <button class="filter-chip" data-who="shared">🤝 <span data-i18n="user_shared">Общее</span></button>
-      </div>
+      <div class="filter-row" id="hist-who-filter"></div>
       <div class="filter-row" id="hist-cat-filter"></div>
       <button class="btn btn-outline" style="width:100%; margin-bottom:14px;" data-action="open-calendar" data-i18n="btn_open_calendar">📅 Открыть по дате</button>
       <div id="hist-list"></div>
@@ -813,12 +804,7 @@
   <section id="screen-stats" class="screen">
     <div class="topbar"><div class="greeting" data-i18n="stats_title">Статистика</div></div>
     <div class="page">
-      <div class="filter-row" id="stats-who-tabs">
-        <button class="filter-chip active" data-who="all" data-i18n="all_who_chip">Все</button>
-        <button class="filter-chip" data-who="eva">🌸 <span data-i18n="user_eva">Ева</span></button>
-        <button class="filter-chip" data-who="mark">💙 <span data-i18n="user_mark">Марко</span></button>
-        <button class="filter-chip" data-who="shared">🤝 <span data-i18n="user_shared">Общее</span></button>
-      </div>
+      <div class="filter-row" id="stats-who-tabs"></div>
       <div class="filter-row" id="stats-period-tabs">
         <button class="filter-chip active" data-period="today" data-i18n="period_today">Сегодня</button>
         <button class="filter-chip" data-period="week" data-i18n="period_week">Неделя</button>
@@ -839,22 +825,8 @@
       </div>
 
       <div class="card" id="stat-compare-card">
-        <div class="section-title" style="margin-top:0;" data-i18n="stat_compare_title">Ева vs Марко vs Общее</div>
-        <div class="compare-row">
-          <div class="cname">🌸 <span data-i18n="user_eva">Ева</span></div>
-          <div class="compare-bar-bg"><div class="compare-bar-fill" id="cmp-eva-bar" style="background:var(--eva-accent);"></div></div>
-          <div class="camt" id="cmp-eva-amt">€0</div>
-        </div>
-        <div class="compare-row">
-          <div class="cname">💙 <span data-i18n="user_mark">Марко</span></div>
-          <div class="compare-bar-bg"><div class="compare-bar-fill" id="cmp-mark-bar" style="background:var(--mark-accent);"></div></div>
-          <div class="camt" id="cmp-mark-amt">€0</div>
-        </div>
-        <div class="compare-row">
-          <div class="cname">🤝 <span data-i18n="user_shared">Общее</span></div>
-          <div class="compare-bar-bg"><div class="compare-bar-fill" id="cmp-shared-bar" style="background:var(--shared-accent);"></div></div>
-          <div class="camt" id="cmp-shared-amt">€0</div>
-        </div>
+        <div class="section-title" style="margin-top:0;" data-i18n="stat_compare_title">Сравнение по людям</div>
+        <div id="stat-compare-rows"></div>
       </div>
 
       <div class="card" id="stat-vs-lastmonth-card" style="display:none;">
@@ -926,19 +898,17 @@
         <button class="btn btn-ghost btn-block" style="margin-top:12px;" data-action="add-category-settings" data-i18n="btn_new_category">＋ Новая категория</button>
       </div>
 
+      <div class="section-title" data-i18n="section_people">Люди</div>
+      <div class="card">
+        <div id="settings-people-list"></div>
+        <button class="btn btn-ghost btn-block" style="margin-top:12px;" data-action="add-person-settings" data-i18n="btn_add_person">＋ Добавить человека</button>
+      </div>
+
       <div class="section-title" data-i18n="section_colors">Цветовые темы</div>
       <div class="card">
         <div class="settings-row">
-          <div><div class="srow-label">🌸 <span data-i18n="user_eva">Ева</span></div><div class="srow-sub" data-i18n="color_eva_sub">Акцент интерфейса для Евы</div></div>
+          <div><div class="srow-label" data-i18n="app_accent_label">🎨 Акцент приложения</div><div class="srow-sub" data-i18n="color_eva_sub">Основной цвет интерфейса</div></div>
           <input type="color" id="color-eva" value="#E23F88" style="width:40px;height:40px;border:none;background:none;">
-        </div>
-        <div class="settings-row">
-          <div><div class="srow-label">💙 <span data-i18n="user_mark">Марко</span></div><div class="srow-sub" data-i18n="color_mark_sub">Акцент интерфейса для Марко</div></div>
-          <input type="color" id="color-mark" value="#5B4FE0" style="width:40px;height:40px;border:none;background:none;">
-        </div>
-        <div class="settings-row">
-          <div><div class="srow-label">🤝 <span data-i18n="user_shared">Общее</span></div><div class="srow-sub" data-i18n="color_shared_sub">Акцент интерфейса для общих трат</div></div>
-          <input type="color" id="color-shared" value="#C6941F" style="width:40px;height:40px;border:none;background:none;">
         </div>
       </div>
 
@@ -1076,6 +1046,32 @@
   </div>
 </div>
 
+<!-- Add income sheet -->
+<div class="overlay" id="overlay-add-income">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div style="padding: 4px 22px 22px;">
+      <div class="ftitle" style="font-weight:800; font-size:16px; margin-bottom:14px;" data-i18n="income_add_title">Новый доход</div>
+      <div class="form-label" style="margin-top:0;" data-i18n="income_amount_label">Сумма</div>
+      <input type="text" inputmode="decimal" class="text-input" id="income-amount" placeholder="0">
+      <div class="currency-toggle" id="income-currency-toggle" style="margin: 10px 0 4px;">
+        <button class="cur-btn active" data-currency="EUR">€ EUR</button>
+        <button class="cur-btn" data-currency="RSD" data-i18n="cur_rsd_short">дин. RSD</button>
+      </div>
+      <div class="form-label" data-i18n="income_source_label">Источник</div>
+      <input type="text" class="text-input" id="income-source" placeholder="Например, Зарплата" data-i18n-ph="placeholder_income_source">
+      <div class="form-label" data-i18n="label_datetime">Дата и время</div>
+      <div class="datetime-row">
+        <input type="date" class="text-input" id="income-date">
+        <input type="time" class="text-input" id="income-time">
+      </div>
+      <div class="form-label" data-i18n="label_comment">Комментарий</div>
+      <input type="text" class="text-input" id="income-note" placeholder="Необязательно" data-i18n-ph="placeholder_comment">
+      <button class="btn btn-primary btn-block" style="margin-top:18px;" data-action="save-income" data-i18n="btn_save_income">Сохранить доход</button>
+    </div>
+  </div>
+</div>
+
 <!-- Generic confirm dialog -->
 <div class="overlay center" id="overlay-confirm">
   <div class="confirm-box">
@@ -1166,7 +1162,7 @@ function mergeRecordArrayById(localVal, cloudVal){
   const toAdd = localVal.filter(e=> e && !existingIds.has(e.id));
   return toAdd.length ? cloudVal.concat(toAdd) : null;
 }
-const EXPENSE_DATA_KEYS = ['wp-expenses-v1','wp-expense-categories-v1','wp-expense-usage-v1','wp-expense-budgets-v1','wp-expense-app-settings-v1','wp-expense-seed-v1-done'];
+const EXPENSE_DATA_KEYS = ['wp-expenses-v1','wp-expense-incomes-v1','wp-expense-categories-v1','wp-expense-usage-v1','wp-expense-budgets-v1','wp-expense-app-settings-v1','wp-expense-seed-v1-done'];
 // Shared with the main SVOJ app (same localStorage origin): once a device has done this
 // merge dance once, it must never do it again. Otherwise a browser/device that hasn't
 // been opened in a while still has its OLD (pre-deletion) copy of wp-expenses-v1 sitting
@@ -1189,7 +1185,7 @@ async function migrateLocalToCloud(uid){
       return;
     }
     if(alreadyMigratedOnce) return;
-    if(k === 'wp-expenses-v1'){
+    if(k === 'wp-expenses-v1' || k === 'wp-expense-incomes-v1'){
       const merged = mergeRecordArrayById(localVal, cloudCache[k]);
       if(merged){
         toPush.push({ user_id:uid, data_key:k, data:merged, updated_at:new Date().toISOString() });
@@ -1301,6 +1297,7 @@ function defaultData(){
   return {
     dataVersion: DATA_VERSION,
     expenses: [],
+    incomes: [],
     categories: defaultCategories(),
     categoryUsage: {},     // { catId: count }
     merchantUsage: {},     // { merchantName: count }
@@ -1309,6 +1306,7 @@ function defaultData(){
     settings: {
       exchangeRate: 117,
       userColors: { eva: "#E23F88", mark: "#5B4FE0", shared: "#C6941F" },
+      people: [], // filled in by loadData() -- see the migration comment there
       language: "ru",
       lastWho: "shared",
       lastCurrency: "EUR"
@@ -1378,6 +1376,7 @@ let DB = null;
 function loadData(){
   const base = defaultData();
   const sharedExpenses = load('wp-expenses-v1', null);
+  const savedIncomes = load('wp-expense-incomes-v1', null);
   const usage = load('wp-expense-usage-v1', null);
   const budgetsWrap = load('wp-expense-budgets-v1', null);
   const savedSettings = load('wp-expense-app-settings-v1', null);
@@ -1385,12 +1384,34 @@ function loadData(){
 
   DB = base;
   if(Array.isArray(sharedExpenses)) DB.expenses = sharedExpenses;
+  if(Array.isArray(savedIncomes)) DB.incomes = savedIncomes;
   if(Array.isArray(savedCategories) && savedCategories.length) DB.categories = savedCategories;
   if(usage){ DB.categoryUsage = usage.categoryUsage || {}; DB.merchantUsage = usage.merchantUsage || {}; }
   if(budgetsWrap){ DB.budgets = budgetsWrap.budgets || {}; DB.categoryBudgets = budgetsWrap.categoryBudgets || {}; }
   if(savedSettings){
     DB.settings = Object.assign(base.settings, savedSettings);
     DB.settings.userColors = Object.assign(base.settings.userColors, savedSettings.userColors || {});
+  }
+
+  // "people" is the who-can-a-purchase-belong-to list, editable via a + button wherever
+  // it's shown. An account that already had settings before this existed (this one) keeps
+  // seeing exactly the fixed Eva/Mark/Shared identities it always had, unchanged -- just now
+  // as regular editable/removable entries instead of hardcoded ones. A genuinely brand-new
+  // account (no settings saved yet at all) instead starts with just one entry for "you",
+  // with no Eva/Marko baggage, since those names only ever meant something for this account.
+  if(!Array.isArray(DB.settings.people) || !DB.settings.people.length){
+    if(savedSettings){
+      const uc = DB.settings.userColors;
+      DB.settings.people = [
+        { id:"eva", name: t("user_eva"), emoji:"🌸", color: uc.eva },
+        { id:"mark", name: t("user_mark"), emoji:"💙", color: uc.mark },
+        { id:"shared", name: t("user_shared"), emoji:"🤝", color: uc.shared }
+      ];
+    } else {
+      DB.settings.people = [
+        { id:"me", name: t("default_me_name"), emoji:"🙂", color: PEOPLE_COLOR_PALETTE[0] }
+      ];
+    }
   }
 
   // One-time seed of the Montenegro trip expenses -- appended to whatever wp-expenses-v1
@@ -1466,6 +1487,7 @@ function dedupeMontenegroSeed(list){
 function persist(){
   try{
     save('wp-expenses-v1', DB.expenses);
+    save('wp-expense-incomes-v1', DB.incomes);
     save('wp-expense-categories-v1', DB.categories);
     save('wp-expense-usage-v1', { categoryUsage: DB.categoryUsage, merchantUsage: DB.merchantUsage });
     save('wp-expense-budgets-v1', { budgets: DB.budgets, categoryBudgets: DB.categoryBudgets });
@@ -1495,6 +1517,18 @@ const I18N = {
     cur_rsd_short: "дин. RSD",
     dash_combined_sub: "общий расход обоих",
     add_expense_btn: "＋ Добавить расход",
+    add_income_btn: "＋ Добавить доход",
+    section_income: "Доход",
+    income_month_total: "Доход за месяц",
+    income_add_title: "Новый доход",
+    income_amount_label: "Сумма",
+    income_source_label: "Источник",
+    placeholder_income_source: "Например, Зарплата",
+    btn_save_income: "Сохранить доход",
+    confirm_delete_income_title: "Удалить этот доход?",
+    toast_income_saved: "Доход сохранён ✓",
+    prompt_new_person_name: "Имя нового человека",
+    default_me_name: "Я",
     section_budget: "Бюджет",
     section_currencies: "Расходы по валютам",
     section_categories: "Категории",
@@ -1523,7 +1557,7 @@ const I18N = {
     stat_count: "Транзакций",
     stat_avg: "Средний расход",
     stat_max: "Самый большой",
-    stat_compare_title: "Ева vs Марко vs Общее",
+    stat_compare_title: "Сравнение по людям",
     vs_lastmonth_title: "По сравнению с прошлым месяцем",
     vs_now: "Сейчас",
     vs_then: "Тогда",
@@ -1544,8 +1578,12 @@ const I18N = {
     language_sub: "Язык интерфейса приложения",
     section_categories_settings: "Категории",
     btn_new_category: "＋ Новая категория",
+    section_people: "Люди",
+    btn_add_person: "＋ Добавить человека",
+    person_name_placeholder: "Имя",
     section_colors: "Цветовые темы",
-    color_eva_sub: "Акцент интерфейса для Евы",
+    app_accent_label: "🎨 Акцент приложения",
+    color_eva_sub: "Основной цвет интерфейса",
     color_mark_sub: "Акцент интерфейса для Марко",
     color_shared_sub: "Акцент интерфейса для общих трат",
     section_currency_settings: "Валюта",
@@ -1653,6 +1691,18 @@ const I18N = {
     cur_rsd_short: "RSD",
     dash_combined_sub: "combined total for both",
     add_expense_btn: "＋ Add expense",
+    add_income_btn: "＋ Add income",
+    section_income: "Income",
+    income_month_total: "Income this month",
+    income_add_title: "New income",
+    income_amount_label: "Amount",
+    income_source_label: "Source",
+    placeholder_income_source: "E.g. Salary",
+    btn_save_income: "Save income",
+    confirm_delete_income_title: "Delete this income?",
+    toast_income_saved: "Income saved ✓",
+    prompt_new_person_name: "New person's name",
+    default_me_name: "Me",
     section_budget: "Budget",
     section_currencies: "Spending by currency",
     section_categories: "Categories",
@@ -1681,7 +1731,7 @@ const I18N = {
     stat_count: "Transactions",
     stat_avg: "Average expense",
     stat_max: "Biggest expense",
-    stat_compare_title: "Eva vs Marko vs Shared",
+    stat_compare_title: "Comparison by person",
     vs_lastmonth_title: "Compared to last month",
     vs_now: "Now",
     vs_then: "Then",
@@ -1702,8 +1752,12 @@ const I18N = {
     language_sub: "App interface language",
     section_categories_settings: "Categories",
     btn_new_category: "＋ New category",
+    section_people: "People",
+    btn_add_person: "＋ Add person",
+    person_name_placeholder: "Name",
     section_colors: "Color themes",
-    color_eva_sub: "Interface accent for Eva",
+    app_accent_label: "🎨 App accent",
+    color_eva_sub: "The interface's primary color",
     color_mark_sub: "Interface accent for Marko",
     color_shared_sub: "Interface accent for shared expenses",
     section_currency_settings: "Currency",
@@ -1813,11 +1867,6 @@ function catName(cat){
   if(cat.custom || !cat.name_en) return cat.name;
   return getLang() === "en" ? cat.name_en : cat.name;
 }
-function userName(userId){
-  if(userId === "mark") return t("user_mark");
-  if(userId === "shared") return t("user_shared");
-  return t("user_eva");
-}
 function pluralExpenses(n){
   if(getLang() === "en"){
     return n + " " + (n === 1 ? "expense" : "expenses");
@@ -1840,18 +1889,41 @@ function applyStaticTranslations(){
 }
 
 /* =========================================================================
-   USERS MODULE
+   PEOPLE MODULE
+   Who a purchase can belong to is a plain editable list (DB.settings.people),
+   not a fixed Eva/Marko/Shared pair -- anyone using this app starts with just
+   themselves and adds more people (or a "shared" bucket) via a + button,
+   typing whatever name they want. See the migration in loadData() for how an
+   account that already had the old fixed identities keeps seeing them.
    ========================================================================= */
-const USERS_META = {
-  eva:  { id:"eva",  emoji:"🌸" },
-  mark: { id:"mark", emoji:"💙" },
-  shared: { id:"shared", emoji:"🤝" }
-};
-// Kept for any code that expects USERS[id].name / .emoji directly.
+const PEOPLE_COLOR_PALETTE = ["#E23F88","#5B4FE0","#C6941F","#2E9E6D","#0EA5E9","#D97706","#DB2777","#7C3AED"];
+
+function getPeople(){ return (DB && DB.settings && DB.settings.people) || []; }
+function getPersonById(id){ return getPeople().find(p => p.id === id); }
+function nextPersonColor(){ return PEOPLE_COLOR_PALETTE[getPeople().length % PEOPLE_COLOR_PALETTE.length]; }
+function addPerson(name){
+  name = (name || "").trim();
+  if(!name) return null;
+  const person = { id: "p" + Date.now().toString(36) + Math.random().toString(36).slice(2,6), name, emoji: "🙂", color: nextPersonColor() };
+  DB.settings.people.push(person);
+  persist();
+  return person;
+}
+function renamePerson(id, name){
+  const p = getPersonById(id);
+  name = (name || "").trim();
+  if(!p || !name) return;
+  p.name = name;
+  persist();
+}
+// Shown for an expense whose "user" doesn't match any current person -- either it was
+// added via the main SVOJ app (which has no per-person concept at all) or its person was
+// since removed from the list. Not itself a member of DB.settings.people.
+const UNKNOWN_PERSON = { id: "shared", emoji: "🤝", get name(){ return t("user_shared"); } };
+// Kept for any code that expects USERS[id].name / .emoji / .id directly.
 const USERS = new Proxy({}, {
   get(_, id){
-    if(!USERS_META[id]) return undefined;
-    return { id, emoji: USERS_META[id].emoji, name: userName(id) };
+    return getPersonById(id);
   }
 });
 
@@ -2050,6 +2122,99 @@ function deleteExpense(id){
 function getExpenseById(id){ return DB.expenses.find(e => e.id === id); }
 
 /* =========================================================================
+   INCOME MODULE
+   ========================================================================= */
+function saveIncome(payload){
+  const now = Date.now();
+  DB.incomes.push({
+    id: newId(),
+    date: payload.date,
+    time: payload.time,
+    amount: payload.amount,
+    currency: payload.currency,
+    source: payload.source,
+    note: payload.note,
+    createdAt: now, updatedAt: now
+  });
+  persist();
+}
+function deleteIncome(id){
+  DB.incomes = DB.incomes.filter(i => i.id !== id);
+  persist();
+}
+function getIncomeById(id){ return DB.incomes.find(i => i.id === id); }
+function incomesForMonth(mKey){ return DB.incomes.filter(i => monthKey(i.date) === mKey); }
+
+function openAddIncomeSheet(){
+  $("#income-amount").value = "";
+  $("#income-source").value = "";
+  $("#income-note").value = "";
+  $("#income-date").value = todayISO();
+  $("#income-time").value = nowTimeStr();
+  setIncomeCurrency(DB.settings.lastCurrency || "EUR");
+  openOverlay("overlay-add-income");
+}
+function setIncomeCurrency(currency){
+  state.incomeSelectedCurrency = currency;
+  $all("#income-currency-toggle .cur-btn[data-currency]").forEach(b => b.classList.toggle("active", b.dataset.currency === currency));
+}
+function handleSaveIncome(){
+  const check = validateAmount($("#income-amount").value);
+  if(!check.valid){ showToast(check.message); return; }
+  const date = $("#income-date").value || todayISO();
+  const time = $("#income-time").value || nowTimeStr();
+  saveIncome({
+    amount: check.amount,
+    currency: state.incomeSelectedCurrency,
+    source: $("#income-source").value.trim(),
+    note: $("#income-note").value.trim(),
+    date, time
+  });
+  closeOverlay("overlay-add-income");
+  showToast(t("toast_income_saved"));
+  renderDashboard();
+}
+function incomeItemHTML(inc){
+  const label = inc.source || t("income_source_label");
+  return `<div class="expense-item" data-income-id="${inc.id}">
+    <div class="expense-icon">💰</div>
+    <div class="expense-mid">
+      <div class="merchant">${escapeHTML(label)}</div>
+      <div class="meta">${escapeHTML(inc.note || "")}</div>
+    </div>
+    <div class="expense-right">
+      <div class="amt">${formatMoney(inc.amount, inc.currency)}</div>
+      <div class="time">${formatDateShort(inc.date)}</div>
+    </div>
+  </div>`;
+}
+function renderIncomeSection(){
+  const mKey = currentMonthKey();
+  const monthIncomes = incomesForMonth(mKey);
+  const totalEUR = monthIncomes.reduce((sum, i) => sum + toEUR(i.amount, i.currency), 0);
+  $("#dash-income-total").textContent = formatDisplay(totalEUR);
+  const listEl = $("#dash-income-list");
+  const recent = monthIncomes.slice().sort((a,b) => (b.date+(b.time||"")).localeCompare(a.date+(a.time||"")) || (b.createdAt-a.createdAt)).slice(0,8);
+  if(recent.length === 0){
+    listEl.innerHTML = `<div class="no-data-msg">${t("no_data_month_yet")}</div>`;
+    return;
+  }
+  listEl.innerHTML = recent.map(incomeItemHTML).join("");
+  listEl.querySelectorAll("[data-income-id]").forEach(el => {
+    el.addEventListener("click", () => {
+      const id = el.dataset.incomeId;
+      askConfirm({
+        emoji: "🗑️",
+        title: t("confirm_delete_income_title"),
+        message: t("confirm_delete_expense_msg"),
+        okLabel: t("btn_delete"),
+        onConfirm: () => { deleteIncome(id); showToast(t("toast_deleted")); renderDashboard(); }
+      });
+    });
+  });
+}
+
+/* =========================================================================
    BUDGETS MODULE
    ========================================================================= */
 function getBudgets(){ return DB.budgets; }
@@ -2166,6 +2331,7 @@ const state = {
   historySearch: "",
   historySelectMode: false,
   historySelectedIds: new Set(),
+  incomeSelectedCurrency: "EUR",
   displayCurrency: "EUR",  // controls how combined totals are shown on Dashboard
   statsWho: "all",         // "all" | "eva" | "mark" | "shared"
   statsPeriod: "today",
@@ -2248,6 +2414,7 @@ function showScreen(name){
    list below shows every expense, regardless of who it belongs to. */
 function renderDashboard(){
   $all("#dash-currency-toggle .cur-btn").forEach(b => b.classList.toggle("active", b.dataset.dispcur === state.displayCurrency));
+  renderIncomeSection();
 
   const mKey = currentMonthKey();
   const [y,m] = mKey.split("-").map(Number);
@@ -2255,14 +2422,12 @@ function renderDashboard(){
 
   const monthExpenses = filterExpenses({from: mKey+"-01", to: mKey+"-"+pad2(daysInMonth(y,m))});
   const totalEUR = sumEUR(monthExpenses);
-  const evaEUR = sumEUR(monthExpenses.filter(e => e.user === "eva"));
-  const markEUR = sumEUR(monthExpenses.filter(e => e.user === "mark"));
-  const sharedEUR = sumEUR(monthExpenses.filter(e => e.user === "shared"));
 
   $("#dash-total-combined").textContent = formatDisplay(totalEUR);
-  $("#dash-combined-eva").textContent = formatDisplay(evaEUR);
-  $("#dash-combined-mark").textContent = formatDisplay(markEUR);
-  $("#dash-combined-shared").textContent = formatDisplay(sharedEUR);
+  $("#dash-split-container").innerHTML = getPeople().map(p => {
+    const personEUR = sumEUR(monthExpenses.filter(e => e.user === p.id));
+    return `<div class="split-item"><div class="who">${p.emoji} ${escapeHTML(p.name)}</div><div class="amt">${formatDisplay(personEUR)}</div></div>`;
+  }).join("");
 
   // Shared monthly budget -- one pool, both people draw from it together
   const budget = getMonthBudget(mKey) || 0;
@@ -2321,7 +2486,7 @@ function renderDashboard(){
     listEl.innerHTML = emptyStateHTML();
     bindEmptyStateButton(listEl);
   } else {
-    listEl.innerHTML = recent.map(expenseItemHTML).join("");
+    listEl.innerHTML = recent.map(e => expenseItemHTML(e)).join("");
     bindExpenseItemClicks(listEl);
   }
 }
@@ -2342,7 +2507,7 @@ function bindEmptyStateButton(container){
 function expenseItemHTML(e, selectMode){
   const cat = getCategoryById(e.category);
   const icon = cat ? cat.icon : "📦";
-  const who = USERS[e.user] || USERS["shared"]; // expenses added via the main SVOJ app have no "user" field
+  const who = USERS[e.user] || UNKNOWN_PERSON; // expenses added via the main SVOJ app have no "user" field
   const label = e.merchant || catName(cat);
   const todayLabelWord = getLang() === "en" ? "TODAY" : "СЕГОДНЯ";
   const checkbox = selectMode
@@ -2353,7 +2518,7 @@ function expenseItemHTML(e, selectMode){
     <div class="expense-icon">${icon}</div>
     <div class="expense-mid">
       <div class="merchant">${escapeHTML(label)}</div>
-      <div class="meta"><span class="who-pill ${who.id}">${who.emoji} ${who.name}</span></div>
+      <div class="meta"><span class="who-pill" style="background:${shadeColor(who.color || "#C6941F", 75)}; color:${shadeColor(who.color || "#C6941F", -25)};">${who.emoji} ${escapeHTML(who.name)}</span></div>
     </div>
     <div class="expense-right">
       <div class="amt">${formatMoney(e.amount, e.currency)}</div>
@@ -2448,7 +2613,8 @@ function openAddScreen(){
   $("#add-delete-wrap").style.display = "none";
 
   setAddCurrency(state.addSelectedCurrency);
-  setAddWho(DB.settings.lastWho || "shared");
+  renderAddWhoToggle();
+  setAddWho(DB.settings.lastWho);
   renderAddCategoryGrid();
   renderMerchantSuggestions("");
   showScreen("add");
@@ -2472,6 +2638,7 @@ function openExpenseEdit(id){
   $("#add-delete-wrap").style.display = "block";
 
   setAddCurrency(exp.currency);
+  renderAddWhoToggle();
   setAddWho(exp.user);
   renderAddCategoryGrid();
   renderMerchantSuggestions("");
@@ -2497,6 +2664,7 @@ function openExpenseRepeat(id){
   $("#add-delete-wrap").style.display = "none";
 
   setAddCurrency(exp.currency);
+  renderAddWhoToggle();
   setAddWho(exp.user);
   renderAddCategoryGrid();
   renderMerchantSuggestions("");
@@ -2515,8 +2683,29 @@ function setAddCurrency(currency){
 }
 
 function setAddWho(who){
-  state.addSelectedWho = who || "shared";
-  $all("#add-who-toggle .who-btn").forEach(b => b.classList.toggle("active", b.dataset.who === state.addSelectedWho));
+  const fallback = (getPeople()[0] && getPeople()[0].id) || "shared";
+  state.addSelectedWho = who || fallback;
+  $all("#add-who-toggle .who-btn[data-who]").forEach(b => b.classList.toggle("active", b.dataset.who === state.addSelectedWho));
+}
+function renderAddWhoToggle(){
+  const box = $("#add-who-toggle");
+  box.innerHTML = getPeople().map(p =>
+    `<button type="button" class="who-btn" data-who="${p.id}" style="--who-color:${p.color};"><span class="em">${p.emoji}</span><span>${escapeHTML(p.name)}</span></button>`
+  ).join("") + `<button type="button" class="who-btn who-btn-add" data-action="add-person">＋</button>`;
+  box.querySelectorAll(".who-btn[data-who]").forEach(btn => btn.addEventListener("click", () => setAddWho(btn.dataset.who)));
+  const addBtn = box.querySelector('[data-action="add-person"]');
+  if(addBtn) addBtn.addEventListener("click", handleAddPerson);
+  $all("#add-who-toggle .who-btn[data-who]").forEach(b => b.classList.toggle("active", b.dataset.who === state.addSelectedWho));
+}
+function handleAddPerson(){
+  const name = (prompt(t("prompt_new_person_name")) || "").trim();
+  if(!name) return;
+  const person = addPerson(name);
+  if(!person) return;
+  renderAddWhoToggle();
+  setAddWho(person.id);
+  renderHistoryWhoFilters();
+  renderStatsWhoTabs();
 }
 
 function renderAddCategoryGrid(){
@@ -2637,7 +2826,7 @@ function openExpenseDetail(id){
   if(!exp) return;
   state.detailExpenseId = id;
   const cat = getCategoryById(exp.category);
-  const who = USERS[exp.user] || USERS["shared"];
+  const who = USERS[exp.user] || UNKNOWN_PERSON;
   $("#detail-icon").textContent = cat ? cat.icon : "📦";
   $("#detail-merchant").textContent = exp.merchant || catName(cat);
   $("#detail-meta").textContent = `${who.emoji} ${who.name} · ${formatDateLabel(exp.date)}` + (exp.time ? ` · ${exp.time}` : "");
@@ -2649,7 +2838,28 @@ function openExpenseDetail(id){
 /* ---- History ----
    Everything is shared now -- this screen shows all expenses, with an
    optional "who" filter (Все/Ева/Марко/Общее) plus category and search. */
+function renderWhoFilterRow(container, selected, onSelect){
+  container.innerHTML = `<button class="filter-chip ${selected==='all'?'active':''}" data-who="all">${t("all_who_chip")}</button>` +
+    getPeople().map(p => `<button class="filter-chip ${selected===p.id?'active':''}" data-who="${p.id}">${p.emoji} ${escapeHTML(p.name)}</button>`).join("");
+  container.querySelectorAll(".filter-chip").forEach(el => {
+    el.addEventListener("click", () => onSelect(el.dataset.who));
+  });
+}
+function renderHistoryWhoFilters(){
+  renderWhoFilterRow($("#hist-who-filter"), state.historyFilterWho, (who) => {
+    state.historyFilterWho = who;
+    renderHistory();
+  });
+}
+function renderStatsWhoTabs(){
+  renderWhoFilterRow($("#stats-who-tabs"), state.statsWho, (who) => {
+    state.statsWho = who;
+    renderStats();
+  });
+}
+
 function renderHistory(){
+  renderHistoryWhoFilters();
   renderHistoryCategoryFilters();
   const list = $("#hist-list");
   let expenses = DB.expenses.slice();
@@ -2710,6 +2920,7 @@ function renderHistoryCategoryFilters(){
    "who" filter (Все/Ева/Марко/Общее). The compare widget (Eva vs Marko vs
    Shared) is shown whenever the filter is "Все". */
 function renderStats(){
+  renderStatsWhoTabs();
   let range;
   if(state.statsPeriod === "custom"){
     range = {from: state.statsCustomFrom || todayISO(), to: state.statsCustomTo || todayISO()};
@@ -2726,19 +2937,20 @@ function renderStats(){
   $("#stat-avg").textContent = formatEUR(stats.avg);
   $("#stat-max").textContent = stats.max ? formatMoney(stats.max.amount, stats.max.currency) : "€0";
 
-  // three-way compare, shown only for the "Все" tab
-  $("#stat-compare-card").style.display = state.statsWho === "all" ? "block" : "none";
-  if(state.statsWho === "all"){
-    const evaSum = sumEUR(allInPeriod.filter(e => e.user === "eva"));
-    const markSum = sumEUR(allInPeriod.filter(e => e.user === "mark"));
-    const sharedSum = sumEUR(allInPeriod.filter(e => e.user === "shared"));
-    const maxCmp = Math.max(evaSum, markSum, sharedSum, 1);
-    $("#cmp-eva-bar").style.width = (evaSum/maxCmp*100) + "%";
-    $("#cmp-mark-bar").style.width = (markSum/maxCmp*100) + "%";
-    $("#cmp-shared-bar").style.width = (sharedSum/maxCmp*100) + "%";
-    $("#cmp-eva-amt").textContent = formatEUR(evaSum);
-    $("#cmp-mark-amt").textContent = formatEUR(markSum);
-    $("#cmp-shared-amt").textContent = formatEUR(sharedSum);
+  // per-person compare, shown only for the "Все" tab, and only when there's more than
+  // one person to compare -- a single-person account has nothing to compare against.
+  const people = getPeople();
+  const showCompare = state.statsWho === "all" && people.length > 1;
+  $("#stat-compare-card").style.display = showCompare ? "block" : "none";
+  if(showCompare){
+    const sums = people.map(p => ({ p, sum: sumEUR(allInPeriod.filter(e => e.user === p.id)) }));
+    const maxCmp = Math.max(...sums.map(s => s.sum), 1);
+    $("#stat-compare-rows").innerHTML = sums.map(({p, sum}) => `
+      <div class="compare-row">
+        <div class="cname">${p.emoji} ${escapeHTML(p.name)}</div>
+        <div class="compare-bar-bg"><div class="compare-bar-fill" style="width:${sum/maxCmp*100}%; background:${p.color};"></div></div>
+        <div class="camt">${formatEUR(sum)}</div>
+      </div>`).join("");
   }
 
   // vs last month (only meaningful for the "month" period)
@@ -2943,8 +3155,6 @@ function handleSaveCatBudget(){
 function renderSettings(){
   $("#exchange-rate").value = getExchangeRate();
   $("#color-eva").value = DB.settings.userColors.eva;
-  $("#color-mark").value = DB.settings.userColors.mark;
-  $("#color-shared").value = DB.settings.userColors.shared;
   $("#data-version-lbl").textContent = DB.dataVersion;
 
   const list = $("#settings-cat-list");
@@ -2962,6 +3172,33 @@ function renderSettings(){
         okLabel:t("btn_delete"),
         onConfirm: () => { deleteCategory(btn.dataset.cat); renderSettings(); showToast(t("toast_category_deleted")); }
       });
+    });
+  });
+
+  renderSettingsPeopleList();
+}
+
+function renderSettingsPeopleList(){
+  const box = $("#settings-people-list");
+  const people = getPeople();
+  box.innerHTML = people.map(p => `
+    <div class="settings-row">
+      <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
+        <input type="color" class="people-color-input" data-person-id="${p.id}" value="${p.color}" style="width:32px;height:32px;border:none;background:none; flex-shrink:0;">
+        <input type="text" class="text-input people-name-input" data-person-id="${p.id}" value="${escapeHTML(p.name)}" placeholder="${t('person_name_placeholder')}" style="flex:1; min-width:0;">
+      </div>
+    </div>`).join("");
+  box.querySelectorAll(".people-color-input").forEach(inp => {
+    inp.addEventListener("input", (e) => {
+      const p = getPersonById(inp.dataset.personId);
+      if(!p) return;
+      p.color = e.target.value;
+      persist();
+    });
+  });
+  box.querySelectorAll(".people-name-input").forEach(inp => {
+    inp.addEventListener("change", (e) => {
+      renamePerson(inp.dataset.personId, e.target.value);
     });
   });
 }
@@ -3034,7 +3271,7 @@ function renderCalendarDayDetail(){
   if(dayExpenses.length === 0){
     html += `<div class="no-data-msg">${t("no_purchases_day")}</div>`;
   } else {
-    html += `<div class="card" style="padding:6px 14px;">` + dayExpenses.map(expenseItemHTML).join("") + `</div>`;
+    html += `<div class="card" style="padding:6px 14px;">` + dayExpenses.map(e => expenseItemHTML(e)).join("") + `</div>`;
   }
   box.innerHTML = html;
   box.querySelectorAll(".expense-item").forEach(el => {
@@ -3157,11 +3394,13 @@ function bindStaticEvents(){
     btn.addEventListener("click", () => showScreen(btn.dataset.screen));
   });
   $all('[data-action="open-add"]').forEach(btn => btn.addEventListener("click", openAddScreen));
+  $all('[data-action="open-add-income"]').forEach(btn => btn.addEventListener("click", openAddIncomeSheet));
+  $all("#income-currency-toggle .cur-btn[data-currency]").forEach(btn => btn.addEventListener("click", () => setIncomeCurrency(btn.dataset.currency)));
+  $('[data-action="save-income"]').addEventListener("click", handleSaveIncome);
 
   // Add screen
   $('[data-action="close-add"]').addEventListener("click", closeAddScreen);
   $all("#screen-add .cur-btn[data-currency]").forEach(btn => btn.addEventListener("click", () => setAddCurrency(btn.dataset.currency)));
-  $all("#add-who-toggle .who-btn").forEach(btn => btn.addEventListener("click", () => setAddWho(btn.dataset.who)));
   $("#add-merchant").addEventListener("input", (e) => renderMerchantSuggestions(e.target.value));
   $('[data-action="save-expense"]').addEventListener("click", handleSaveExpense);
   $('[data-action="delete-expense"]').addEventListener("click", handleDeleteExpenseFromForm);
@@ -3197,15 +3436,6 @@ function bindStaticEvents(){
     });
   });
 
-  // History who-filter (Все/Ева/Марко/Общее)
-  $all("#hist-who-filter .filter-chip").forEach(btn => {
-    btn.addEventListener("click", () => {
-      state.historyFilterWho = btn.dataset.who;
-      $all("#hist-who-filter .filter-chip").forEach(b => b.classList.toggle("active", b===btn));
-      renderHistory();
-    });
-  });
-
   // Calendar
   $('[data-action="cal-prev"]').addEventListener("click", () => {
     state.calendarMonth--; if(state.calendarMonth<1){state.calendarMonth=12; state.calendarYear--;}
@@ -3216,14 +3446,6 @@ function bindStaticEvents(){
     renderCalendar();
   });
 
-  // Stats who-filter (Все/Ева/Марко/Общее)
-  $all("#stats-who-tabs .filter-chip").forEach(btn => {
-    btn.addEventListener("click", () => {
-      state.statsWho = btn.dataset.who;
-      $all("#stats-who-tabs .filter-chip").forEach(b => b.classList.toggle("active", b===btn));
-      renderStats();
-    });
-  });
   $all("#stats-period-tabs .filter-chip").forEach(btn => {
     btn.addEventListener("click", () => {
       state.statsPeriod = btn.dataset.period;
@@ -3243,17 +3465,18 @@ function bindStaticEvents(){
 
   // New category
   $('[data-action="add-category-settings"]').addEventListener("click", openNewCategorySheet);
+  $('[data-action="add-person-settings"]').addEventListener("click", () => {
+    const name = (prompt(t("prompt_new_person_name")) || "").trim();
+    if(!name) return;
+    if(addPerson(name)) renderSettingsPeopleList();
+  });
   $('[data-action="save-new-category"]').addEventListener("click", handleSaveNewCategory);
 
-  // Settings: colors (badges/bars only -- there's no per-user app theme anymore)
+  // The app's single overall accent color -- per-person tag colors live in the
+  // "People" section instead (DB.settings.people[].color), set via addPerson()/
+  // renderSettingsPeopleList(), and have nothing to do with this app-wide setting.
   $("#color-eva").addEventListener("input", (e) => {
     DB.settings.userColors.eva = e.target.value; persist(); applyColorTheme();
-  });
-  $("#color-mark").addEventListener("input", (e) => {
-    DB.settings.userColors.mark = e.target.value; persist(); applyColorTheme();
-  });
-  $("#color-shared").addEventListener("input", (e) => {
-    DB.settings.userColors.shared = e.target.value; persist(); applyColorTheme();
   });
   $("#exchange-rate").addEventListener("change", (e) => {
     const v = parseFloat(String(e.target.value).replace(",","."));
