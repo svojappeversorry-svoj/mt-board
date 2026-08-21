@@ -1166,6 +1166,7 @@ const STRINGS = {
     newEmailExample:'new@email.com', newPasswordExample:'new password (6+ chars)',
     back:'← Back', save:'Save', cancel:'Cancel', offlineNote:'Sign in with an account to sync settings across devices — currently saved on this device only.',
     widgetLibraryLink:'🧩 Daily Page Widgets', customizeArrow:'Customize →',
+    linkedApps:'Linked apps', moneyAppRow:'💶 SVOJ money', openArrow:'Open →',
     enterNewEmail:'enter a new email first', updating:'updating…', checkNewEmail:'check your new email to confirm the change',
     passwordTooShort:'password needs 6+ characters', passwordUpdated:'password updated',
     deleteAllConfirm:'Delete ALL your SVOJ data? This cannot be undone.',
@@ -1273,6 +1274,7 @@ const STRINGS = {
     newEmailExample:'new@email.com', newPasswordExample:'новый пароль (от 6 символов)',
     back:'← Назад', save:'Сохранить', cancel:'Отмена', offlineNote:'Войдите в аккаунт, чтобы синхронизировать настройки между устройствами — сейчас они сохраняются только на этом устройстве.',
     widgetLibraryLink:'🧩 Виджеты страницы дня', customizeArrow:'Настроить →',
+    linkedApps:'Связанные приложения', moneyAppRow:'💶 SVOJ money', openArrow:'Открыть →',
     enterNewEmail:'сначала введите новый email', updating:'обновляем…', checkNewEmail:'проверьте новую почту, чтобы подтвердить смену',
     passwordTooShort:'пароль должен быть от 6 символов', passwordUpdated:'пароль обновлён',
     deleteAllConfirm:'Удалить ВСЕ данные SVOJ? Отменить это нельзя.',
@@ -3009,6 +3011,12 @@ function buildSettingsView(){
           <option value="ru" ${currentLanguage==='ru'?'selected':''}>Русский</option>
         </select></div>
       <div class="settings-row"><span class="settings-row-label">${t('widgetLibraryLink')}</span><button type="button" class="settings-btn-outline" id="openWidgetsBtn">${t('customizeArrow')}</button></div>
+    </div>
+
+    <div class="settings-section-label">${t('linkedApps')}</div>
+    <div class="note month-section">
+      <div class="pin"></div>
+      <div class="settings-row"><span class="settings-row-label">${t('moneyAppRow')}</span><a href="expenses.html" class="settings-btn-outline" style="text-decoration:none; display:inline-block;">${t('openArrow')}</a></div>
     </div>
 
     <div class="settings-section-label">${t('regional')}</div>
