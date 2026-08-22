@@ -1412,6 +1412,27 @@ const MERGE_ON_LOGIN = {
 // on this device) while making cloud authoritative on every sign-in after that, so
 // deletions actually stick. Shared flag name with expenses.html (same localStorage origin).
 const CLOUD_MIGRATED_FLAG_KEY = 'wp-cloud-migrated-v1';
+// Which account this browser's local cache currently belongs to. localStorage is not
+// namespaced per-account and sign-out never clears it, so without this check, a SECOND,
+// completely unrelated account signing in on the same browser would have its (empty) cloud
+// row polluted forever: migrateLocalToCloud below treats any local key missing from the
+// cloud as "offline data waiting to be saved" and uploads it -- with no way to tell that
+// the local data actually belongs to whoever was signed in *before*. Shared key name with
+// expenses.html (same localStorage origin) so switching accounts in either app is caught.
+const LAST_USER_ID_KEY = 'wp-cloud-last-user-id-v1';
+function wipeLocalDataIfAccountChanged(uid){
+  let lastUserId;
+  try{ lastUserId = localStorage.getItem(LAST_USER_ID_KEY); }catch(e){ lastUserId = null; }
+  if(lastUserId && lastUserId !== uid){
+    for(let i = localStorage.length - 1; i >= 0; i--){
+      const k = localStorage.key(i);
+      if(k && k.startsWith('wp-') && k !== LAST_USER_ID_KEY){
+        try{ localStorage.removeItem(k); }catch(e){}
+      }
+    }
+  }
+  try{ localStorage.setItem(LAST_USER_ID_KEY, uid); }catch(e){}
+}
 async function migrateLocalToCloud(uid){
   if(!sb) return;
   const alreadyMigratedOnce = localStorage.getItem(CLOUD_MIGRATED_FLAG_KEY) === '1';
@@ -1466,6 +1487,7 @@ async function onSignedIn(user){
   logoutBtn.style.display = 'inline-block';
   settingsBtnEl.style.display = 'inline-flex';
   showAuthMsg('', '');
+  wipeLocalDataIfAccountChanged(user.id);
   await fetchAllCloudData(user.id);
   await migrateLocalToCloud(user.id);
   setSyncBadge('ok');
