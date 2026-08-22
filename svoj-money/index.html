@@ -1,0 +1,3959 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<title>SVOJ money</title>
+<link rel="icon" type="image/png" sizes="32x32" href="money-icon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="money-icon-192.png">
+<link rel="apple-touch-icon" href="money-icon-180.png">
+<link rel="manifest" href="money-manifest.webmanifest">
+<style>
+  :root{
+    --app-accent:#E23F88;
+    --app-accent-dark:#C22E71;
+    --app-accent-light:#FFE4F0;
+    --app-accent-soft:#FFF3F8;
+
+    --bg:#FAF9FC;
+    --card:#FFFFFF;
+    --text:#221F2E;
+    --muted:#8B879C;
+    --muted-light:#C9C6D6;
+    --border:#EEEBF3;
+    --success:#2AB37D;
+    --warning:#E8A23D;
+    --danger:#E4553F;
+    --danger-light:#FDEBE8;
+    --ink-btn-bg:#221F2E;
+
+    --accent: var(--app-accent);
+    --accent-dark: var(--app-accent-dark);
+    --accent-light: var(--app-accent-light);
+    --accent-soft: var(--app-accent-soft);
+
+    --radius-lg:22px;
+    --radius-md:16px;
+    --radius-sm:12px;
+    --shadow-card: 0 2px 14px rgba(40,20,60,0.06);
+    --shadow-pop: 0 10px 30px rgba(40,20,60,0.14);
+  }
+
+  /* Dark mode -- applied via a class (light/dark/system all resolve to either this class
+     being present or not; "system" just means JS decides based on matchMedia instead of a
+     saved preference). --app-accent-soft feeds the app background gradient below, and
+     --accent-light/--accent-soft aren't redefined here on purpose: they're aliases
+     (":root" says --accent-soft: var(--app-accent-soft)"), so overriding --app-accent-soft
+     on body is enough for them to resolve to the new dark value too via normal CSS
+     inheritance. */
+  body.pref-dark{
+    /* -dark variant is re-aimed at "readable text ON a tinted -soft/-light surface"
+       rather than its light-mode job of "dark text on a pale surface" -- the surface
+       it pairs with got dark-tinted above, so the text needs to get lighter, not stay
+       a medium-dark shade that now has poor contrast against its own dark background. */
+    --app-accent-light:#4A2436; --app-accent-soft: color-mix(in srgb, var(--accent) 18%, #1C1825); --app-accent-dark:#FF8FC0;
+    --bg:#1C1825;
+    --card:#252030;
+    --text:#F1EDF7;
+    --muted:#9D97AE;
+    --muted-light:#5C5570;
+    --border:#332D42;
+    --success:#3FCB93;
+    --warning:#F0B15A;
+    --danger:#FF6B5C;
+    --danger-light: color-mix(in srgb, var(--danger) 20%, #1C1825);
+    --ink-btn-bg:#0F0D14;
+    --shadow-card: 0 2px 14px rgba(0,0,0,0.35);
+    --shadow-pop: 0 10px 30px rgba(0,0,0,0.5);
+  }
+
+  *{ box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+  html,body{ height:100%; }
+  body{
+    margin:0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow-x:hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1,h2,h3,h4,p{ margin:0; }
+  button{ font-family:inherit; cursor:pointer; border:none; background:none; color:inherit; }
+  input, select, textarea{ font-family:inherit; }
+  input:focus, select:focus, textarea:focus, button:focus-visible{
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  #app{
+    max-width: 520px;
+    margin: 0 auto;
+    min-height: 100vh;
+    position: relative;
+    padding-bottom: 96px;
+    background: var(--bg);
+  }
+
+  .screen{ display:none; animation: fadeIn .25s ease; }
+  .screen.active{ display:block; }
+  @keyframes fadeIn{ from{opacity:0; transform: translateY(6px);} to{opacity:1; transform:none;} }
+
+  /* ---------- Welcome screen ---------- */
+  #screen-welcome.active{ display:flex; }
+  .welcome-wrap{
+    min-height:100vh;
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding: 32px 24px;
+    background: linear-gradient(160deg, var(--app-accent-soft) 0%, #FAF9FC 60%);
+  }
+  .welcome-title{
+    font-size: 26px;
+    font-weight: 800;
+    text-align:center;
+    letter-spacing: -0.02em;
+    margin-bottom: 6px;
+  }
+  .welcome-sub{
+    color: var(--muted);
+    text-align:center;
+    font-size: 15px;
+    margin-bottom: 36px;
+  }
+  .user-cards{
+    display:flex;
+    gap:16px;
+    width:100%;
+  }
+  .user-card{
+    flex:1;
+    background: var(--card);
+    border-radius: var(--radius-lg);
+    padding: 28px 14px;
+    text-align:center;
+    box-shadow: var(--shadow-card);
+    border: 2px solid transparent;
+    transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+  }
+  .user-card:active{ transform: scale(0.96); }
+  .user-card .emoji{ font-size: 46px; display:block; margin-bottom:10px; }
+  .user-card .name{ font-size:18px; font-weight:700; }
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding: 18px 20px 10px;
+  }
+  .topbar .greeting{ font-size:22px; font-weight:800; letter-spacing:-0.02em; }
+  .topbar .greeting .em{ color: var(--accent); }
+  .switch-user-btn{
+    display:flex; align-items:center; gap:6px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    box-shadow: var(--shadow-card);
+  }
+  .switch-user-btn:active{ transform: scale(0.95); }
+
+  /* ---------- Generic containers ---------- */
+  .page{ padding: 6px 20px 20px; }
+  .section-title{
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin: 22px 2px 10px;
+  }
+
+  .card{
+    background: var(--card);
+    border-radius: var(--radius-lg);
+    padding: 18px;
+    box-shadow: var(--shadow-card);
+    margin-bottom: 14px;
+  }
+
+  /* ---------- Dashboard summary ---------- */
+  .summary-hero{
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+    border-radius: var(--radius-lg);
+    padding: 22px 20px;
+    color: #fff;
+    box-shadow: 0 12px 24px -8px var(--accent);
+  }
+  .summary-hero .label{ font-size:13px; opacity:0.85; font-weight:600; }
+  .summary-hero .amount{ font-size:38px; font-weight:800; letter-spacing:-0.02em; margin: 4px 0 16px; }
+  .summary-split{ display:flex; gap:8px; }
+  .summary-split .split-item{
+    flex:1;
+    min-width:0;
+    background: rgba(255,255,255,0.16);
+    border-radius: var(--radius-md);
+    padding: 10px 8px;
+  }
+  .summary-split .split-item .who{ font-size:11px; opacity:0.85; font-weight:600; display:flex; align-items:center; gap:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .summary-split .split-item .amt{ font-size:15.5px; font-weight:800; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .summary-count{ font-size:12px; opacity:0.85; margin-top:14px; font-weight:600; }
+
+  .big-add-btn{
+    width:100%;
+    margin-top:16px;
+    background: var(--ink-btn-bg);
+    color:#fff;
+    border-radius: var(--radius-md);
+    padding: 16px;
+    font-size:16px;
+    font-weight:700;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    box-shadow: 0 8px 18px -6px rgba(20,10,30,0.35);
+  }
+  .big-add-btn:active{ transform: scale(0.98); }
+
+  /* ---------- Expense list item ---------- */
+  .expense-item{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding: 12px 4px;
+    border-bottom: 1px solid var(--border);
+    cursor:pointer;
+  }
+  .expense-item:last-child{ border-bottom:none; }
+  .expense-checkbox{
+    width:22px; height:22px; flex-shrink:0; border-radius:7px;
+    border:2px solid var(--border); background:var(--card);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .expense-checkbox.checked{ background:var(--accent); border-color:var(--accent); }
+  .expense-checkbox.checked::after{ content:"✓"; color:#fff; font-size:13px; font-weight:800; }
+  #hist-select-toggle-btn.active-select{ background:var(--accent); color:#fff; border-color:var(--accent); }
+  .expense-icon{
+    width:44px; height:44px;
+    border-radius: 14px;
+    background: var(--accent-soft);
+    display:flex; align-items:center; justify-content:center;
+    font-size:20px;
+    flex-shrink:0;
+  }
+  .expense-mid{ flex:1; min-width:0; }
+  .expense-mid .merchant{ font-weight:700; font-size:14.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .expense-mid .meta{ font-size:12.5px; color:var(--muted); margin-top:2px; display:flex; align-items:center; gap:6px; }
+  .who-pill{
+    display:inline-flex; align-items:center; gap:3px;
+    font-size:11px; font-weight:700; padding: 2px 7px; border-radius:999px;
+  }
+  .expense-right{ text-align:right; flex-shrink:0; }
+  .expense-right .amt{ font-weight:800; font-size:15px; }
+  .expense-right .time{ font-size:11.5px; color: var(--muted-light); margin-top:2px; }
+
+  .empty-state{
+    text-align:center;
+    padding: 40px 20px;
+    color: var(--muted);
+  }
+  .empty-state .em{ font-size:40px; display:block; margin-bottom:10px;}
+  .empty-state .t1{ font-weight:700; color: var(--text); margin-bottom:6px; font-size:15px;}
+  .empty-state .t2{ font-size:13.5px; margin-bottom:18px; }
+
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:6px;
+    padding: 12px 18px;
+    border-radius: 999px;
+    font-weight:700;
+    font-size:14px;
+  }
+  .btn-primary{ background: var(--accent); color:#fff; }
+  .btn-primary:active{ transform: scale(0.96); }
+  .btn-ghost{ background: var(--accent-soft); color: var(--accent-dark); }
+  .btn-danger{ background: var(--danger-light); color: var(--danger); }
+  .btn-danger:disabled{ opacity:0.5; cursor:default; }
+  .btn-outline{ background: var(--card); border:1.5px solid var(--border); color: var(--text); }
+  .btn-block{ width:100%; }
+
+  /* ---------- Bottom nav ---------- */
+  .bottom-nav{
+    position: fixed;
+    bottom:0; left:0; right:0;
+    max-width:520px;
+    margin:0 auto;
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    display:flex;
+    padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
+    box-shadow: 0 -4px 18px rgba(30,10,50,0.06);
+    z-index: 40;
+  }
+  .nav-btn{
+    flex:1;
+    display:flex; flex-direction:column; align-items:center; gap:2px;
+    padding:6px 2px;
+    color: var(--muted-light);
+    font-size:10.5px;
+    font-weight:700;
+    border-radius: 12px;
+    transition: color .15s ease;
+  }
+  .nav-btn .ic{ font-size:20px; }
+  .nav-btn.active{ color: var(--accent); }
+  .nav-btn:active{ transform: scale(0.92); }
+  .nav-btn.fab .ic{
+    background: var(--accent);
+    color:#fff;
+    width:38px;height:38px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:20px;
+    margin-bottom:1px;
+    box-shadow: 0 6px 14px -4px var(--accent);
+  }
+
+  /* ---------- Add expense form ---------- */
+  .form-header{
+    display:flex; align-items:center; gap:12px;
+    padding: 16px 20px 8px;
+  }
+  .form-header .back-btn{
+    width:38px;height:38px; border-radius:50%;
+    background: var(--card); box-shadow: var(--shadow-card);
+    display:flex; align-items:center; justify-content:center;
+    font-size:18px;
+  }
+  .form-header .ftitle{ font-size:18px; font-weight:800; }
+
+  .amount-input-wrap{
+    display:flex; align-items:baseline; justify-content:center;
+    gap:6px;
+    padding: 22px 20px 10px;
+  }
+  .amount-input-wrap .cur-sym{ font-size:30px; font-weight:700; color: var(--muted); }
+  .amount-input-wrap input{
+    border:none; background:none;
+    font-size:52px; font-weight:800;
+    width: 220px;
+    text-align:center;
+    color: var(--text);
+    letter-spacing:-0.02em;
+  }
+  .amount-error{ text-align:center; color:var(--danger); font-size:13px; font-weight:600; min-height:18px; margin-bottom:6px;}
+
+  .currency-toggle{
+    display:flex; justify-content:center; gap:10px; margin-bottom: 6px;
+  }
+  .cur-btn{
+    padding: 8px 20px;
+    border-radius: 999px;
+    font-weight:700;
+    font-size:14px;
+    background: var(--accent-soft);
+    color: var(--muted);
+    border: 1.5px solid transparent;
+  }
+  .cur-btn.active{ background: var(--accent); color:#fff; }
+
+  .who-toggle{
+    display:flex; gap:8px; padding: 0 20px; margin-bottom: 4px;
+  }
+  .who-btn{
+    flex:1;
+    padding: 12px 6px;
+    border-radius: var(--radius-md);
+    font-weight:700;
+    font-size:13.5px;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    color: var(--muted);
+    display:flex; flex-direction:column; align-items:center; gap:3px;
+  }
+  .who-btn .em{ font-size:18px; }
+  .who-btn:active{ transform: scale(0.96); }
+  .who-btn.active{
+    background: color-mix(in srgb, var(--who-color, var(--accent)) 18%, white);
+    border-color: var(--who-color, var(--accent));
+    color: color-mix(in srgb, var(--who-color, var(--accent)) 65%, black);
+  }
+  .who-btn-add{ flex:0 0 44px; font-size:18px; }
+
+  .form-section{ padding: 4px 20px; }
+  .form-label{ font-size:13px; font-weight:700; color:var(--muted); margin: 18px 2px 10px; text-transform:uppercase; letter-spacing:0.05em; }
+
+  .cat-grid{
+    display:grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap:10px;
+  }
+  .cat-chip{
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 12px 4px;
+    text-align:center;
+    display:flex; flex-direction:column; align-items:center; gap:5px;
+  }
+  .cat-chip .em{ font-size:22px; }
+  .cat-chip .lbl{ font-size:10.5px; font-weight:600; color: var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
+  .cat-chip.selected{ border-color: var(--accent); background: var(--accent-soft); }
+  .cat-chip.selected .lbl{ color: var(--accent-dark); }
+  .cat-chip.add-new{ border-style:dashed; color:var(--muted); }
+  .cat-chip:active{ transform: scale(0.95); }
+
+  .toggle-all-cats{
+    text-align:center; margin-top:12px;
+    font-size:13px; font-weight:700; color: var(--accent);
+  }
+
+  .text-input{
+    width:100%;
+    padding: 13px 14px;
+    border-radius: var(--radius-md);
+    border: 1.5px solid var(--border);
+    background: var(--card);
+    font-size:14.5px;
+    color: var(--text);
+  }
+  .datetime-row{ display:flex; gap:10px; }
+  .datetime-row .text-input{ flex:1; }
+
+  .suggest-list{ display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+  .suggest-chip{
+    background: var(--accent-soft); color: var(--accent-dark);
+    font-size:12.5px; font-weight:600;
+    padding: 6px 12px; border-radius: 999px;
+  }
+
+  .save-bar{ padding: 22px 20px 30px; }
+
+  /* ---------- History ---------- */
+  .search-bar{
+    display:flex; align-items:center; gap:8px;
+    background: var(--card);
+    border-radius: 999px;
+    padding: 11px 16px;
+    box-shadow: var(--shadow-card);
+    margin-bottom: 14px;
+  }
+  .search-bar input{ border:none; background:none; flex:1; font-size:14px; color:var(--text); }
+  .filter-row{ display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; margin-bottom:6px; scrollbar-width:none; }
+  .filter-row::-webkit-scrollbar{ display:none; }
+  .filter-chip{
+    flex-shrink:0;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    padding: 8px 15px;
+    border-radius: 999px;
+    font-size:13px;
+    font-weight:600;
+    color: var(--muted);
+    white-space:nowrap;
+  }
+  .filter-chip.active{ background: var(--accent); border-color:var(--accent); color:#fff; }
+
+  .date-group-label{
+    font-size:12.5px; font-weight:800; color: var(--muted);
+    text-transform:uppercase; letter-spacing:0.05em;
+    margin: 18px 4px 4px;
+  }
+
+  /* ---------- Modal / sheet ---------- */
+  .overlay{
+    position: fixed; inset:0; background: rgba(20,10,30,0.4);
+    display:none; align-items:flex-end; justify-content:center;
+    z-index: 100;
+  }
+  .overlay.active{ display:flex; animation: fadeIn .2s ease; }
+  .sheet{
+    background: var(--bg);
+    width:100%; max-width:520px;
+    border-radius: 24px 24px 0 0;
+    max-height: 92vh;
+    overflow-y:auto;
+    animation: slideUp .25s ease;
+    padding-bottom: 20px;
+  }
+  @keyframes slideUp{ from{ transform: translateY(30px); opacity:0.4; } to{ transform:none; opacity:1; } }
+  .sheet-handle{ width:40px; height:5px; background: var(--border); border-radius:99px; margin: 10px auto 4px; }
+
+  .confirm-box{
+    background: var(--card);
+    border-radius: var(--radius-lg);
+    padding: 26px 22px;
+    max-width: 340px;
+    width: 90%;
+    text-align:center;
+    box-shadow: var(--shadow-pop);
+  }
+  .confirm-box .cem{ font-size:32px; margin-bottom:10px; }
+  .confirm-box .ctitle{ font-weight:800; font-size:16px; margin-bottom:6px; }
+  .confirm-box .cmsg{ font-size:13.5px; color: var(--muted); margin-bottom:20px; line-height:1.5; }
+  .confirm-box .cbtns{ display:flex; gap:10px; }
+  .confirm-box .cbtns .btn{ flex:1; }
+  .overlay.center{ align-items:center; padding:20px; }
+
+  /* ---------- Toast ---------- */
+  .toast{
+    position: fixed;
+    bottom: 100px;
+    left:50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--text);
+    color:#fff;
+    padding: 12px 22px;
+    border-radius: 999px;
+    font-size:13.5px;
+    font-weight:600;
+    opacity:0;
+    transition: all .25s ease;
+    z-index: 200;
+    display:flex; align-items:center; gap:8px;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.25);
+    max-width: 90%;
+    text-align:center;
+  }
+  .toast.show{ opacity:1; transform: translateX(-50%) translateY(0); }
+
+  /* ---------- Stats ---------- */
+  .tab-row{
+    display:flex; background: var(--card); border-radius: 999px; padding:4px;
+    box-shadow: var(--shadow-card); margin-bottom:16px;
+  }
+  .tab-btn{ flex:1; text-align:center; padding: 9px 4px; border-radius:999px; font-size:13px; font-weight:700; color:var(--muted); }
+  .tab-btn.active{ background: var(--accent); color:#fff; }
+
+  .period-row{ display:flex; gap:8px; overflow-x:auto; margin-bottom:16px; scrollbar-width:none; }
+  .period-row::-webkit-scrollbar{ display:none; }
+
+  .stat-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:6px; }
+  .stat-box{ background:var(--card); border-radius: var(--radius-md); padding:14px; box-shadow: var(--shadow-card); }
+  .stat-box .slabel{ font-size:11.5px; color:var(--muted); font-weight:700; margin-bottom:4px; }
+  .stat-box .sval{ font-size:19px; font-weight:800; }
+
+  .compare-row{ display:flex; align-items:center; gap:10px; margin: 6px 0; }
+  .compare-row .cname{ font-size:12.5px; font-weight:700; width:56px; flex-shrink:0; }
+  .compare-bar-bg{ flex:1; height:10px; background: var(--border); border-radius:99px; overflow:hidden; }
+  .compare-bar-fill{ height:100%; border-radius:99px; transition: width .4s ease; }
+  .compare-row .camt{ font-size:12.5px; font-weight:700; width:64px; text-align:right; flex-shrink:0; }
+
+  .cat-stat-row{ display:flex; align-items:center; gap:10px; padding: 10px 0; border-bottom:1px solid var(--border); }
+  .cat-stat-row:last-child{ border-bottom:none; }
+  .cat-stat-icon{ width:38px; height:38px; border-radius:12px; background: var(--accent-soft); display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0; }
+  .cat-stat-mid{ flex:1; min-width:0; }
+  .cat-stat-mid .cn{ font-size:13.5px; font-weight:700; }
+  .cat-stat-mid .cbar-bg{ height:6px; background:var(--border); border-radius:99px; margin-top:5px; overflow:hidden; }
+  .cat-stat-mid .cbar-fill{ height:100%; background: var(--accent); border-radius:99px; }
+  .cat-stat-right{ text-align:right; flex-shrink:0; }
+  .cat-stat-right .ca{ font-weight:800; font-size:13.5px; }
+  .cat-stat-right .cp{ font-size:11px; color:var(--muted); }
+
+  .rank-row{ display:flex; align-items:center; gap:10px; padding:9px 0; }
+  .rank-num{ width:22px; height:22px; border-radius:50%; background: var(--accent-soft); color:var(--accent-dark); font-size:11.5px; font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .rank-mid{ flex:1; font-size:13.5px; font-weight:600; }
+  .rank-amt{ font-weight:800; font-size:13.5px; }
+
+  .no-data-msg{ text-align:center; color:var(--muted); font-size:13px; padding: 18px 0; }
+
+  /* ---------- Budget ---------- */
+  .budget-progress-bg{ height:14px; background: var(--border); border-radius:99px; overflow:hidden; margin: 12px 0 6px; }
+  .budget-progress-fill{ height:100%; border-radius:99px; transition: width .4s ease; background: var(--accent); }
+  .budget-progress-fill.warn{ background: var(--warning); }
+  .budget-progress-fill.over{ background: var(--danger); }
+  .budget-row-nums{ display:flex; justify-content:space-between; font-size:12.5px; color:var(--muted); font-weight:600; }
+  .budget-alert{
+    margin-top:12px; padding:10px 14px; border-radius: var(--radius-sm);
+    font-size:12.5px; font-weight:700; display:flex; align-items:center; gap:8px;
+  }
+  .budget-alert.warn{ background:#FFF6E8; color:#A66A12; }
+  .budget-alert.over{ background: var(--danger-light); color: var(--danger); }
+  .budget-alert.ok{ background:#E9F9F1; color: var(--success); }
+
+  .catbudget-row{ padding: 12px 0; border-bottom:1px solid var(--border); }
+  .catbudget-row:last-child{ border-bottom:none; }
+  .catbudget-top{ display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+  .catbudget-top .cbn{ font-size:13.5px; font-weight:700; display:flex; align-items:center; gap:6px; }
+  .catbudget-top .cbedit{ font-size:12px; color:var(--accent); font-weight:700; }
+  .catbudget-nums{ font-size:11.5px; color:var(--muted); margin-top:5px; }
+
+  .month-block{
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+    color:#fff;
+    margin-bottom:16px;
+  }
+  .month-block .mtitle{ font-size:13px; font-weight:800; letter-spacing:0.06em; opacity:0.9; margin-bottom:14px; }
+  .month-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:14px; }
+  .month-grid .mstat .ml{ font-size:11.5px; opacity:0.85; font-weight:600; }
+  .month-grid .mstat .mv{ font-size:18px; font-weight:800; margin-top:2px; }
+  .month-note{ font-size:12px; opacity:0.9; margin-top:14px; font-style:italic; }
+
+  /* ---------- Settings ---------- */
+  .settings-row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 15px 4px; border-bottom:1px solid var(--border);
+  }
+  .settings-row:last-child{ border-bottom:none; }
+  .settings-row .srow-label{ font-size:14.5px; font-weight:600; }
+  .settings-row .srow-sub{ font-size:12px; color:var(--muted); margin-top:2px; }
+  .color-dot{ width:26px; height:26px; border-radius:50%; border:2px solid #fff; box-shadow:0 0 0 1.5px var(--border); }
+
+  .manage-cat-row{ display:flex; align-items:center; gap:10px; padding:10px 4px; border-bottom:1px solid var(--border); }
+  .manage-cat-row .em{ font-size:18px; }
+  .manage-cat-row .nm{ flex:1; font-size:14px; font-weight:600; }
+  .manage-cat-row .del{ color:var(--danger); font-size:13px; font-weight:700; }
+
+  input[type="file"]{ display:none; }
+  .hint-text{ font-size:12px; color:var(--muted); line-height:1.5; margin-top:6px; }
+
+  /* Calendar */
+  .cal-grid{ display:grid; grid-template-columns: repeat(7,1fr); gap:4px; margin-top:10px;}
+  .cal-dow{ text-align:center; font-size:10.5px; color:var(--muted); font-weight:700; padding-bottom:4px; }
+  .cal-day{ aspect-ratio:1; display:flex; align-items:center; justify-content:center; border-radius:10px; font-size:12.5px; font-weight:600; position:relative; }
+  .cal-day.has-exp{ background: var(--accent-soft); color: var(--accent-dark); font-weight:800; }
+  .cal-day.empty{ visibility:hidden; }
+  .cal-day.today{ box-shadow: inset 0 0 0 2px var(--accent); }
+  .cal-nav{ display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;}
+  .cal-nav button{ font-size:16px; padding:6px 10px; font-weight:800; color:var(--accent); }
+  .cal-nav .cal-title{ font-weight:800; font-size:14px; }
+
+  @media (min-width: 560px){
+    body{ background: #F0EEF5; }
+    #app{ box-shadow: 0 0 60px rgba(30,10,50,0.08); }
+  }
+
+  /* ---------- Auth screen ---------- */
+  .auth-screen{
+    position: fixed; inset:0; z-index: 500;
+    display:flex; align-items:center; justify-content:center;
+    padding: 24px;
+    background: linear-gradient(160deg, var(--app-accent-soft) 0%, #FAF9FC 60%);
+  }
+  .auth-screen.hidden{ display:none; }
+  .auth-card{
+    width:100%; max-width: 380px;
+    background: var(--card);
+    border-radius: var(--radius-lg);
+    padding: 32px 26px;
+    box-shadow: var(--shadow-pop);
+    text-align:center;
+  }
+  .auth-emoji{ font-size:40px; margin-bottom:6px; }
+  .auth-title{ font-size:22px; font-weight:800; letter-spacing:-0.02em; margin-bottom:4px; }
+  .auth-sub{ color:var(--muted); font-size:13.5px; margin-bottom:22px; }
+  .auth-field{ text-align:left; margin-bottom:14px; }
+  .auth-field label{ display:block; font-size:12.5px; font-weight:700; color:var(--muted); margin-bottom:6px; }
+  .auth-field input{ width:100%; padding:12px 14px; border-radius:var(--radius-md); border:1.5px solid var(--border); background:var(--bg); font-size:14.5px; color:var(--text); }
+  .auth-btn-row{ display:flex; gap:10px; margin-top:18px; }
+  .auth-msg{ min-height:18px; margin-top:12px; font-size:12.5px; font-weight:600; color:var(--danger); }
+  .auth-msg.notice{ color: var(--accent-dark); }
+  .auth-skip{ display:block; width:100%; margin-top:16px; font-size:12.5px; font-weight:600; color:var(--muted); text-decoration:underline; }
+</style>
+</head>
+<body>
+
+<div class="auth-screen" id="authScreen">
+  <div class="auth-card">
+    <div class="auth-emoji">💶</div>
+    <h1 class="auth-title">SVOJ money</h1>
+    <p class="auth-sub">Тот же аккаунт, что и в SVOJ</p>
+    <div class="auth-field">
+      <label for="authEmail">Email</label>
+      <input type="email" id="authEmail" autocomplete="email" placeholder="you@example.com">
+    </div>
+    <div class="auth-field">
+      <label for="authPassword">Пароль</label>
+      <input type="password" id="authPassword" autocomplete="current-password" placeholder="••••••••">
+    </div>
+    <div class="auth-btn-row">
+      <button type="button" class="btn btn-outline btn-block" id="authSignupBtn">Создать</button>
+      <button type="button" class="btn btn-primary btn-block" id="authLoginBtn">Войти</button>
+    </div>
+    <div class="auth-msg" id="authMsg"></div>
+    <button type="button" class="auth-skip" id="authSkipBtn">Продолжить без аккаунта (только это устройство)</button>
+  </div>
+</div>
+
+<div id="app">
+
+  <!-- ============ DASHBOARD ============ -->
+  <section id="screen-dashboard" class="screen">
+    <div class="topbar">
+      <div class="greeting" data-i18n="app_title">💶 SVOJ money</div>
+    </div>
+    <div class="page">
+
+      <div class="currency-toggle" id="dash-currency-toggle" style="justify-content:flex-end; margin-bottom:10px;">
+        <button class="cur-btn active" data-dispcur="EUR" style="padding:6px 14px; font-size:12.5px;">€ EUR</button>
+        <button class="cur-btn" data-dispcur="RSD" style="padding:6px 14px; font-size:12.5px;" data-i18n="cur_rsd_short">дин. RSD</button>
+      </div>
+
+      <div class="summary-hero">
+        <div class="label" id="dash-month-label">ОБЩЕЕ ЗА АВГУСТ</div>
+        <div class="amount" id="dash-total-combined">€0</div>
+        <div class="summary-count" style="margin-top:-10px; margin-bottom:14px;" data-i18n="dash_combined_sub">общий расход</div>
+        <div class="summary-split" id="dash-split-container"></div>
+      </div>
+
+      <button class="big-add-btn" data-action="open-add" data-i18n="add_expense_btn">＋ Добавить расход</button>
+      <button class="btn btn-outline btn-block" style="margin-top:10px;" data-action="open-add-income" data-i18n="add_income_btn">＋ Добавить доход</button>
+
+      <div class="card" id="dash-shared-budget-card" style="display:none; margin-top:12px;">
+        <div class="settings-row">
+          <div class="srow-label" id="dash-shared-budget-label">🤝</div>
+          <button class="btn btn-outline" id="dash-shared-open-btn" data-i18n="openArrow">Открыть →</button>
+        </div>
+      </div>
+
+      <div class="section-title" data-i18n="section_income">Доход</div>
+      <div class="card">
+        <div class="settings-row">
+          <div class="srow-label" data-i18n="income_month_total">Доход за месяц</div>
+          <div style="font-weight:800; font-size:15px; color: var(--income-color, #2E9E6D);" id="dash-income-total">€0</div>
+        </div>
+      </div>
+      <div class="card" id="dash-income-list"></div>
+
+      <div class="section-title" data-i18n="section_budget">Бюджет</div>
+      <div class="card">
+        <div class="budget-row-nums"><span id="dash-budget-spent-lbl">€0 потрачено</span><span id="dash-budget-of-lbl">из €0</span></div>
+        <div class="budget-progress-bg"><div class="budget-progress-fill" id="dash-budget-fill" style="width:0%;"></div></div>
+        <div class="budget-alert" id="dash-budget-alert"></div>
+      </div>
+
+      <div class="section-title" data-i18n="section_currencies">Расходы по валютам</div>
+      <div class="card">
+        <div class="settings-row">
+          <div class="srow-label">€ EUR</div>
+          <div style="font-weight:800; font-size:15px;" id="dash-cur-eur">€0</div>
+        </div>
+        <div class="settings-row">
+          <div class="srow-label" data-i18n="cur_rsd_short">дин. RSD</div>
+          <div style="font-weight:800; font-size:15px;" id="dash-cur-rsd">0 дин.</div>
+        </div>
+      </div>
+
+      <div class="section-title" data-i18n="section_categories">Категории</div>
+      <div class="card" id="dash-categories-list"></div>
+
+      <div class="section-title" data-i18n="section_recent">Последние расходы</div>
+      <div class="card" id="dash-recent-list"></div>
+    </div>
+  </section>
+
+  <!-- ============ ADD / EDIT EXPENSE ============ -->
+  <section id="screen-add" class="screen">
+    <div class="form-header">
+      <button class="back-btn" data-action="close-add">←</button>
+      <div class="ftitle" id="add-form-title" data-i18n="add_title_new">Новый расход</div>
+    </div>
+
+    <div class="amount-input-wrap">
+      <span class="cur-sym" id="add-cur-sym">€</span>
+      <input type="text" inputmode="decimal" id="add-amount" placeholder="0">
+    </div>
+    <div class="amount-error" id="add-amount-error"></div>
+
+    <div class="currency-toggle">
+      <button class="cur-btn active" data-currency="EUR">€ EUR</button>
+      <button class="cur-btn" data-currency="RSD" data-i18n="cur_rsd_short">дин. RSD</button>
+    </div>
+
+    <div class="form-label" style="padding:0 20px; margin-top:14px;" data-i18n="who_label">Кто платил</div>
+    <div class="who-toggle" id="add-who-toggle"></div>
+
+    <div class="form-section">
+      <div class="form-label" data-i18n="label_category">Категория</div>
+      <div class="cat-grid" id="add-cat-grid"></div>
+
+      <div class="form-label" data-i18n="label_merchant">Магазин / место</div>
+      <input type="text" class="text-input" id="add-merchant" placeholder="Например, Lidl" data-i18n-ph="placeholder_merchant">
+      <div class="suggest-list" id="add-merchant-suggest"></div>
+
+      <div class="form-label" data-i18n="label_datetime">Дата и время</div>
+      <div class="datetime-row">
+        <input type="date" class="text-input" id="add-date">
+        <input type="time" class="text-input" id="add-time">
+      </div>
+
+      <div class="form-label" data-i18n="label_comment">Комментарий</div>
+      <input type="text" class="text-input" id="add-comment" placeholder="Необязательно, например «ужин с друзьями»" data-i18n-ph="placeholder_comment">
+    </div>
+
+    <div class="save-bar">
+      <button class="btn btn-primary btn-block" data-action="save-expense" style="padding:16px;" data-i18n="btn_save_expense">Сохранить расход</button>
+      <div id="add-delete-wrap" style="margin-top:10px; display:none;">
+        <button class="btn btn-danger btn-block" data-action="delete-expense" style="padding:14px;" data-i18n="btn_delete_expense">Удалить расход</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ HISTORY ============ -->
+  <section id="screen-history" class="screen">
+    <div class="topbar">
+      <div class="greeting" data-i18n="history_title">История</div>
+      <button class="settings-btn" id="hist-select-toggle-btn" type="button" title="Select">☑</button>
+    </div>
+    <div class="page">
+      <div class="search-bar">
+        <span>🔍</span>
+        <input type="text" id="hist-search" placeholder="Поиск по магазину, категории, комментарию" data-i18n-ph="placeholder_search">
+      </div>
+      <div class="filter-row" id="hist-who-filter"></div>
+      <div class="filter-row" id="hist-cat-filter"></div>
+      <button class="btn btn-outline" style="width:100%; margin-bottom:14px;" data-action="open-calendar" data-i18n="btn_open_calendar">📅 Открыть по дате</button>
+      <div id="hist-list"></div>
+    </div>
+    <div class="save-bar" id="hist-bulk-bar" style="display:none;">
+      <div style="display:flex; gap:10px; align-items:center;">
+        <button class="btn btn-outline" style="flex:1;" id="hist-bulk-cancel-btn" data-i18n="btn_cancel">Отмена</button>
+        <button class="btn btn-danger" style="flex:1;" id="hist-bulk-delete-btn"><span data-i18n="btn_delete">Удалить</span> (<span id="hist-bulk-count">0</span>)</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SHARED BUDGET ============ -->
+  <section id="screen-shared" class="screen">
+    <div class="topbar">
+      <div class="greeting" id="shared-budget-title">🤝 <span data-i18n="section_shared_budget">Общий бюджет</span></div>
+      <button class="settings-btn" id="shared-add-btn" type="button" title="Add">＋</button>
+    </div>
+    <div class="page">
+      <div class="card" id="shared-participants-card"></div>
+      <div id="shared-tx-list"></div>
+    </div>
+  </section>
+
+  <!-- ============ STATISTICS ============ -->
+  <section id="screen-stats" class="screen">
+    <div class="topbar"><div class="greeting" data-i18n="stats_title">Статистика</div></div>
+    <div class="page">
+      <div class="filter-row" id="stats-who-tabs"></div>
+      <div class="filter-row" id="stats-period-tabs">
+        <button class="filter-chip active" data-period="today" data-i18n="period_today">Сегодня</button>
+        <button class="filter-chip" data-period="week" data-i18n="period_week">Неделя</button>
+        <button class="filter-chip" data-period="month" data-i18n="period_month">Месяц</button>
+        <button class="filter-chip" data-period="lastmonth" data-i18n="period_lastmonth">Прошлый месяц</button>
+        <button class="filter-chip" data-period="custom" data-i18n="period_custom">Период…</button>
+      </div>
+      <div id="stats-custom-range" class="datetime-row" style="display:none; margin-bottom:14px;">
+        <input type="date" class="text-input" id="stats-from">
+        <input type="date" class="text-input" id="stats-to">
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-box"><div class="slabel" data-i18n="stat_total">Всего потрачено</div><div class="sval" id="stat-total">€0</div></div>
+        <div class="stat-box"><div class="slabel" data-i18n="stat_count">Транзакций</div><div class="sval" id="stat-count">0</div></div>
+        <div class="stat-box"><div class="slabel" data-i18n="stat_avg">Средний расход</div><div class="sval" id="stat-avg">€0</div></div>
+        <div class="stat-box"><div class="slabel" data-i18n="stat_max">Самый большой</div><div class="sval" id="stat-max">€0</div></div>
+      </div>
+
+      <div class="card" id="stat-compare-card">
+        <div class="section-title" style="margin-top:0;" data-i18n="stat_compare_title">Сравнение по людям</div>
+        <div id="stat-compare-rows"></div>
+      </div>
+
+      <div class="card" id="stat-vs-lastmonth-card" style="display:none;">
+        <div class="section-title" style="margin-top:0;" data-i18n="vs_lastmonth_title">По сравнению с прошлым месяцем</div>
+        <div class="compare-row"><div class="cname" data-i18n="vs_now">Сейчас</div><div class="camt" id="vs-this" style="flex:1; text-align:left;"></div></div>
+        <div class="compare-row"><div class="cname" data-i18n="vs_then">Тогда</div><div class="camt" id="vs-last" style="flex:1; text-align:left;"></div></div>
+        <div style="font-weight:800; font-size:16px; margin-top:6px;" id="vs-delta"></div>
+      </div>
+
+      <div class="section-title" data-i18n="stat_cat_title">Расходы по категориям</div>
+      <div class="card" id="stat-categories"></div>
+
+      <div class="section-title" data-i18n="stat_biggest_title">Самые большие расходы</div>
+      <div class="card" id="stat-biggest"></div>
+
+      <div class="section-title" data-i18n="stat_topday_title">Самый дорогой день</div>
+      <div class="card" id="stat-topday"></div>
+    </div>
+  </section>
+
+  <!-- ============ BUDGET ============ -->
+  <section id="screen-budget" class="screen">
+    <div class="topbar"><div class="greeting" data-i18n="budget_title">Бюджет</div></div>
+    <div class="page">
+      <div class="month-block">
+        <div class="mtitle" id="budget-month-title">АВГУСТ 2026</div>
+        <div class="month-grid">
+          <div class="mstat"><div class="ml" data-i18n="mb_spent">Потрачено</div><div class="mv" id="mb-spent">€0</div></div>
+          <div class="mstat"><div class="ml" data-i18n="mb_budget">Бюджет</div><div class="mv" id="mb-budget">€0</div></div>
+          <div class="mstat"><div class="ml" data-i18n="mb_left">Осталось</div><div class="mv" id="mb-left">€0</div></div>
+          <div class="mstat"><div class="ml" data-i18n="mb_avgday">Среднее в день</div><div class="mv" id="mb-avgday">€0</div></div>
+        </div>
+        <div class="month-note" id="mb-forecast"></div>
+      </div>
+
+      <div class="card">
+        <div class="section-title" style="margin-top:0;" data-i18n="section_total_budget">Общий бюджет месяца</div>
+        <div class="budget-progress-bg"><div class="budget-progress-fill" id="budget-total-fill" style="width:0%;"></div></div>
+        <div class="budget-row-nums"><span id="budget-total-spent-lbl">€0 потрачено</span><span id="budget-total-of-lbl">из €0</span></div>
+        <div class="budget-alert" id="budget-alert-box"></div>
+        <button class="btn btn-ghost btn-block" style="margin-top:14px;" data-action="edit-total-budget" data-i18n="btn_edit_total_budget">Изменить бюджет месяца</button>
+      </div>
+
+      <div class="section-title" data-i18n="section_cat_budgets">Бюджеты по категориям</div>
+      <div class="card" id="catbudget-list"></div>
+      <button class="btn btn-outline btn-block" style="margin-top:12px;" data-action="add-cat-budget" data-i18n="btn_add_cat_budget">＋ Добавить лимит категории</button>
+    </div>
+  </section>
+
+  <!-- ============ SETTINGS ============ -->
+  <section id="screen-settings" class="screen">
+    <div class="topbar"><div class="greeting" data-i18n="settings_title">Настройки</div></div>
+    <div class="page">
+
+      <div class="section-title" style="margin-top:0;" data-i18n="section_language">Язык</div>
+      <div class="card">
+        <div class="settings-row">
+          <div><div class="srow-label" data-i18n="section_language">Язык</div><div class="srow-sub" data-i18n="language_sub">Язык интерфейса приложения</div></div>
+          <div class="currency-toggle" id="lang-toggle" style="margin:0;">
+            <button class="cur-btn" data-lang="ru" style="padding:7px 14px; font-size:12.5px;">Русский</button>
+            <button class="cur-btn" data-lang="en" style="padding:7px 14px; font-size:12.5px;">English</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title" data-i18n="section_appearance">Оформление</div>
+      <div class="card">
+        <div class="settings-row">
+          <div><div class="srow-label" data-i18n="appearance_label">Тема</div><div class="srow-sub" data-i18n="appearance_sub">Внешний вид приложения</div></div>
+          <div class="currency-toggle" id="colorscheme-toggle" style="margin:0; flex-wrap:wrap;">
+            <button class="cur-btn" data-scheme="light" style="padding:7px 12px; font-size:12.5px;" data-i18n="scheme_light">Светлая</button>
+            <button class="cur-btn" data-scheme="dark" style="padding:7px 12px; font-size:12.5px;" data-i18n="scheme_dark">Тёмная</button>
+            <button class="cur-btn" data-scheme="system" style="padding:7px 12px; font-size:12.5px;" data-i18n="scheme_system">Системная</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title" data-i18n="section_categories_settings">Категории</div>
+      <div class="card">
+        <div id="settings-cat-list"></div>
+        <button class="btn btn-ghost btn-block" style="margin-top:12px;" data-action="add-category-settings" data-i18n="btn_new_category">＋ Новая категория</button>
+      </div>
+
+      <div class="section-title" data-i18n="section_people">Люди</div>
+      <div class="card">
+        <div id="settings-people-list"></div>
+        <button class="btn btn-ghost btn-block" style="margin-top:12px;" data-action="add-person-settings" data-i18n="btn_add_person">＋ Добавить человека</button>
+      </div>
+
+      <div class="section-title">🤝 <span data-i18n="section_shared_budget">Общий бюджет</span></div>
+      <div class="card" id="settings-shared-budget"></div>
+
+      <div class="section-title" data-i18n="section_colors">Цветовые темы</div>
+      <div class="card">
+        <div class="settings-row">
+          <div><div class="srow-label" data-i18n="app_accent_label">🎨 Акцент приложения</div><div class="srow-sub" data-i18n="color_accent_sub">Основной цвет интерфейса</div></div>
+          <input type="color" id="color-accent" value="#E23F88" style="width:40px;height:40px;border:none;background:none;">
+        </div>
+      </div>
+
+      <div class="section-title" data-i18n="section_currency_settings">Валюта</div>
+      <div class="card">
+        <div class="settings-row">
+          <div><div class="srow-label" data-i18n="exchange_rate_label">Курс EUR → RSD</div><div class="srow-sub" data-i18n="exchange_rate_sub">Используется, пока нет автоматического курса</div></div>
+          <input type="text" inputmode="decimal" class="text-input" id="exchange-rate" style="width:90px; text-align:center;">
+        </div>
+      </div>
+
+      <div class="section-title" data-i18n="section_data">Данные</div>
+      <div class="card">
+        <div class="settings-row" data-action="export-data" style="cursor:pointer;">
+          <div><div class="srow-label" data-i18n="export_label">Экспортировать данные</div><div class="srow-sub" data-i18n="export_sub">Скачать резервную копию в JSON</div></div>
+          <span>⬇️</span>
+        </div>
+        <div class="settings-row" data-action="import-data" style="cursor:pointer;">
+          <div><div class="srow-label" data-i18n="import_label">Импортировать данные</div><div class="srow-sub" data-i18n="import_sub">Восстановить из файла резервной копии</div></div>
+          <span>⬆️</span>
+        </div>
+        <input type="file" id="import-file-input" accept="application/json">
+        <div class="settings-row" data-action="clear-data" style="cursor:pointer;">
+          <div><div class="srow-label" style="color:var(--danger);" data-i18n="clear_label">Очистить все данные</div><div class="srow-sub" data-i18n="clear_sub">Удалит все расходы и настройки безвозвратно</div></div>
+          <span>🗑️</span>
+        </div>
+      </div>
+
+      <div class="hint-text" style="text-align:center; margin-top:10px;"><span data-i18n="footer_hint">Наши расходы · версия данных</span> <span id="data-version-lbl">1</span></div>
+    </div>
+  </section>
+
+  <!-- ============ BOTTOM NAV ============ -->
+  <nav class="bottom-nav" id="bottom-nav">
+    <button class="nav-btn" data-screen="dashboard"><span class="ic">🏠</span><span data-i18n="nav_home">Главная</span></button>
+    <button class="nav-btn" data-screen="history"><span class="ic">📋</span><span data-i18n="nav_history">История</span></button>
+    <button class="nav-btn fab" data-action="open-add"><span class="ic">＋</span><span data-i18n="nav_add">Добавить</span></button>
+    <button class="nav-btn" data-screen="stats"><span class="ic">📊</span><span data-i18n="nav_stats">Статистика</span></button>
+    <button class="nav-btn" data-screen="budget"><span class="ic">💰</span><span data-i18n="nav_budget">Бюджет</span></button>
+  </nav>
+</div>
+
+<!-- ============ MODALS ============ -->
+
+<!-- Expense detail sheet -->
+<div class="overlay" id="overlay-expense-detail">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div style="padding: 4px 22px 22px;">
+      <div style="display:flex; align-items:center; gap:14px; margin-bottom:18px;">
+        <div class="expense-icon" id="detail-icon" style="width:52px;height:52px;font-size:24px;"></div>
+        <div style="flex:1;">
+          <div style="font-weight:800; font-size:17px;" id="detail-merchant"></div>
+          <div style="font-size:13px; color:var(--muted);" id="detail-meta"></div>
+        </div>
+        <div style="font-weight:800; font-size:19px;" id="detail-amount"></div>
+      </div>
+      <div id="detail-comment" style="font-size:13.5px; color:var(--muted); margin-bottom:16px;"></div>
+      <div style="display:flex; gap:10px;">
+        <button class="btn btn-ghost" style="flex:1;" data-action="detail-repeat" data-i18n="detail_repeat">🔁 Повторить</button>
+        <button class="btn btn-outline" style="flex:1;" data-action="detail-edit" data-i18n="detail_edit">✏️ Изменить</button>
+      </div>
+      <button class="btn btn-danger btn-block" style="margin-top:10px;" data-action="detail-delete" data-i18n="btn_delete_expense">Удалить расход</button>
+    </div>
+  </div>
+</div>
+
+<!-- All categories sheet -->
+<div class="overlay" id="overlay-all-categories">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div style="padding: 4px 22px 22px;">
+      <div class="ftitle" style="font-weight:800; font-size:16px; margin-bottom:14px;" data-i18n="all_categories_title">Все категории</div>
+      <div class="cat-grid" id="all-cat-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Calendar sheet -->
+<div class="overlay" id="overlay-calendar">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div style="padding: 4px 22px 22px;">
+      <div class="cal-nav">
+        <button data-action="cal-prev">‹</button>
+        <div class="cal-title" id="cal-title"></div>
+        <button data-action="cal-next">›</button>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+      <div id="cal-day-detail" style="margin-top:16px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- New category sheet -->
+<div class="overlay" id="overlay-new-category">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div style="padding: 4px 22px 22px;">
+      <div class="ftitle" style="font-weight:800; font-size:16px; margin-bottom:14px;" data-i18n="new_cat_title">Новая категория</div>
+      <div class="form-label" style="margin-top:0;" data-i18n="new_cat_icon_label">Иконка (emoji)</div>
+      <input type="text" class="text-input" id="new-cat-emoji" placeholder="🧩" maxlength="4">
+      <div class="form-label" data-i18n="new_cat_name_label">Название</div>
+      <input type="text" class="text-input" id="new-cat-name" placeholder="Например, Хобби" data-i18n-ph="placeholder_cat_name">
+      <button class="btn btn-primary btn-block" style="margin-top:18px;" data-action="save-new-category" data-i18n="btn_create_category">Создать категорию</button>
+    </div>
+  </div>
+</div>
+
+<!-- Category budget edit sheet -->
+<div class="overlay" id="overlay-catbudget">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div style="padding: 4px 22px 22px;">
+      <div class="ftitle" style="font-weight:800; font-size:16px; margin-bottom:14px;" data-i18n="catbudget_title">Лимит категории</div>
+      <div class="form-label" style="margin-top:0;" data-i18n="catbudget_cat_label">Категория</div>
+      <select class="text-input" id="catbudget-select"></select>
+      <div class="form-label" data-i18n="catbudget_amount_label">Лимит на месяц (€)</div>
+      <input type="text" inputmode="decimal" class="text-input" id="catbudget-amount">
+      <button class="btn btn-primary btn-block" style="margin-top:18px;" data-action="save-cat-budget" data-i18n="btn_save_limit">Сохранить лимит</button>
+    </div>
+  </div>
+</div>
+
+<!-- Total budget edit sheet -->
+<div class="overlay" id="overlay-totalbudget">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div style="padding: 4px 22px 22px;">
+      <div class="ftitle" style="font-weight:800; font-size:16px; margin-bottom:6px;" id="totalbudget-title">Бюджет на август 2026</div>
+      <div class="hint-text" style="margin-bottom:14px;" data-i18n="totalbudget_sub">Сколько вы хотите потратить в этом месяце?</div>
+      <input type="text" inputmode="decimal" class="text-input" id="totalbudget-amount" placeholder="2000">
+      <button class="btn btn-primary btn-block" style="margin-top:18px;" data-action="save-total-budget" data-i18n="btn_save_budget">Сохранить бюджет</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add income sheet -->
+<div class="overlay" id="overlay-add-income">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div style="padding: 4px 22px 22px;">
+      <div class="ftitle" style="font-weight:800; font-size:16px; margin-bottom:14px;" data-i18n="income_add_title">Новый доход</div>
+      <div class="form-label" style="margin-top:0;" data-i18n="income_amount_label">Сумма</div>
+      <input type="text" inputmode="decimal" class="text-input" id="income-amount" placeholder="0">
+      <div class="currency-toggle" id="income-currency-toggle" style="margin: 10px 0 4px;">
+        <button class="cur-btn active" data-currency="EUR">€ EUR</button>
+        <button class="cur-btn" data-currency="RSD" data-i18n="cur_rsd_short">дин. RSD</button>
+      </div>
+      <div class="form-label" data-i18n="income_source_label">Источник</div>
+      <input type="text" class="text-input" id="income-source" placeholder="Например, Зарплата" data-i18n-ph="placeholder_income_source">
+      <div class="form-label" data-i18n="label_datetime">Дата и время</div>
+      <div class="datetime-row">
+        <input type="date" class="text-input" id="income-date">
+        <input type="time" class="text-input" id="income-time">
+      </div>
+      <div class="form-label" data-i18n="label_comment">Комментарий</div>
+      <input type="text" class="text-input" id="income-note" placeholder="Необязательно" data-i18n-ph="placeholder_comment">
+      <button class="btn btn-primary btn-block" style="margin-top:18px;" data-action="save-income" data-i18n="btn_save_income">Сохранить доход</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add shared-budget transaction sheet -->
+<div class="overlay" id="overlay-add-shared">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div style="padding: 4px 22px 22px;">
+      <div class="ftitle" style="font-weight:800; font-size:16px; margin-bottom:14px;" data-i18n="shared_add_title">Новая запись</div>
+      <div class="who-toggle" id="shared-kind-toggle" style="margin-bottom:10px;">
+        <button type="button" class="who-btn active" data-kind="expense"><span data-i18n="shared_kind_expense">Расход</span></button>
+        <button type="button" class="who-btn" data-kind="income"><span data-i18n="shared_kind_income">Доход</span></button>
+      </div>
+      <div class="form-label" style="margin-top:0;" data-i18n="income_amount_label">Сумма</div>
+      <input type="text" inputmode="decimal" class="text-input" id="shared-amount" placeholder="0">
+      <div class="currency-toggle" id="shared-currency-toggle" style="margin: 10px 0 4px;">
+        <button class="cur-btn active" data-currency="EUR">€ EUR</button>
+        <button class="cur-btn" data-currency="RSD" data-i18n="cur_rsd_short">дин. RSD</button>
+      </div>
+      <div class="form-label" data-i18n="shared_category_label">Категория / источник</div>
+      <input type="text" class="text-input" id="shared-category" placeholder="Например, Продукты" data-i18n-ph="placeholder_shared_category">
+      <div class="form-label" data-i18n="label_comment">Комментарий</div>
+      <input type="text" class="text-input" id="shared-note" placeholder="Необязательно" data-i18n-ph="placeholder_comment">
+      <div class="form-label" data-i18n="shared_date_label">Дата</div>
+      <input type="date" class="text-input" id="shared-date">
+      <label style="display:flex; align-items:center; gap:8px; margin-top:16px; font-family:var(--font-ui); font-weight:700; font-size:13.5px;">
+        <input type="checkbox" id="shared-is-common">
+        <span data-i18n="shared_is_common_label">🤝 Общее (видят и редактируют все участники)</span>
+      </label>
+      <button class="btn btn-primary btn-block" style="margin-top:18px;" id="shared-save-btn">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- Generic confirm dialog -->
+<div class="overlay center" id="overlay-confirm">
+  <div class="confirm-box">
+    <div class="cem" id="confirm-emoji">⚠️</div>
+    <div class="ctitle" id="confirm-title">Вы уверены?</div>
+    <div class="cmsg" id="confirm-msg"></div>
+    <div class="cbtns">
+      <button class="btn btn-outline" data-action="confirm-cancel" data-i18n="btn_cancel">Отмена</button>
+      <button class="btn btn-danger" id="confirm-ok-btn" data-action="confirm-ok" data-i18n="btn_delete">Удалить</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+"use strict";
+
+// Applied immediately, before auth/data even starts loading, so the very first paint
+// (including the login screen) already has the right look -- no flash of the wrong
+// theme. Reads a small mirror key directly rather than waiting for the full settings
+// blob to load; DB.settings.colorScheme (set up further down) is the synced source of
+// truth and keeps this mirror key up to date whenever it changes.
+const COLOR_SCHEME_KEY = 'svojmoney-expense-color-scheme-v1';
+function resolveColorScheme(pref){
+  if(pref === 'system'){
+    return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+  }
+  return pref === 'dark' ? 'dark' : 'light';
+}
+function applyColorScheme(){
+  let pref;
+  try{ pref = localStorage.getItem(COLOR_SCHEME_KEY) || 'light'; }catch(e){ pref = 'light'; }
+  document.body.classList.toggle('pref-dark', resolveColorScheme(pref) === 'dark');
+}
+applyColorScheme();
+if(window.matchMedia){
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    let pref;
+    try{ pref = localStorage.getItem(COLOR_SCHEME_KEY) || 'light'; }catch(e){ pref = 'light'; }
+    if(pref === 'system') applyColorScheme();
+  });
+}
+
+// Declared this early (before the auth wiring below) on purpose: if the Supabase
+// CDN script fails to load, sb is null and the offline fallback path runs
+// synchronously as this script executes top-to-bottom, calling all the way
+// through to loadData() -> defaultData() before the script reaches its own
+// "EXPENSE DATA MODULE" section further down -- a const declared only there
+// would still be in its temporal dead zone at that point and throw.
+const DATA_VERSION = 1;
+
+/* =========================================================================
+   DATA LAYER -- SVOJ Money's OWN, ISOLATED Supabase project.
+   This project must NOT be shared with the SVOJ planner app (or any other
+   app). Every table here is scoped to auth.uid() via Row Level Security --
+   see supabase/schema.sql in this app's folder for the full schema + RLS
+   policies to run (once) in this project's SQL editor. Falls back to plain
+   localStorage when offline/signed out.
+
+   SETUP: create a new project at https://supabase.com/dashboard, run
+   supabase/schema.sql against it, then paste that project's URL and anon
+   key below (Project Settings -> API). The anon key is safe to ship in
+   client code -- it has no privileges beyond what the RLS policies grant.
+   ========================================================================= */
+const SUPABASE_URL = 'PASTE_YOUR_SVOJ_MONEY_SUPABASE_URL_HERE';
+const SUPABASE_ANON_KEY = 'PASTE_YOUR_SVOJ_MONEY_SUPABASE_ANON_KEY_HERE';
+const sb = (SUPABASE_URL.startsWith('http') && window.supabase)
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  : null;
+
+let currentUserId = null;
+let cloudCache = {};
+const pendingWrites = {};
+
+function localSave(key, val){ try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){} }
+function localLoad(key, fallback){ try{ const v = localStorage.getItem(key); return v===null ? fallback : JSON.parse(v); }catch(e){ return fallback; } }
+
+function setSyncBadge(state){
+  const el = document.getElementById('syncBadge');
+  if(!el || !currentUserId) return;
+  el.classList.remove('err','busy');
+  if(state === 'busy') el.classList.add('busy');
+  else if(state === 'err') el.classList.add('err');
+}
+
+function save(key, val){
+  localSave(key, val);
+  cloudCache[key] = val;
+  if(!currentUserId || !sb) return;
+  clearTimeout(pendingWrites[key]);
+  setSyncBadge('busy');
+  pendingWrites[key] = setTimeout(()=>{
+    sb.from('app_data').upsert({ user_id: currentUserId, data_key: key, data: val, updated_at: new Date().toISOString() }, { onConflict: 'user_id,data_key' })
+      .then(({ error })=>{ setSyncBadge(error ? 'err' : 'ok'); if(error) console.error('sync error', key, error); });
+  }, 600);
+}
+function load(key, fallback){
+  if(currentUserId && Object.prototype.hasOwnProperty.call(cloudCache, key)) return cloudCache[key];
+  return localLoad(key, fallback);
+}
+
+async function fetchAllCloudData(uid){
+  if(!sb) return;
+  const { data, error } = await sb.from('app_data').select('data_key, data').eq('user_id', uid);
+  if(error){ console.error('fetch error', error); setSyncBadge('err'); return; }
+  cloudCache = {};
+  (data || []).forEach(row=>{ cloudCache[row.data_key] = row.data; });
+}
+
+// Merge-on-login helper so a device that recorded
+// expenses offline (or before ever signing in) doesn't lose them the moment
+// it signs in and the cloud turns out to already have its own expenses.
+function mergeRecordArrayById(localVal, cloudVal){
+  if(!Array.isArray(localVal) || !Array.isArray(cloudVal)) return null;
+  const existingIds = new Set(cloudVal.map(e=> e && e.id));
+  const toAdd = localVal.filter(e=> e && !existingIds.has(e.id));
+  return toAdd.length ? cloudVal.concat(toAdd) : null;
+}
+const EXPENSE_DATA_KEYS = ['svojmoney-expenses-v1','svojmoney-expense-incomes-v1','svojmoney-expense-categories-v1','svojmoney-expense-usage-v1','svojmoney-expense-budgets-v1','svojmoney-expense-app-settings-v1'];
+// Once a device has done this
+// merge dance once, it must never do it again. Otherwise a browser/device that hasn't
+// been opened in a while still has its OLD (pre-deletion) copy of wp-expenses-v1 sitting
+// in plain localStorage; comparing that stale copy against the fresh cloud data on every
+// single sign-in makes any expense deleted elsewhere since then look "local-only" and
+// resurrects it back into the cloud. Gating the merge behind a one-time flag keeps the
+// legitimate case (data recorded before ever signing in on this device) while making
+// cloud authoritative on every sign-in after that, so deletions actually stick.
+const CLOUD_MIGRATED_FLAG_KEY = 'svojmoney-cloud-migrated-v1';
+// Which account this browser's local cache currently belongs to. handleLogout() clears
+// local data on an explicit sign-out, but this is a second line of defense for the case
+// where a session simply expired/was cleared without going through that path: without this
+// check, a SECOND, completely unrelated account signing in on the same browser could have
+// its (empty) cloud row polluted forever -- migrateLocalToCloud below treats any local key
+// missing from the cloud as "offline data waiting to be saved" and uploads it, with no way
+// to tell the local data actually belongs to whoever was signed in *before*.
+// Namespaced to this app only -- SVOJ Money never shares a Supabase project,
+// auth users, or localStorage keys with any other app.
+const LAST_USER_ID_KEY = 'svojmoney-cloud-last-user-id-v1';
+function wipeLocalExpenseDataIfAccountChanged(uid){
+  let lastUserId;
+  try{ lastUserId = localStorage.getItem(LAST_USER_ID_KEY); }catch(e){ lastUserId = null; }
+  if(lastUserId && lastUserId !== uid){
+    EXPENSE_DATA_KEYS.forEach(k => { try{ localStorage.removeItem(k); }catch(e){} });
+    try{ localStorage.removeItem(CLOUD_MIGRATED_FLAG_KEY); }catch(e){}
+  }
+  try{ localStorage.setItem(LAST_USER_ID_KEY, uid); }catch(e){}
+}
+async function migrateLocalToCloud(uid){
+  if(!sb) return;
+  const alreadyMigratedOnce = localStorage.getItem(CLOUD_MIGRATED_FLAG_KEY) === '1';
+  const toPush = [];
+  EXPENSE_DATA_KEYS.forEach(k=>{
+    const localVal = localLoad(k, undefined);
+    if(localVal === undefined) return;
+    if(!(k in cloudCache)){
+      toPush.push({ user_id:uid, data_key:k, data:localVal, updated_at:new Date().toISOString() });
+      cloudCache[k] = localVal;
+      return;
+    }
+    if(alreadyMigratedOnce) return;
+    if(k === 'svojmoney-expenses-v1' || k === 'svojmoney-expense-incomes-v1'){
+      const merged = mergeRecordArrayById(localVal, cloudCache[k]);
+      if(merged){
+        toPush.push({ user_id:uid, data_key:k, data:merged, updated_at:new Date().toISOString() });
+        cloudCache[k] = merged;
+        localSave(k, merged);
+      }
+    }
+  });
+  if(toPush.length) await sb.from('app_data').upsert(toPush, { onConflict:'user_id,data_key' });
+  try{ localStorage.setItem(CLOUD_MIGRATED_FLAG_KEY, '1'); }catch(e){}
+}
+
+/* ============ AUTH ============
+   SVOJ Money's own, isolated Supabase Auth users -- unrelated to any other
+   app's accounts, even if a person happens to reuse the same email. */
+const OFFLINE_FLAG_KEY = 'svojmoney-offline-mode-v1';
+let appStarted = false;
+function hideAuthScreen(){ const el = document.getElementById('authScreen'); if(el) el.classList.add('hidden'); }
+function showAuthMsg(text, kind){ const el = document.getElementById('authMsg'); if(el){ el.textContent = text; el.className = 'auth-msg ' + (kind||''); } }
+
+async function onSignedIn(user){
+  if(appStarted) return;
+  appStarted = true;
+  try{ localStorage.removeItem(OFFLINE_FLAG_KEY); }catch(e){}
+  currentUserId = user.id;
+  currentUserEmailForSettings = user.email || null;
+  hideAuthScreen();
+  wipeLocalExpenseDataIfAccountChanged(user.id);
+  await fetchAllCloudData(user.id);
+  await migrateLocalToCloud(user.id);
+  setSyncBadge('ok');
+  startApp();
+  ensureProfileSynced();
+  loadSharedBudgetData().then(() => {
+    if(state.currentScreen === "settings") renderSettingsSharedBudget();
+    if(state.currentScreen === "shared") renderSharedScreen();
+  });
+}
+function startOffline(){
+  if(appStarted) return;
+  appStarted = true;
+  try{ localStorage.setItem(OFFLINE_FLAG_KEY, '1'); }catch(e){}
+  hideAuthScreen();
+  startApp();
+}
+let currentUserEmailForSettings = null;
+
+// Wired up from bootstrapAuth(), called at the very end of the script (after every
+// other const/let in this file has finished initializing) rather than run inline
+// here -- the offline fallback below can call all the way through to loadData()
+// synchronously, and it needs everything this script defines to already exist.
+function bootstrapAuth(){
+  if(sb){
+    document.getElementById('authSignupBtn').addEventListener('click', async ()=>{
+      const email = document.getElementById('authEmail').value.trim();
+      const password = document.getElementById('authPassword').value;
+      if(!email || password.length < 6){ showAuthMsg('Enter an email and a password (6+ characters)', 'error'); return; }
+      showAuthMsg('Creating account…', '');
+      const { error } = await sb.auth.signUp({ email, password });
+      if(error) showAuthMsg(error.message, 'error');
+      else showAuthMsg('Check your email to confirm the account.', 'notice');
+    });
+    document.getElementById('authLoginBtn').addEventListener('click', async ()=>{
+      const email = document.getElementById('authEmail').value.trim();
+      const password = document.getElementById('authPassword').value;
+      if(!email || !password){ showAuthMsg('Enter your email and password', 'error'); return; }
+      showAuthMsg('Logging in…', '');
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if(error) showAuthMsg(error.message, 'error');
+    });
+    sb.auth.onAuthStateChange((event, session)=>{
+      if(event === 'SIGNED_IN' && session && session.user){ onSignedIn(session.user); }
+    });
+    sb.auth.getSession().then(({ data })=>{
+      if(data && data.session && data.session.user){ onSignedIn(data.session.user); }
+      else if(localStorage.getItem(OFFLINE_FLAG_KEY) === '1'){ startOffline(); }
+    });
+  } else if(localStorage.getItem(OFFLINE_FLAG_KEY) === '1'){
+    startOffline();
+  }
+  document.getElementById('authSkipBtn').addEventListener('click', startOffline);
+}
+// Signing out must leave NOTHING this account's financial data behind on a
+// shared/public device -- otherwise the next person to sign in (or the next
+// person to hit "continue without an account") would inherit this account's
+// expenses/income via localStorage before the cloud fetch even runs.
+async function handleLogout(){
+  try{
+    localStorage.removeItem(OFFLINE_FLAG_KEY);
+    EXPENSE_DATA_KEYS.forEach(k => localStorage.removeItem(k));
+    localStorage.removeItem(CLOUD_MIGRATED_FLAG_KEY);
+    localStorage.removeItem(LAST_USER_ID_KEY);
+  }catch(e){}
+  if(sb) await sb.auth.signOut();
+  location.reload();
+}
+
+/* =========================================================================
+   EXPENSE DATA MODULE
+   ========================================================================= */
+
+function defaultCategories(){
+  return [
+    {id:"food", icon:"🍔", name:"Еда", name_en:"Food", custom:false},
+    {id:"groceries", icon:"🛒", name:"Продукты", name_en:"Groceries", custom:false},
+    {id:"restaurants", icon:"🍽", name:"Рестораны", name_en:"Restaurants", custom:false},
+    {id:"cafe", icon:"☕", name:"Кафе", name_en:"Café", custom:false},
+    {id:"transport", icon:"🚕", name:"Транспорт", name_en:"Transport", custom:false},
+    {id:"home", icon:"🏠", name:"Дом", name_en:"Home", custom:false},
+    {id:"clothes", icon:"👗", name:"Одежда", name_en:"Clothing", custom:false},
+    {id:"beauty", icon:"💄", name:"Красота", name_en:"Beauty", custom:false},
+    {id:"health", icon:"❤️", name:"Здоровье", name_en:"Health", custom:false},
+    {id:"travel", icon:"✈️", name:"Путешествия", name_en:"Travel", custom:false},
+    {id:"entertainment", icon:"🎬", name:"Развлечения", name_en:"Entertainment", custom:false},
+    {id:"subscriptions", icon:"📱", name:"Подписки", name_en:"Subscriptions", custom:false},
+    {id:"pet", icon:"🐶", name:"Питомец", name_en:"Pet", custom:false},
+    {id:"gifts", icon:"🎁", name:"Подарки", name_en:"Gifts", custom:false},
+    {id:"tech", icon:"💻", name:"Техника", name_en:"Tech", custom:false},
+    {id:"other", icon:"📦", name:"Другое", name_en:"Other", custom:false}
+  ];
+}
+
+function defaultData(){
+  return {
+    dataVersion: DATA_VERSION,
+    expenses: [],
+    incomes: [],
+    categories: defaultCategories(),
+    categoryUsage: {},     // { catId: count }
+    merchantUsage: {},     // { merchantName: count }
+    budgets: {},           // { "2026-08": 2000 }
+    categoryBudgets: {},   // { "2026-08": { food: 400 } }
+    settings: {
+      exchangeRate: 117,
+      userColors: { accent: "#E23F88" },
+      people: [], // filled in by loadData() -- always starts with just one entry, "me"
+      activeBudget: null, // {id, name, code} -- set once this account creates/joins a shared budget
+      colorScheme: "light", // "light" | "dark" | "system"
+      language: "ru",
+      lastWho: null,
+      lastCurrency: "EUR",
+      onboarded: false // true once this account has been asked "what should we call you?"
+    }
+  };
+}
+
+let DB = null;
+
+// Loads each piece from its own svojmoney-* key (via the save()/load() layer above)
+// instead of one single-blob key, so categories/budgets/usage/settings each get their
+// own dedicated key.
+function loadData(){
+  const base = defaultData();
+  const sharedExpenses = load('svojmoney-expenses-v1', null);
+  const savedIncomes = load('svojmoney-expense-incomes-v1', null);
+  const usage = load('svojmoney-expense-usage-v1', null);
+  const budgetsWrap = load('svojmoney-expense-budgets-v1', null);
+  const savedSettings = load('svojmoney-expense-app-settings-v1', null);
+  const savedCategories = load('svojmoney-expense-categories-v1', null);
+
+  DB = base;
+  if(Array.isArray(sharedExpenses)) DB.expenses = sharedExpenses;
+  if(Array.isArray(savedIncomes)) DB.incomes = savedIncomes;
+  if(Array.isArray(savedCategories) && savedCategories.length) DB.categories = savedCategories;
+  if(usage){ DB.categoryUsage = usage.categoryUsage || {}; DB.merchantUsage = usage.merchantUsage || {}; }
+  if(budgetsWrap){ DB.budgets = budgetsWrap.budgets || {}; DB.categoryBudgets = budgetsWrap.categoryBudgets || {}; }
+  if(savedSettings){
+    DB.settings = Object.assign(base.settings, savedSettings);
+    DB.settings.userColors = Object.assign(base.settings.userColors, savedSettings.userColors || {});
+  }
+
+  // "people" is the who-can-a-purchase-belong-to list, editable via a + button wherever
+  // it's shown. Every account -- new or existing -- always has at least one entry, "you";
+  // more people are added manually (see addPerson()). Nothing here is hardcoded to any
+  // particular name.
+  if(!Array.isArray(DB.settings.people) || !DB.settings.people.length){
+    DB.settings.people = [
+      { id:"me", name: t("default_me_name"), emoji:"🙂", color: PEOPLE_COLOR_PALETTE[0] }
+    ];
+  }
+
+  // General-purpose safety net: two expenses with 100%-identical date, time, amount,
+  // currency, category, merchant, note and payer are never two real separate purchases --
+  // that exact a match only happens when a stale device brings a deleted record back (see
+  // migrateLocalToCloud's CLOUD_MIGRATED_FLAG_KEY guard). Keeps the older (createdAt) copy.
+  DB.expenses = dedupeExactDuplicateExpenses(DB.expenses);
+
+  persist();
+  return DB;
+}
+
+function dedupeExactDuplicateExpenses(list){
+  if(!Array.isArray(list) || !list.length) return list;
+  const sigOf = e => [e.date, e.time || '', e.amount, e.currency, e.category, e.merchant || '', e.note || '', e.user || ''].join('|');
+  const bestBySig = new Map();
+  list.forEach((e, idx) => {
+    const sig = sigOf(e);
+    const prev = bestBySig.get(sig);
+    if(!prev || (e.createdAt || 0) < (prev.e.createdAt || 0)) bestBySig.set(sig, { e, idx });
+  });
+  const keepIdx = new Set(Array.from(bestBySig.values()).map(x => x.idx));
+  if(keepIdx.size === list.length) return list;
+  return list.filter((_, idx) => keepIdx.has(idx));
+}
+
+function persist(){
+  try{
+    save('svojmoney-expenses-v1', DB.expenses);
+    save('svojmoney-expense-incomes-v1', DB.incomes);
+    save('svojmoney-expense-categories-v1', DB.categories);
+    save('svojmoney-expense-usage-v1', { categoryUsage: DB.categoryUsage, merchantUsage: DB.merchantUsage });
+    save('svojmoney-expense-budgets-v1', { budgets: DB.budgets, categoryBudgets: DB.categoryBudgets });
+    save('svojmoney-expense-app-settings-v1', DB.settings);
+  }catch(e){
+    console.error("Failed to save data", e);
+    showToast(t("toast_save_failed"));
+  }
+}
+
+function resetAllData(){
+  DB = defaultData();
+  persist();
+}
+
+/* =========================================================================
+   I18N MODULE
+   ========================================================================= */
+const I18N = {
+  ru: {
+    user_shared: "Общее",
+    app_title: "💶 SVOJ money",
+    who_label: "Кто платил",
+    all_who_chip: "Все",
+    cur_rsd_short: "дин. RSD",
+    dash_combined_sub: "общий расход",
+    add_expense_btn: "＋ Добавить расход",
+    add_income_btn: "＋ Добавить доход",
+    section_income: "Доход",
+    income_month_total: "Доход за месяц",
+    income_add_title: "Новый доход",
+    income_amount_label: "Сумма",
+    income_source_label: "Источник",
+    placeholder_income_source: "Например, Зарплата",
+    btn_save_income: "Сохранить доход",
+    confirm_delete_income_title: "Удалить этот доход?",
+    toast_income_saved: "Доход сохранён ✓",
+    prompt_new_person_name: "Имя нового человека",
+    prompt_your_name: "Как вас называть?",
+    section_shared_budget: "Общий бюджет",
+    shared_add_title: "Новая запись",
+    shared_kind_expense: "Расход",
+    shared_kind_income: "Доход",
+    shared_category_label: "Категория / источник",
+    placeholder_shared_category: "Например, Продукты",
+    shared_date_label: "Дата",
+    shared_is_common_label: "🤝 Общее (видят и редактируют все участники)",
+    shared_create_btn: "Создать общий бюджет",
+    shared_join_label: "Ведёте бюджет с кем-то?",
+    shared_join_btn: "Присоединиться",
+    shared_code_label: "Код приглашения",
+    shared_leave_label: "Покинуть общий бюджет",
+    shared_leave_btn: "Покинуть",
+    shared_leave_confirm_title: "Покинуть общий бюджет?",
+    shared_leave_confirm_msg: "Ты больше не будешь видеть общие траты. Записи никуда не денутся для остальных участников.",
+    shared_empty_title: "Пока нет общих записей",
+    shared_invalid_code: "Неверный код приглашения",
+    shared_needs_account: "Сначала войдите в аккаунт",
+    shared_budget_default_name: "Общий бюджет",
+    openArrow: "Открыть →",
+    default_me_name: "Я",
+    section_budget: "Бюджет",
+    section_currencies: "Расходы по валютам",
+    section_categories: "Категории",
+    section_recent: "Последние расходы",
+    add_title_new: "Новый расход",
+    add_title_edit: "Изменить расход",
+    add_title_repeat: "Повторить расход",
+    label_category: "Категория",
+    label_merchant: "Магазин / место",
+    placeholder_merchant: "Например, Lidl",
+    label_datetime: "Дата и время",
+    label_comment: "Комментарий",
+    placeholder_comment: "Необязательно, например «ужин с друзьями»",
+    btn_save_expense: "Сохранить расход",
+    btn_delete_expense: "Удалить расход",
+    history_title: "История",
+    placeholder_search: "Поиск по магазину, категории, комментарию",
+    btn_open_calendar: "📅 Открыть по дате",
+    stats_title: "Статистика",
+    period_today: "Сегодня",
+    period_week: "Неделя",
+    period_month: "Месяц",
+    period_lastmonth: "Прошлый месяц",
+    period_custom: "Период…",
+    stat_total: "Всего потрачено",
+    stat_count: "Транзакций",
+    stat_avg: "Средний расход",
+    stat_max: "Самый большой",
+    stat_compare_title: "Сравнение по людям",
+    vs_lastmonth_title: "По сравнению с прошлым месяцем",
+    vs_now: "Сейчас",
+    vs_then: "Тогда",
+    stat_cat_title: "Расходы по категориям",
+    stat_biggest_title: "Самые большие расходы",
+    stat_topday_title: "Самый дорогой день",
+    budget_title: "Бюджет",
+    mb_spent: "Потрачено",
+    mb_budget: "Бюджет",
+    mb_left: "Осталось",
+    mb_avgday: "Среднее в день",
+    section_total_budget: "Общий бюджет месяца",
+    btn_edit_total_budget: "Изменить бюджет месяца",
+    section_cat_budgets: "Бюджеты по категориям",
+    btn_add_cat_budget: "＋ Добавить лимит категории",
+    settings_title: "Настройки",
+    section_language: "Язык",
+    language_sub: "Язык интерфейса приложения",
+    section_appearance: "Оформление",
+    appearance_label: "Тема",
+    appearance_sub: "Внешний вид приложения",
+    scheme_light: "Светлая",
+    scheme_dark: "Тёмная",
+    scheme_system: "Системная",
+    section_categories_settings: "Категории",
+    btn_new_category: "＋ Новая категория",
+    section_people: "Люди",
+    btn_add_person: "＋ Добавить человека",
+    person_name_placeholder: "Имя",
+    section_colors: "Цветовые темы",
+    app_accent_label: "🎨 Акцент приложения",
+    color_accent_sub: "Основной цвет интерфейса",
+    color_shared_sub: "Акцент интерфейса для общих трат",
+    section_currency_settings: "Валюта",
+    exchange_rate_label: "Курс EUR → RSD",
+    exchange_rate_sub: "Используется, пока нет автоматического курса",
+    section_data: "Данные",
+    export_label: "Экспортировать данные",
+    export_sub: "Скачать резервную копию в JSON",
+    import_label: "Импортировать данные",
+    import_sub: "Восстановить из файла резервной копии",
+    clear_label: "Очистить все данные",
+    clear_sub: "Удалит все расходы и настройки безвозвратно",
+    footer_hint: "SVOJ money · версия данных",
+    nav_home: "Главная",
+    nav_history: "История",
+    nav_add: "Добавить",
+    nav_stats: "Статистика",
+    nav_budget: "Бюджет",
+    detail_repeat: "🔁 Повторить",
+    detail_edit: "✏️ Изменить",
+    all_categories_title: "Все категории",
+    new_cat_title: "Новая категория",
+    new_cat_icon_label: "Иконка (emoji)",
+    new_cat_name_label: "Название",
+    placeholder_cat_name: "Например, Хобби",
+    btn_create_category: "Создать категорию",
+    catbudget_title: "Лимит категории",
+    catbudget_cat_label: "Категория",
+    catbudget_amount_label: "Лимит на месяц (€)",
+    btn_save_limit: "Сохранить лимит",
+    totalbudget_sub: "Сколько вы хотите потратить в этом месяце?",
+    btn_save_budget: "Сохранить бюджет",
+    btn_cancel: "Отмена",
+    btn_delete: "Удалить",
+    more_chip: "Ещё",
+    new_chip: "Новая",
+    toast_saved: "Расход сохранён ✓",
+    toast_updated: "Изменения сохранены ✓",
+    toast_deleted: "Расход удалён",
+    toast_category_created: "Категория создана ✓",
+    toast_category_deleted: "Категория удалена",
+    toast_budget_saved: "Бюджет сохранён ✓",
+    toast_limit_saved: "Лимит сохранён ✓",
+    toast_rate_updated: "Курс обновлён ✓",
+    toast_rate_invalid: "Введите корректный курс",
+    toast_export_done: "Файл резервной копии скачан ✓",
+    toast_import_bad_format: "Файл повреждён или имеет неверный формат",
+    toast_import_read_error: "Не удалось прочитать файл",
+    toast_import_done: "Данные восстановлены ✓",
+    toast_all_cleared: "Все данные удалены",
+    toast_save_failed: "Не удалось сохранить данные ⚠️",
+    toast_enter_category_name: "Введите название категории",
+    validation_empty_amount: "Введите сумму расхода",
+    validation_amount_positive: "Сумма должна быть больше нуля",
+    validation_date_required: "Пожалуйста, укажите дату расхода",
+    confirm_delete_expense_title: "Удалить этот расход?",
+    confirm_delete_expense_msg: "Это действие нельзя отменить.",
+    confirm_delete_category_title: "Удалить категорию?",
+    confirm_delete_category_msg: "Расходы с этой категорией останутся, но категория исчезнет из списка.",
+    confirm_import_title: "Импортировать данные?",
+    confirm_import_msg: "Текущие данные будут заменены содержимым файла резервной копии. Это действие нельзя отменить.",
+    confirm_import_ok: "Импортировать",
+    confirm_clear_title: "Удалить все данные?",
+    confirm_clear_msg: "Все расходы, категории и настройки будут удалены безвозвратно. Рекомендуем сначала сделать экспорт данных.",
+    confirm_clear_ok: "Да, удалить всё",
+    empty_state_title: "Пока ни одной траты",
+    empty_state_sub: "Добавьте первую покупку, чтобы начать видеть вашу финансовую картину.",
+    empty_state_btn: "Добавить расход",
+    empty_search_title: "Ничего не найдено",
+    empty_search_sub: "Попробуйте изменить фильтры или поисковый запрос.",
+    no_data_period: "Нет данных за этот период",
+    no_data_month_yet: "Пока нет расходов в этом месяце",
+    no_cat_budgets: "Лимиты по категориям ещё не установлены",
+    no_budget_set: "Общий бюджет месяца ещё не установлен",
+    budget_warn: "Вы приближаетесь к лимиту бюджета",
+    budget_ok: "Вы укладываетесь в бюджет 👍",
+    dash_budget_warn: "Общие расходы приближаются к лимиту",
+    my_purchases_day_title: "Покупки в этот день",
+    no_purchases_day: "В этот день расходов не было",
+    day_total_label: "Всего",
+    category_label: "Расход",
+    all_categories_chip: "Все категории",
+    purchases_suffix: "покуп.",
+    of_label: "из",
+    spent_label: "потрачено",
+    left_label: "осталось",
+    over_by_label: "превышено на",
+    shared_spend_label: "Общий расход",
+    change_label: "Изменить",
+    delete_label: "Удалить",
+    budget_for: "Бюджет на",
+    per_day_label: "в день",
+    approx_label: "приблизительно",
+    forecast_label: "Прогноз до конца месяца",
+    can_spend_label: "Можно тратить примерно",
+    over_budget_label: "Вы превысили бюджет на"
+  },
+  en: {
+    user_shared: "Shared",
+    app_title: "💶 SVOJ money",
+    who_label: "Who paid",
+    all_who_chip: "All",
+    cur_rsd_short: "RSD",
+    dash_combined_sub: "combined total",
+    add_expense_btn: "＋ Add expense",
+    add_income_btn: "＋ Add income",
+    section_income: "Income",
+    income_month_total: "Income this month",
+    income_add_title: "New income",
+    income_amount_label: "Amount",
+    income_source_label: "Source",
+    placeholder_income_source: "E.g. Salary",
+    btn_save_income: "Save income",
+    confirm_delete_income_title: "Delete this income?",
+    toast_income_saved: "Income saved ✓",
+    prompt_new_person_name: "New person's name",
+    prompt_your_name: "What should we call you?",
+    section_shared_budget: "Shared budget",
+    shared_add_title: "New entry",
+    shared_kind_expense: "Expense",
+    shared_kind_income: "Income",
+    shared_category_label: "Category / source",
+    placeholder_shared_category: "E.g. Groceries",
+    shared_date_label: "Date",
+    shared_is_common_label: "🤝 Common (all members can see and edit)",
+    shared_create_btn: "Create shared budget",
+    shared_join_label: "Sharing a budget with someone?",
+    shared_join_btn: "Join",
+    shared_code_label: "Invite code",
+    shared_leave_label: "Leave shared budget",
+    shared_leave_btn: "Leave",
+    shared_leave_confirm_title: "Leave the shared budget?",
+    shared_leave_confirm_msg: "You'll stop seeing shared transactions. Records stay intact for the other members.",
+    shared_empty_title: "No shared entries yet",
+    shared_invalid_code: "Invalid invite code",
+    shared_needs_account: "Sign in first",
+    shared_budget_default_name: "Shared budget",
+    openArrow: "Open →",
+    default_me_name: "Me",
+    section_budget: "Budget",
+    section_currencies: "Spending by currency",
+    section_categories: "Categories",
+    section_recent: "Recent expenses",
+    add_title_new: "New expense",
+    add_title_edit: "Edit expense",
+    add_title_repeat: "Repeat expense",
+    label_category: "Category",
+    label_merchant: "Merchant / place",
+    placeholder_merchant: "e.g. Lidl",
+    label_datetime: "Date and time",
+    label_comment: "Comment",
+    placeholder_comment: "Optional, e.g. \"dinner with friends\"",
+    btn_save_expense: "Save expense",
+    btn_delete_expense: "Delete expense",
+    history_title: "History",
+    placeholder_search: "Search by merchant, category, comment",
+    btn_open_calendar: "📅 Open by date",
+    stats_title: "Statistics",
+    period_today: "Today",
+    period_week: "Week",
+    period_month: "Month",
+    period_lastmonth: "Last month",
+    period_custom: "Custom…",
+    stat_total: "Total spent",
+    stat_count: "Transactions",
+    stat_avg: "Average expense",
+    stat_max: "Biggest expense",
+    stat_compare_title: "Comparison by person",
+    vs_lastmonth_title: "Compared to last month",
+    vs_now: "Now",
+    vs_then: "Then",
+    stat_cat_title: "Spending by category",
+    stat_biggest_title: "Biggest expenses",
+    stat_topday_title: "Most expensive day",
+    budget_title: "Budget",
+    mb_spent: "Spent",
+    mb_budget: "Budget",
+    mb_left: "Left",
+    mb_avgday: "Average per day",
+    section_total_budget: "Shared monthly budget",
+    btn_edit_total_budget: "Edit monthly budget",
+    section_cat_budgets: "Category budgets",
+    btn_add_cat_budget: "＋ Add category limit",
+    settings_title: "Settings",
+    section_language: "Language",
+    language_sub: "App interface language",
+    section_appearance: "Appearance",
+    appearance_label: "Theme",
+    appearance_sub: "The app's visual style",
+    scheme_light: "Light",
+    scheme_dark: "Dark",
+    scheme_system: "System",
+    section_categories_settings: "Categories",
+    btn_new_category: "＋ New category",
+    section_people: "People",
+    btn_add_person: "＋ Add person",
+    person_name_placeholder: "Name",
+    section_colors: "Color themes",
+    app_accent_label: "🎨 App accent",
+    color_accent_sub: "The interface's primary color",
+    color_shared_sub: "Interface accent for shared expenses",
+    section_currency_settings: "Currency",
+    exchange_rate_label: "EUR → RSD rate",
+    exchange_rate_sub: "Used until a live exchange rate is available",
+    section_data: "Data",
+    export_label: "Export data",
+    export_sub: "Download a JSON backup",
+    import_label: "Import data",
+    import_sub: "Restore from a backup file",
+    clear_label: "Clear all data",
+    clear_sub: "Permanently deletes all expenses and settings",
+    footer_hint: "SVOJ money · data version",
+    nav_home: "Home",
+    nav_history: "History",
+    nav_add: "Add",
+    nav_stats: "Stats",
+    nav_budget: "Budget",
+    detail_repeat: "🔁 Repeat",
+    detail_edit: "✏️ Edit",
+    all_categories_title: "All categories",
+    new_cat_title: "New category",
+    new_cat_icon_label: "Icon (emoji)",
+    new_cat_name_label: "Name",
+    placeholder_cat_name: "e.g. Hobby",
+    btn_create_category: "Create category",
+    catbudget_title: "Category limit",
+    catbudget_cat_label: "Category",
+    catbudget_amount_label: "Monthly limit (€)",
+    btn_save_limit: "Save limit",
+    totalbudget_sub: "How much do you want to spend this month?",
+    btn_save_budget: "Save budget",
+    btn_cancel: "Cancel",
+    btn_delete: "Delete",
+    more_chip: "More",
+    new_chip: "New",
+    toast_saved: "Expense saved ✓",
+    toast_updated: "Changes saved ✓",
+    toast_deleted: "Expense deleted",
+    toast_category_created: "Category created ✓",
+    toast_category_deleted: "Category deleted",
+    toast_budget_saved: "Budget saved ✓",
+    toast_limit_saved: "Limit saved ✓",
+    toast_rate_updated: "Rate updated ✓",
+    toast_rate_invalid: "Enter a valid rate",
+    toast_export_done: "Backup file downloaded ✓",
+    toast_import_bad_format: "The file is corrupted or has an invalid format",
+    toast_import_read_error: "Couldn't read the file",
+    toast_import_done: "Data restored ✓",
+    toast_all_cleared: "All data deleted",
+    toast_save_failed: "Couldn't save data ⚠️",
+    toast_enter_category_name: "Enter a category name",
+    validation_empty_amount: "Enter the expense amount",
+    validation_amount_positive: "Amount must be greater than zero",
+    validation_date_required: "Please choose a date for the expense",
+    confirm_delete_expense_title: "Delete this expense?",
+    confirm_delete_expense_msg: "This action can't be undone.",
+    confirm_delete_category_title: "Delete this category?",
+    confirm_delete_category_msg: "Expenses in this category will stay, but it will disappear from the list.",
+    confirm_import_title: "Import data?",
+    confirm_import_msg: "Your current data will be replaced with the backup file's contents. This action can't be undone.",
+    confirm_import_ok: "Import",
+    confirm_clear_title: "Delete all data?",
+    confirm_clear_msg: "All expenses, categories, and settings will be permanently deleted. We recommend exporting your data first.",
+    confirm_clear_ok: "Yes, delete everything",
+    empty_state_title: "No expenses yet",
+    empty_state_sub: "Add your first purchase to start seeing your financial picture.",
+    empty_state_btn: "Add expense",
+    empty_search_title: "Nothing found",
+    empty_search_sub: "Try changing your filters or search terms.",
+    no_data_period: "No data for this period",
+    no_data_month_yet: "No expenses yet this month",
+    no_cat_budgets: "No category limits set yet",
+    no_budget_set: "The shared monthly budget isn't set yet",
+    budget_warn: "You're getting close to the budget limit",
+    budget_ok: "You're within budget 👍",
+    dash_budget_warn: "Combined spending is nearing the limit",
+    my_purchases_day_title: "Purchases that day",
+    no_purchases_day: "No expenses that day",
+    day_total_label: "Total",
+    category_label: "Expense",
+    all_categories_chip: "All categories",
+    purchases_suffix: "purchases",
+    of_label: "of",
+    spent_label: "spent",
+    left_label: "left",
+    over_by_label: "over by",
+    shared_spend_label: "Combined spending",
+    change_label: "Edit",
+    delete_label: "Delete",
+    budget_for: "Budget for",
+    per_day_label: "per day",
+    approx_label: "approximate",
+    forecast_label: "Forecast to end of month",
+    can_spend_label: "You can spend about",
+    over_budget_label: "You've exceeded the budget by"
+  }
+};
+
+function getLang(){ return (DB && DB.settings && DB.settings.language) || "ru"; }
+function t(key){
+  const dict = I18N[getLang()] || I18N.ru;
+  return (key in dict) ? dict[key] : (I18N.ru[key] || key);
+}
+function catName(cat){
+  if(!cat) return t("category_label");
+  if(cat.custom || !cat.name_en) return cat.name;
+  return getLang() === "en" ? cat.name_en : cat.name;
+}
+function pluralExpenses(n){
+  if(getLang() === "en"){
+    return n + " " + (n === 1 ? "expense" : "expenses");
+  }
+  const mod10 = n % 10, mod100 = n % 100;
+  let word = "трат";
+  if(mod100 < 11 || mod100 > 14){
+    if(mod10 === 1) word = "трата";
+    else if(mod10 >= 2 && mod10 <= 4) word = "траты";
+  }
+  return n + " " + word;
+}
+
+// Applies every static data-i18n[-ph] element on the page to the current language.
+function applyStaticTranslations(){
+  document.documentElement.lang = getLang();
+  $all("[data-i18n]").forEach(el => { el.textContent = t(el.dataset.i18n); });
+  $all("[data-i18n-ph]").forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
+  $all("#lang-toggle .cur-btn").forEach(b => b.classList.toggle("active", b.dataset.lang === getLang()));
+}
+
+/* =========================================================================
+   PEOPLE MODULE
+   Who a purchase can belong to is a plain editable list (DB.settings.people).
+   Every account starts with just one entry for the account holder themselves
+   (renamed during onboarding -- see maybeRunOnboarding()) and can add more
+   people via a + button, typing whatever name they want. Never a fixed pair.
+   ========================================================================= */
+const PEOPLE_COLOR_PALETTE = ["#E23F88","#5B4FE0","#C6941F","#2E9E6D","#0EA5E9","#D97706","#DB2777","#7C3AED"];
+
+function getPeople(){ return (DB && DB.settings && DB.settings.people) || []; }
+function getPersonById(id){ return getPeople().find(p => p.id === id); }
+function nextPersonColor(){ return PEOPLE_COLOR_PALETTE[getPeople().length % PEOPLE_COLOR_PALETTE.length]; }
+function addPerson(name){
+  name = (name || "").trim();
+  if(!name) return null;
+  const person = { id: "p" + Date.now().toString(36) + Math.random().toString(36).slice(2,6), name, emoji: "🙂", color: nextPersonColor() };
+  DB.settings.people.push(person);
+  persist();
+  return person;
+}
+function renamePerson(id, name){
+  const p = getPersonById(id);
+  name = (name || "").trim();
+  if(!p || !name) return;
+  p.name = name;
+  persist();
+}
+
+/* =========================================================================
+   SHARED BUDGET MODULE
+   Generic multi-account collaboration -- works for any two (or more) real
+   SVOJ accounts, not a hardcoded pair. Backed by real Postgres tables
+   (shared_budgets / shared_budget_members / shared_budget_transactions)
+   with row-level security enforced server-side, NOT the local JSON-blob
+   save()/load() layer everything else in this file uses: once a second
+   independent account can read this data, permissions must be enforced by
+   the database itself -- a client-side-only check is not real security,
+   since anyone could edit their own browser's JS state to bypass it.
+   Requires the migration in shared_budget_migration.sql to have been run
+   once against this Supabase project; until then these calls simply fail
+   gracefully (RPC/table not found) and the Settings section shows the
+   create/join UI without crashing.
+   ========================================================================= */
+let sharedParticipants = [];
+let sharedTransactions = [];
+
+async function ensureProfileSynced(){
+  if(!sb || !currentUserId) return;
+  const myName = (getPeople()[0] && getPeople()[0].name) || t("default_me_name");
+  try{
+    await sb.from('profiles').upsert(
+      { user_id: currentUserId, display_name: myName, updated_at: new Date().toISOString() },
+      { onConflict: 'user_id' }
+    );
+  }catch(e){ console.error('profile sync failed', e); }
+}
+
+async function createSharedBudget(){
+  if(!sb || !currentUserId){ showToast(t("shared_needs_account")); return; }
+  const { data, error } = await sb.rpc('create_shared_budget', { p_name: t("shared_budget_default_name") });
+  if(error){ console.error(error); showToast(error.message); return; }
+  const row = Array.isArray(data) ? data[0] : data;
+  DB.settings.activeBudget = { id: row.budget_id, name: t("shared_budget_default_name"), code: row.invite_code };
+  persist();
+  await loadSharedBudgetData();
+  renderSettingsSharedBudget();
+  showToast(t("toast_saved"));
+}
+
+async function joinSharedBudgetByCode(code){
+  if(!sb || !currentUserId){ showToast(t("shared_needs_account")); return; }
+  const { data, error } = await sb.rpc('join_shared_budget', { p_code: code.trim() });
+  if(error){ console.error(error); showToast(t("shared_invalid_code")); return; }
+  const row = Array.isArray(data) ? data[0] : data;
+  DB.settings.activeBudget = { id: row.budget_id, name: row.budget_name, code: code.trim().toUpperCase() };
+  persist();
+  await loadSharedBudgetData();
+  renderSettingsSharedBudget();
+  showToast(t("toast_saved"));
+}
+
+async function loadSharedBudgetData(){
+  const budget = DB.settings.activeBudget;
+  if(!sb || !currentUserId || !budget){ sharedParticipants = []; sharedTransactions = []; return; }
+  const [partsRes, txRes] = await Promise.all([
+    sb.rpc('budget_participants', { b_id: budget.id }),
+    sb.from('shared_budget_transactions').select('*').eq('budget_id', budget.id).order('date', { ascending:false })
+  ]);
+  if(partsRes.error) console.error('participants load failed', partsRes.error);
+  if(txRes.error) console.error('shared tx load failed', txRes.error);
+  sharedParticipants = partsRes.data || [];
+  sharedTransactions = txRes.data || [];
+}
+
+function leaveSharedBudget(){
+  DB.settings.activeBudget = null;
+  persist();
+  sharedParticipants = [];
+  sharedTransactions = [];
+  renderSettingsSharedBudget();
+  renderDashboard();
+}
+
+function participantName(userId){
+  const p = sharedParticipants.find(p => p.user_id === userId);
+  return p ? p.display_name : t("default_me_name");
+}
+
+function canEditSharedTx(tx){ return tx.is_common || tx.owner_id === currentUserId; }
+
+async function saveSharedTransaction(){
+  const budget = DB.settings.activeBudget;
+  if(!budget) return;
+  const check = validateAmount($("#shared-amount").value);
+  if(!check.valid){ showToast(check.message); return; }
+  const payload = {
+    budget_id: budget.id,
+    owner_id: currentUserId,
+    kind: state.sharedAddKind,
+    is_common: $("#shared-is-common").checked,
+    amount: check.amount,
+    currency: state.sharedAddCurrency,
+    category: $("#shared-category").value.trim(),
+    note: $("#shared-note").value.trim(),
+    date: $("#shared-date").value || todayISO(),
+    time: nowTimeStr()
+  };
+  const { error } = await sb.from('shared_budget_transactions').insert(payload);
+  if(error){ console.error(error); showToast(error.message); return; }
+  closeOverlay("overlay-add-shared");
+  showToast(t("toast_saved"));
+  await loadSharedBudgetData();
+  renderSharedScreen();
+}
+
+async function deleteSharedTransaction(id){
+  const { error } = await sb.from('shared_budget_transactions').delete().eq('id', id);
+  if(error){ console.error(error); showToast(error.message); return; }
+  await loadSharedBudgetData();
+  renderSharedScreen();
+}
+
+function sharedTxItemHTML(tx){
+  const who = tx.is_common ? t("user_shared") : participantName(tx.owner_id);
+  const emoji = tx.is_common ? "🤝" : "🙂";
+  const editable = canEditSharedTx(tx);
+  const label = tx.category || tx.note || (tx.kind === "income" ? t("income_source_label") : t("category_label"));
+  return `<div class="expense-item" data-shared-id="${tx.id}" style="${editable ? "cursor:pointer;" : "opacity:0.85;"}">
+    <div class="expense-icon">${tx.kind === "income" ? "💰" : "🧾"}</div>
+    <div class="expense-mid">
+      <div class="merchant">${escapeHTML(label)}</div>
+      <div class="meta"><span class="who-pill" style="background:var(--paper2);">${emoji} ${escapeHTML(who)}</span>${editable ? "" : ' <span style="font-size:10px; opacity:0.6;">🔒</span>'}</div>
+    </div>
+    <div class="expense-right">
+      <div class="amt" style="${tx.kind === "income" ? "color:#2E9E6D;" : ""}">${tx.kind === "income" ? "+" : ""}${formatMoney(tx.amount, tx.currency)}</div>
+      <div class="time">${formatDateShort(tx.date)}</div>
+    </div>
+  </div>`;
+}
+
+function renderSharedScreen(){
+  const budget = DB.settings.activeBudget;
+  if(!budget) return;
+  $("#shared-budget-title").innerHTML = `🤝 ${escapeHTML(budget.name)}`;
+  const partsCard = $("#shared-participants-card");
+  partsCard.innerHTML =
+    `<div class="settings-row"><div class="srow-label">${t("shared_code_label")}</div><div style="font-family:var(--font-mono, monospace); font-weight:800;">${escapeHTML(budget.code || "")}</div></div>` +
+    sharedParticipants.map(p => `<div class="settings-row"><div class="srow-label">🙂 ${escapeHTML(p.display_name)}</div></div>`).join("");
+  const list = $("#shared-tx-list");
+  if(!sharedTransactions.length){
+    list.innerHTML = `<div class="empty-state"><span class="em">🤝</span><div class="t1">${t("shared_empty_title")}</div></div>`;
+    return;
+  }
+  const groups = {}; const order = [];
+  sharedTransactions.forEach(tx => { if(!groups[tx.date]){ groups[tx.date] = []; order.push(tx.date); } groups[tx.date].push(tx); });
+  let html = "";
+  order.forEach(date => {
+    html += `<div class="date-group-label">${formatDateLabel(date)}</div><div class="card" style="padding:6px 14px;">`;
+    html += groups[date].map(sharedTxItemHTML).join("");
+    html += `</div>`;
+  });
+  list.innerHTML = html;
+  list.querySelectorAll("[data-shared-id]").forEach(el => {
+    el.addEventListener("click", () => {
+      const tx = sharedTransactions.find(t => t.id === el.dataset.sharedId);
+      if(!tx || !canEditSharedTx(tx)) return;
+      askConfirm({
+        emoji: "🗑️", title: t("confirm_delete_expense_title"), message: t("confirm_delete_expense_msg"), okLabel: t("btn_delete"),
+        onConfirm: () => deleteSharedTransaction(tx.id)
+      });
+    });
+  });
+}
+
+function setSharedKind(kind){
+  state.sharedAddKind = kind;
+  $all("#shared-kind-toggle .who-btn[data-kind]").forEach(b => b.classList.toggle("active", b.dataset.kind === kind));
+  $("#shared-save-btn").textContent = kind === "income" ? t("btn_save_income") : t("btn_save_expense");
+}
+function setSharedCurrency(currency){
+  state.sharedAddCurrency = currency;
+  $all("#shared-currency-toggle .cur-btn[data-currency]").forEach(b => b.classList.toggle("active", b.dataset.currency === currency));
+}
+function openAddSharedSheet(){
+  setSharedKind("expense");
+  setSharedCurrency("EUR");
+  $("#shared-amount").value = "";
+  $("#shared-category").value = "";
+  $("#shared-note").value = "";
+  $("#shared-date").value = todayISO();
+  $("#shared-is-common").checked = false;
+  openOverlay("overlay-add-shared");
+}
+
+function renderSettingsSharedBudget(){
+  const box = $("#settings-shared-budget");
+  if(!box) return;
+  const budget = DB.settings.activeBudget;
+  if(!budget){
+    box.innerHTML = `
+      <button class="btn btn-primary btn-block" id="shared-create-btn">${t("shared_create_btn")}</button>
+      <div class="form-label" style="margin-top:16px;">${t("shared_join_label")}</div>
+      <div style="display:flex; gap:8px;">
+        <input type="text" class="text-input" id="shared-join-code" placeholder="SVOJ-XXXX" style="flex:1;">
+        <button class="btn btn-outline" id="shared-join-btn">${t("shared_join_btn")}</button>
+      </div>`;
+    $("#shared-create-btn").addEventListener("click", createSharedBudget);
+    $("#shared-join-btn").addEventListener("click", () => {
+      const code = $("#shared-join-code").value.trim();
+      if(code) joinSharedBudgetByCode(code);
+    });
+  } else {
+    box.innerHTML = `
+      <div class="settings-row"><div class="srow-label">🤝 ${escapeHTML(budget.name)}</div><button class="btn btn-outline" id="shared-open-btn">${t("openArrow")}</button></div>
+      <div class="settings-row"><div class="srow-label">${t("shared_code_label")}</div><div style="font-weight:800;">${escapeHTML(budget.code || "")}</div></div>
+      <div class="settings-row"><div class="srow-label">${t("shared_leave_label")}</div><button class="btn btn-danger" id="shared-leave-btn">${t("shared_leave_btn")}</button></div>`;
+    $("#shared-open-btn").addEventListener("click", () => { renderSharedScreen(); showScreen("shared"); });
+    $("#shared-leave-btn").addEventListener("click", () => {
+      askConfirm({ emoji: "👋", title: t("shared_leave_confirm_title"), message: t("shared_leave_confirm_msg"), okLabel: t("shared_leave_btn"), onConfirm: leaveSharedBudget });
+    });
+  }
+}
+// Shown for an expense whose "user" doesn't match any current person -- its person was
+// since removed from the list. Not itself a member of DB.settings.people.
+const UNKNOWN_PERSON = { id: "shared", emoji: "🤝", get name(){ return t("user_shared"); } };
+// Kept for any code that expects USERS[id].name / .emoji / .id directly.
+const USERS = new Proxy({}, {
+  get(_, id){
+    return getPersonById(id);
+  }
+});
+
+/* =========================================================================
+   UTILITIES
+   ========================================================================= */
+function uid(){ return 'e' + Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+// Prefers a real UUID (matches the DB's uuid columns); falls back to a short
+// timestamp-based id if crypto.randomUUID isn't available.
+function newId(){ return (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : uid(); }
+
+function pad2(n){ return String(n).padStart(2,"0"); }
+
+function todayISO(){
+  const d = new Date();
+  return d.getFullYear() + "-" + pad2(d.getMonth()+1) + "-" + pad2(d.getDate());
+}
+function nowTimeStr(){
+  const d = new Date();
+  return pad2(d.getHours()) + ":" + pad2(d.getMinutes());
+}
+function monthKey(dateStr){ return dateStr.slice(0,7); } // "2026-08-20" -> "2026-08"
+function currentMonthKey(){ return monthKey(todayISO()); }
+
+function formatMoney(amount, currency){
+  currency = currency || "EUR";
+  const locale = getLang() === "en" ? "en-US" : "ru-RU";
+  const rsdSuffix = getLang() === "en" ? "RSD" : "дин.";
+  const rounded = Math.round(amount * 100) / 100;
+  const str = rounded.toLocaleString(locale, {minimumFractionDigits: (rounded % 1 !== 0 ? 2 : 0), maximumFractionDigits:2});
+  return currency === "EUR" ? ("€" + str) : (str + " " + rsdSuffix);
+}
+
+function formatEUR(amount){
+  const locale = getLang() === "en" ? "en-US" : "ru-RU";
+  const rounded = Math.round(amount * 100) / 100;
+  return "€" + rounded.toLocaleString(locale, {minimumFractionDigits: (rounded % 1 !== 0 ? 2 : 0), maximumFractionDigits:2});
+}
+
+const MONTHS = {
+  ru: ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"],
+  en: ["January","February","March","April","May","June","July","August","September","October","November","December"]
+};
+const MONTHS_GEN = {
+  ru: ["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"],
+  en: ["January","February","March","April","May","June","July","August","September","October","November","December"]
+};
+const DOW = {
+  ru: ["Пн","Вт","Ср","Чт","Пт","Сб","Вс"],
+  en: ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]
+};
+function monthsArr(){ return MONTHS[getLang()] || MONTHS.ru; }
+function monthsGenArr(){ return MONTHS_GEN[getLang()] || MONTHS_GEN.ru; }
+function dowArr(){ return DOW[getLang()] || DOW.ru; }
+
+function formatDateLabel(dateStr){
+  const today = todayISO();
+  const yesterday = shiftDateStr(today, -1);
+  if(dateStr === today) return getLang() === "en" ? "TODAY" : "СЕГОДНЯ";
+  if(dateStr === yesterday) return getLang() === "en" ? "YESTERDAY" : "ВЧЕРА";
+  const [y,m,d] = dateStr.split("-").map(Number);
+  if(getLang() === "en"){
+    return monthsGenArr()[m-1] + " " + d + (y !== Number(today.slice(0,4)) ? ", " + y : "");
+  }
+  return d + " " + monthsGenArr()[m-1] + (y !== Number(today.slice(0,4)) ? " " + y : "");
+}
+
+function shiftDateStr(dateStr, days){
+  const [y,m,d] = dateStr.split("-").map(Number);
+  const dt = new Date(y, m-1, d);
+  dt.setDate(dt.getDate() + days);
+  return dt.getFullYear() + "-" + pad2(dt.getMonth()+1) + "-" + pad2(dt.getDate());
+}
+
+function daysInMonth(year, month){ return new Date(year, month, 0).getDate(); } // month 1-12
+
+/* =========================================================================
+   CURRENCY MODULE
+   ========================================================================= */
+function getExchangeRate(){ return DB.settings.exchangeRate || 117; }
+
+// Generic conversion so a future real-time rate API can replace getExchangeRate()
+// without touching any call site. Original expense amount/currency are NEVER
+// overwritten anywhere in the app -- this is purely a display-time calculation.
+function convertCurrency(amount, fromCurrency, toCurrency){
+  if(fromCurrency === toCurrency) return amount;
+  const rate = getExchangeRate(); // 1 EUR = rate RSD
+  if(fromCurrency === "EUR" && toCurrency === "RSD") return amount * rate;
+  if(fromCurrency === "RSD" && toCurrency === "EUR") return amount / rate;
+  return amount;
+}
+
+function toEUR(amount, currency){
+  return convertCurrency(amount, currency, "EUR");
+}
+
+// Sums a list of expenses into their two real currency buckets (no conversion).
+function sumByCurrency(expenses){
+  const buckets = {EUR:0, RSD:0};
+  expenses.forEach(e => { buckets[e.currency] = (buckets[e.currency]||0) + e.amount; });
+  return buckets;
+}
+
+/* =========================================================================
+   CATEGORIES MODULE
+   ========================================================================= */
+function getCategories(){ return DB.categories; }
+function getCategoryById(id){ return DB.categories.find(c => c.id === id); }
+
+function saveCategory(icon, name){
+  const id = "custom_" + uid();
+  DB.categories.push({id, icon: icon || "📦", name: name, custom:true});
+  persist();
+  return id;
+}
+
+function deleteCategory(id){
+  DB.categories = DB.categories.filter(c => c.id !== id);
+  persist();
+}
+
+function bumpCategoryUsage(id){
+  DB.categoryUsage[id] = (DB.categoryUsage[id] || 0) + 1;
+  persist();
+}
+
+function getPopularCategories(limit){
+  const cats = getCategories().slice();
+  cats.sort((a,b) => (DB.categoryUsage[b.id]||0) - (DB.categoryUsage[a.id]||0));
+  return cats.slice(0, limit);
+}
+
+/* =========================================================================
+   MERCHANTS MODULE
+   ========================================================================= */
+function bumpMerchantUsage(name){
+  if(!name) return;
+  DB.merchantUsage[name] = (DB.merchantUsage[name] || 0) + 1;
+  persist();
+}
+function getMerchantSuggestions(query, limit){
+  const names = Object.keys(DB.merchantUsage);
+  names.sort((a,b) => DB.merchantUsage[b] - DB.merchantUsage[a]);
+  if(query){
+    const q = query.toLowerCase();
+    return names.filter(n => n.toLowerCase().startsWith(q)).slice(0, limit||5);
+  }
+  return names.slice(0, limit||6);
+}
+
+/* =========================================================================
+   EXPENSES MODULE (CRUD) - future-backend-ready interface
+   ========================================================================= */
+function getExpenses(){ return DB.expenses; }
+
+function saveExpense(data){
+  const now = Date.now();
+  const expense = {
+    id: newId(),
+    user: data.user,
+    amount: data.amount,
+    currency: data.currency,
+    category: data.category,
+    merchant: data.merchant || "",
+    date: data.date,
+    time: data.time,
+    note: data.note || "",
+    createdAt: now,
+    updatedAt: now
+  };
+  DB.expenses.push(expense);
+  bumpCategoryUsage(expense.category);
+  if(expense.merchant) bumpMerchantUsage(expense.merchant);
+  DB.settings.lastCurrency = expense.currency;
+  persist();
+  return expense;
+}
+
+function updateExpense(id, data){
+  const idx = DB.expenses.findIndex(e => e.id === id);
+  if(idx === -1) return null;
+  const existing = DB.expenses[idx];
+  const updated = Object.assign({}, existing, data, { updatedAt: Date.now() });
+  DB.expenses[idx] = updated;
+  bumpCategoryUsage(updated.category);
+  if(updated.merchant) bumpMerchantUsage(updated.merchant);
+  persist();
+  return updated;
+}
+
+function deleteExpense(id){
+  DB.expenses = DB.expenses.filter(e => e.id !== id);
+  persist();
+}
+
+function getExpenseById(id){ return DB.expenses.find(e => e.id === id); }
+
+/* =========================================================================
+   INCOME MODULE
+   ========================================================================= */
+function saveIncome(payload){
+  const now = Date.now();
+  DB.incomes.push({
+    id: newId(),
+    date: payload.date,
+    time: payload.time,
+    amount: payload.amount,
+    currency: payload.currency,
+    source: payload.source,
+    note: payload.note,
+    createdAt: now, updatedAt: now
+  });
+  persist();
+}
+function deleteIncome(id){
+  DB.incomes = DB.incomes.filter(i => i.id !== id);
+  persist();
+}
+function getIncomeById(id){ return DB.incomes.find(i => i.id === id); }
+function incomesForMonth(mKey){ return DB.incomes.filter(i => monthKey(i.date) === mKey); }
+
+function openAddIncomeSheet(){
+  $("#income-amount").value = "";
+  $("#income-source").value = "";
+  $("#income-note").value = "";
+  $("#income-date").value = todayISO();
+  $("#income-time").value = nowTimeStr();
+  setIncomeCurrency(DB.settings.lastCurrency || "EUR");
+  openOverlay("overlay-add-income");
+}
+function setIncomeCurrency(currency){
+  state.incomeSelectedCurrency = currency;
+  $all("#income-currency-toggle .cur-btn[data-currency]").forEach(b => b.classList.toggle("active", b.dataset.currency === currency));
+}
+function handleSaveIncome(){
+  const check = validateAmount($("#income-amount").value);
+  if(!check.valid){ showToast(check.message); return; }
+  const date = $("#income-date").value || todayISO();
+  const time = $("#income-time").value || nowTimeStr();
+  saveIncome({
+    amount: check.amount,
+    currency: state.incomeSelectedCurrency,
+    source: $("#income-source").value.trim(),
+    note: $("#income-note").value.trim(),
+    date, time
+  });
+  closeOverlay("overlay-add-income");
+  showToast(t("toast_income_saved"));
+  renderDashboard();
+}
+function incomeItemHTML(inc){
+  const label = inc.source || t("income_source_label");
+  return `<div class="expense-item" data-income-id="${inc.id}">
+    <div class="expense-icon">💰</div>
+    <div class="expense-mid">
+      <div class="merchant">${escapeHTML(label)}</div>
+      <div class="meta">${escapeHTML(inc.note || "")}</div>
+    </div>
+    <div class="expense-right">
+      <div class="amt">${formatMoney(inc.amount, inc.currency)}</div>
+      <div class="time">${formatDateShort(inc.date)}</div>
+    </div>
+  </div>`;
+}
+function renderDashboardSharedBudgetCard(){
+  const card = $("#dash-shared-budget-card");
+  const budget = DB.settings.activeBudget;
+  if(!budget){ card.style.display = "none"; return; }
+  card.style.display = "block";
+  $("#dash-shared-budget-label").textContent = "🤝 " + budget.name;
+}
+
+function renderIncomeSection(){
+  const mKey = currentMonthKey();
+  const monthIncomes = incomesForMonth(mKey);
+  const totalEUR = monthIncomes.reduce((sum, i) => sum + toEUR(i.amount, i.currency), 0);
+  $("#dash-income-total").textContent = formatDisplay(totalEUR);
+  const listEl = $("#dash-income-list");
+  const recent = monthIncomes.slice().sort((a,b) => (b.date+(b.time||"")).localeCompare(a.date+(a.time||"")) || (b.createdAt-a.createdAt)).slice(0,8);
+  if(recent.length === 0){
+    listEl.innerHTML = `<div class="no-data-msg">${t("no_data_month_yet")}</div>`;
+    return;
+  }
+  listEl.innerHTML = recent.map(incomeItemHTML).join("");
+  listEl.querySelectorAll("[data-income-id]").forEach(el => {
+    el.addEventListener("click", () => {
+      const id = el.dataset.incomeId;
+      askConfirm({
+        emoji: "🗑️",
+        title: t("confirm_delete_income_title"),
+        message: t("confirm_delete_expense_msg"),
+        okLabel: t("btn_delete"),
+        onConfirm: () => { deleteIncome(id); showToast(t("toast_deleted")); renderDashboard(); }
+      });
+    });
+  });
+}
+
+/* =========================================================================
+   BUDGETS MODULE
+   ========================================================================= */
+function getBudgets(){ return DB.budgets; }
+function getMonthBudget(mKey){ return DB.budgets[mKey]; }
+function saveBudget(mKey, amount){ DB.budgets[mKey] = amount; persist(); }
+
+function getCategoryBudgets(mKey){ return DB.categoryBudgets[mKey] || {}; }
+function saveCategoryBudget(mKey, categoryId, amount){
+  if(!DB.categoryBudgets[mKey]) DB.categoryBudgets[mKey] = {};
+  DB.categoryBudgets[mKey][categoryId] = amount;
+  persist();
+}
+function deleteCategoryBudget(mKey, categoryId){
+  if(DB.categoryBudgets[mKey]) delete DB.categoryBudgets[mKey][categoryId];
+  persist();
+}
+
+/* =========================================================================
+   STATISTICS MODULE (all computed on the fly from expenses[])
+   ========================================================================= */
+function filterExpenses({from, to, who} = {}){
+  return DB.expenses.filter(e => {
+    if(who && who !== "all" && e.user !== who) return false;
+    if(from && e.date < from) return false;
+    if(to && e.date > to) return false;
+    return true;
+  });
+}
+
+function sumEUR(expenses){
+  return expenses.reduce((s,e) => s + toEUR(e.amount, e.currency), 0);
+}
+
+function getPeriodRange(period){
+  const today = todayISO();
+  if(period === "today") return {from: today, to: today};
+  if(period === "week"){
+    return {from: shiftDateStr(today, -6), to: today};
+  }
+  if(period === "month"){
+    return {from: today.slice(0,8) + "01", to: today};
+  }
+  if(period === "lastmonth"){
+    const [y,m] = today.split("-").map(Number);
+    let ly = y, lm = m - 1;
+    if(lm === 0){ lm = 12; ly = y - 1; }
+    const from = ly + "-" + pad2(lm) + "-01";
+    const to = ly + "-" + pad2(lm) + "-" + pad2(daysInMonth(ly, lm));
+    return {from, to};
+  }
+  return {from: today, to: today};
+}
+
+function computeStats(expenses){
+  const count = expenses.length;
+  const total = sumEUR(expenses);
+  const avg = count ? total / count : 0;
+  let max = null;
+  expenses.forEach(e => {
+    const v = toEUR(e.amount, e.currency);
+    if(!max || v > toEUR(max.amount, max.currency)) max = e;
+  });
+  return {count, total, avg, max};
+}
+
+function categoryBreakdown(expenses){
+  const map = {};
+  expenses.forEach(e => {
+    const v = toEUR(e.amount, e.currency);
+    if(!map[e.category]) map[e.category] = {sum:0, count:0};
+    map[e.category].sum += v;
+    map[e.category].count += 1;
+  });
+  const total = expenses.reduce((s,e) => s + toEUR(e.amount, e.currency), 0);
+  const rows = Object.keys(map).map(catId => {
+    const cat = getCategoryById(catId);
+    return {
+      catId, icon: cat ? cat.icon : "📦", name: catName(cat),
+      sum: map[catId].sum, count: map[catId].count,
+      pct: total ? (map[catId].sum/total*100) : 0
+    };
+  });
+  rows.sort((a,b) => b.sum - a.sum);
+  return rows;
+}
+
+function biggestExpenses(expenses, limit){
+  return expenses.slice().sort((a,b) => toEUR(b.amount,b.currency) - toEUR(a.amount,a.currency)).slice(0, limit||5);
+}
+
+function topSpendingDay(expenses){
+  const map = {};
+  expenses.forEach(e => {
+    map[e.date] = (map[e.date] || 0) + toEUR(e.amount, e.currency);
+  });
+  let bestDate = null, bestVal = 0;
+  Object.keys(map).forEach(d => { if(map[d] > bestVal){ bestVal = map[d]; bestDate = d; } });
+  return bestDate ? {date: bestDate, sum: bestVal} : null;
+}
+
+/* =========================================================================
+   APPLICATION STATE
+   ========================================================================= */
+const state = {
+  currentScreen: "dashboard",
+  addMode: "create",       // "create" | "edit" | "repeat"
+  editingExpenseId: null,
+  addSelectedCategory: null,
+  addSelectedCurrency: "EUR",
+  addSelectedWho: null,     // a person id from DB.settings.people -- who the expense belongs to
+  allCategoriesExpanded: false,
+  historyFilterWho: "all",
+  historyFilterCat: "all",
+  historySearch: "",
+  historySelectMode: false,
+  historySelectedIds: new Set(),
+  incomeSelectedCurrency: "EUR",
+  sharedAddKind: "expense",
+  sharedAddCurrency: "EUR",
+  displayCurrency: "EUR",  // controls how combined totals are shown on Dashboard
+  statsWho: "all",         // "all" | a person id from DB.settings.people
+  statsPeriod: "today",
+  statsCustomFrom: null,
+  statsCustomTo: null,
+  calendarYear: null,
+  calendarMonth: null,
+  calendarSelectedDate: null,
+  confirmCallback: null,
+  pendingImportPayload: null
+};
+
+// Formats a EUR-based aggregate amount in whichever currency the user picked
+// for the Dashboard's shared totals. The underlying expense data never changes.
+function formatDisplay(eurAmount){
+  const converted = convertCurrency(eurAmount, "EUR", state.displayCurrency);
+  return formatMoney(converted, state.displayCurrency);
+}
+
+/* =========================================================================
+   RENDERING MODULE
+   ========================================================================= */
+function $(sel){ return document.querySelector(sel); }
+function $all(sel){ return Array.from(document.querySelectorAll(sel)); }
+
+function showToast(msg){
+  const t = $("#toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(showToast._timer);
+  showToast._timer = setTimeout(() => t.classList.remove("show"), 2200);
+}
+
+// The app has a single accent color, set from Settings; per-person tag colors
+// (DB.settings.people[].color) are separate and set via addPerson()/renamePerson().
+function applyColorTheme(){
+  const colors = DB.settings.userColors;
+  const root = document.documentElement;
+  root.style.setProperty("--app-accent", colors.accent);
+  root.style.setProperty("--app-accent-dark", shadeColor(colors.accent, -15));
+}
+
+function shadeColor(hex, percent){
+  try{
+    let r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+    r = Math.max(0, Math.min(255, Math.round(r + (percent/100)*255)));
+    g = Math.max(0, Math.min(255, Math.round(g + (percent/100)*255)));
+    b = Math.max(0, Math.min(255, Math.round(b + (percent/100)*255)));
+    return "#" + [r,g,b].map(v => v.toString(16).padStart(2,"0")).join("");
+  }catch(e){ return hex; }
+}
+
+function showScreen(name){
+  if(name !== "history") exitHistorySelectMode();
+  state.currentScreen = name;
+  $all(".screen").forEach(s => s.classList.remove("active"));
+  const el = document.getElementById("screen-" + name);
+  if(el) el.classList.add("active");
+  $all(".nav-btn").forEach(b => b.classList.toggle("active", b.dataset.screen === name));
+  const bottomNav = $("#bottom-nav");
+  bottomNav.style.display = (name === "add") ? "none" : "flex";
+  window.scrollTo(0,0);
+
+  if(name === "dashboard") renderDashboard();
+  if(name === "history") renderHistory();
+  if(name === "stats") renderStats();
+  if(name === "budget") renderBudget();
+  if(name === "settings") renderSettings();
+  if(name === "shared") renderSharedScreen();
+}
+
+/* ---- Dashboard ----
+   Everything is shared and visible to every person on this account. The hero
+   widget shows the combined total plus a per-person breakdown (getPeople());
+   the recent list below shows every expense, regardless of who it belongs to. */
+function renderDashboard(){
+  $all("#dash-currency-toggle .cur-btn").forEach(b => b.classList.toggle("active", b.dataset.dispcur === state.displayCurrency));
+  renderDashboardSharedBudgetCard();
+  renderIncomeSection();
+
+  const mKey = currentMonthKey();
+  const [y,m] = mKey.split("-").map(Number);
+  $("#dash-month-label").textContent = (getLang() === "en" ? "TOTAL FOR " : "ОБЩЕЕ ЗА ") + monthsArr()[m-1].toUpperCase();
+
+  const monthExpenses = filterExpenses({from: mKey+"-01", to: mKey+"-"+pad2(daysInMonth(y,m))});
+  const totalEUR = sumEUR(monthExpenses);
+
+  $("#dash-total-combined").textContent = formatDisplay(totalEUR);
+  $("#dash-split-container").innerHTML = getPeople().map(p => {
+    const personEUR = sumEUR(monthExpenses.filter(e => e.user === p.id));
+    return `<div class="split-item"><div class="who">${p.emoji} ${escapeHTML(p.name)}</div><div class="amt">${formatDisplay(personEUR)}</div></div>`;
+  }).join("");
+
+  // Shared monthly budget -- one pool, everyone draws from it together
+  const budget = getMonthBudget(mKey) || 0;
+  const pct = budget > 0 ? Math.min(totalEUR/budget*100, 100) : 0;
+  $("#dash-budget-spent-lbl").textContent = formatDisplay(totalEUR) + " " + t("spent_label");
+  $("#dash-budget-of-lbl").textContent = t("of_label") + " " + formatDisplay(budget);
+  const fill = $("#dash-budget-fill");
+  fill.style.width = pct + "%";
+  fill.className = "budget-progress-fill" + (totalEUR > budget && budget>0 ? " over" : (pct>=80 && budget>0 ? " warn" : ""));
+  const alertBox = $("#dash-budget-alert");
+  if(budget <= 0){
+    alertBox.className = "budget-alert ok";
+    alertBox.textContent = t("no_budget_set");
+  } else if(totalEUR > budget){
+    alertBox.className = "budget-alert over";
+    alertBox.textContent = `${t("over_budget_label")} ${formatDisplay(totalEUR-budget)}`;
+  } else if(pct >= 80){
+    alertBox.className = "budget-alert warn";
+    alertBox.textContent = t("dash_budget_warn");
+  } else {
+    alertBox.className = "budget-alert ok";
+    alertBox.textContent = t("budget_ok");
+  }
+
+  // Actual amounts spent per real currency (never converted/merged)
+  const byCur = sumByCurrency(monthExpenses);
+  $("#dash-cur-eur").textContent = formatMoney(byCur.EUR, "EUR");
+  $("#dash-cur-rsd").textContent = formatMoney(byCur.RSD, "RSD");
+
+  // Combined category totals
+  const catRows = categoryBreakdown(monthExpenses).slice(0,6);
+  const catBox = $("#dash-categories-list");
+  if(catRows.length === 0){
+    catBox.innerHTML = `<div class="no-data-msg">${t("no_data_month_yet")}</div>`;
+  } else {
+    catBox.innerHTML = catRows.map(r => `
+      <div class="cat-stat-row">
+        <div class="cat-stat-icon">${r.icon}</div>
+        <div class="cat-stat-mid">
+          <div class="cn">${escapeHTML(r.name)}</div>
+          <div class="cbar-bg"><div class="cbar-fill" style="width:${r.pct}%;"></div></div>
+        </div>
+        <div class="cat-stat-right">
+          <div class="ca">${formatDisplay(r.sum)}</div>
+          <div class="cp">${r.pct.toFixed(0)}%</div>
+        </div>
+      </div>`).join("");
+  }
+
+  // Everyone's recent expenses -- there's no privacy split anymore.
+  const recent = DB.expenses.slice()
+    .sort((a,b) => (b.date+b.time).localeCompare(a.date+a.time) || (b.createdAt - a.createdAt))
+    .slice(0,8);
+  const listEl = $("#dash-recent-list");
+  if(recent.length === 0){
+    listEl.innerHTML = emptyStateHTML();
+    bindEmptyStateButton(listEl);
+  } else {
+    listEl.innerHTML = recent.map(e => expenseItemHTML(e)).join("");
+    bindExpenseItemClicks(listEl);
+  }
+}
+
+function emptyStateHTML(){
+  return `<div class="empty-state">
+    <span class="em">🌱</span>
+    <div class="t1">${t("empty_state_title")}</div>
+    <div class="t2">${t("empty_state_sub")}</div>
+    <button class="btn btn-primary" data-action="open-add">${t("empty_state_btn")}</button>
+  </div>`;
+}
+function bindEmptyStateButton(container){
+  const btn = container.querySelector('[data-action="open-add"]');
+  if(btn) btn.addEventListener("click", () => openAddScreen());
+}
+
+function expenseItemHTML(e, selectMode){
+  const cat = getCategoryById(e.category);
+  const icon = cat ? cat.icon : "📦";
+  const who = USERS[e.user] || UNKNOWN_PERSON;
+  const label = e.merchant || catName(cat);
+  const todayLabelWord = getLang() === "en" ? "TODAY" : "СЕГОДНЯ";
+  const checkbox = selectMode
+    ? `<div class="expense-checkbox${state.historySelectedIds.has(e.id) ? " checked" : ""}" data-checkbox-id="${e.id}"></div>`
+    : "";
+  return `<div class="expense-item" data-id="${e.id}">
+    ${checkbox}
+    <div class="expense-icon">${icon}</div>
+    <div class="expense-mid">
+      <div class="merchant">${escapeHTML(label)}</div>
+      <div class="meta"><span class="who-pill" style="background:${shadeColor(who.color || "#C6941F", 75)}; color:${shadeColor(who.color || "#C6941F", -25)};">${who.emoji} ${escapeHTML(who.name)}</span></div>
+    </div>
+    <div class="expense-right">
+      <div class="amt">${formatMoney(e.amount, e.currency)}</div>
+      <div class="time">${formatDateLabel(e.date) === todayLabelWord ? (e.time || "") : formatDateShort(e.date)}</div>
+    </div>
+  </div>`;
+}
+
+function formatDateShort(dateStr){
+  const [y,m,d] = dateStr.split("-").map(Number);
+  return d + "." + pad2(m);
+}
+
+function escapeHTML(str){
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function bindExpenseItemClicks(container){
+  container.querySelectorAll(".expense-item").forEach(el => {
+    el.addEventListener("click", () => {
+      if(state.historySelectMode) toggleHistorySelect(el.dataset.id);
+      else openExpenseDetail(el.dataset.id);
+    });
+  });
+}
+
+/* ---- History bulk select / delete ---- */
+function toggleHistorySelectMode(){
+  state.historySelectMode = !state.historySelectMode;
+  if(!state.historySelectMode) state.historySelectedIds.clear();
+  renderHistory();
+}
+function exitHistorySelectMode(){
+  state.historySelectMode = false;
+  state.historySelectedIds.clear();
+}
+function toggleHistorySelect(id){
+  if(state.historySelectedIds.has(id)) state.historySelectedIds.delete(id);
+  else state.historySelectedIds.add(id);
+  renderHistory();
+}
+function updateHistoryBulkBar(){
+  const bar = $("#hist-bulk-bar");
+  if(!bar) return;
+  const count = state.historySelectedIds.size;
+  bar.style.display = state.historySelectMode ? "block" : "none";
+  const countEl = $("#hist-bulk-count");
+  if(countEl) countEl.textContent = String(count);
+  const delBtn = $("#hist-bulk-delete-btn");
+  if(delBtn) delBtn.disabled = count === 0;
+  const toggleBtn = $("#hist-select-toggle-btn");
+  if(toggleBtn) toggleBtn.classList.toggle("active-select", state.historySelectMode);
+}
+function bulkDeleteSelectedExpenses(){
+  const ids = new Set(state.historySelectedIds);
+  if(!ids.size) return;
+  const n = ids.size;
+  askConfirm({
+    emoji: "🗑️",
+    title: getLang() === "en"
+      ? `Delete ${n} selected expense${n===1?"":"s"}?`
+      : `Удалить ${n} выбранных ${pluralExpenses(n).split(" ")[1]}?`,
+    message: t("confirm_delete_expense_msg"),
+    okLabel: t("btn_delete"),
+    onConfirm: () => {
+      DB.expenses = DB.expenses.filter(e => !ids.has(e.id));
+      persist();
+      exitHistorySelectMode();
+      renderHistory();
+      showToast(t("toast_deleted"));
+    }
+  });
+}
+
+/* ---- Add / Edit expense screen ---- */
+function openAddScreen(){
+  state.addMode = "create";
+  state.editingExpenseId = null;
+  state.addSelectedCategory = getPopularCategories(1)[0] ? getPopularCategories(1)[0].id : "food";
+  state.addSelectedCurrency = DB.settings.lastCurrency || "EUR";
+  state.allCategoriesExpanded = false;
+
+  $("#add-form-title").textContent = t("add_title_new");
+  $("#add-amount").value = "";
+  $("#add-amount-error").textContent = "";
+  $("#add-merchant").value = "";
+  $("#add-comment").value = "";
+  $("#add-date").value = todayISO();
+  $("#add-time").value = nowTimeStr();
+  $("#add-delete-wrap").style.display = "none";
+
+  setAddCurrency(state.addSelectedCurrency);
+  renderAddWhoToggle();
+  setAddWho(DB.settings.lastWho);
+  renderAddCategoryGrid();
+  renderMerchantSuggestions("");
+  showScreen("add");
+}
+
+function openExpenseEdit(id){
+  const exp = getExpenseById(id);
+  if(!exp) return;
+  state.addMode = "edit";
+  state.editingExpenseId = id;
+  state.addSelectedCategory = exp.category;
+  state.addSelectedCurrency = exp.currency;
+
+  $("#add-form-title").textContent = t("add_title_edit");
+  $("#add-amount").value = String(exp.amount);
+  $("#add-amount-error").textContent = "";
+  $("#add-merchant").value = exp.merchant || "";
+  $("#add-comment").value = exp.note || "";
+  $("#add-date").value = exp.date;
+  $("#add-time").value = exp.time;
+  $("#add-delete-wrap").style.display = "block";
+
+  setAddCurrency(exp.currency);
+  renderAddWhoToggle();
+  setAddWho(exp.user);
+  renderAddCategoryGrid();
+  renderMerchantSuggestions("");
+  closeOverlay("overlay-expense-detail");
+  showScreen("add");
+}
+
+function openExpenseRepeat(id){
+  const exp = getExpenseById(id);
+  if(!exp) return;
+  state.addMode = "repeat";
+  state.editingExpenseId = null;
+  state.addSelectedCategory = exp.category;
+  state.addSelectedCurrency = exp.currency;
+
+  $("#add-form-title").textContent = t("add_title_repeat");
+  $("#add-amount").value = String(exp.amount);
+  $("#add-amount-error").textContent = "";
+  $("#add-merchant").value = exp.merchant || "";
+  $("#add-comment").value = "";
+  $("#add-date").value = todayISO();
+  $("#add-time").value = nowTimeStr();
+  $("#add-delete-wrap").style.display = "none";
+
+  setAddCurrency(exp.currency);
+  renderAddWhoToggle();
+  setAddWho(exp.user);
+  renderAddCategoryGrid();
+  renderMerchantSuggestions("");
+  closeOverlay("overlay-expense-detail");
+  showScreen("add");
+}
+
+function closeAddScreen(){
+  showScreen(state.editingExpenseId || state.addMode === "repeat" ? "history" : "dashboard");
+}
+
+function setAddCurrency(currency){
+  state.addSelectedCurrency = currency;
+  $all("#screen-add .cur-btn[data-currency]").forEach(b => b.classList.toggle("active", b.dataset.currency === currency));
+  $("#add-cur-sym").textContent = currency === "EUR" ? "€" : (getLang()==="en" ? "RSD" : "дин.");
+}
+
+function setAddWho(who){
+  const fallback = (getPeople()[0] && getPeople()[0].id) || "shared";
+  state.addSelectedWho = who || fallback;
+  $all("#add-who-toggle .who-btn[data-who]").forEach(b => b.classList.toggle("active", b.dataset.who === state.addSelectedWho));
+}
+function renderAddWhoToggle(){
+  const box = $("#add-who-toggle");
+  box.innerHTML = getPeople().map(p =>
+    `<button type="button" class="who-btn" data-who="${p.id}" style="--who-color:${p.color};"><span class="em">${p.emoji}</span><span>${escapeHTML(p.name)}</span></button>`
+  ).join("") + `<button type="button" class="who-btn who-btn-add" data-action="add-person">＋</button>`;
+  box.querySelectorAll(".who-btn[data-who]").forEach(btn => btn.addEventListener("click", () => setAddWho(btn.dataset.who)));
+  const addBtn = box.querySelector('[data-action="add-person"]');
+  if(addBtn) addBtn.addEventListener("click", handleAddPerson);
+  $all("#add-who-toggle .who-btn[data-who]").forEach(b => b.classList.toggle("active", b.dataset.who === state.addSelectedWho));
+}
+function handleAddPerson(){
+  const name = (prompt(t("prompt_new_person_name")) || "").trim();
+  if(!name) return;
+  const person = addPerson(name);
+  if(!person) return;
+  renderAddWhoToggle();
+  setAddWho(person.id);
+  renderHistoryWhoFilters();
+  renderStatsWhoTabs();
+}
+
+function renderAddCategoryGrid(){
+  const popular = getPopularCategories(7);
+  const grid = $("#add-cat-grid");
+  grid.innerHTML = popular.map(catChipHTML).join("");
+  grid.innerHTML += `<button class="cat-chip add-new" data-action="toggle-all-cats"><span class="em">⋯</span><span class="lbl">${t("more_chip")}</span></button>`;
+  grid.querySelectorAll(".cat-chip[data-cat]").forEach(el => {
+    el.addEventListener("click", () => {
+      state.addSelectedCategory = el.dataset.cat;
+      renderAddCategoryGrid();
+    });
+  });
+  const toggleBtn = grid.querySelector('[data-action="toggle-all-cats"]');
+  if(toggleBtn) toggleBtn.addEventListener("click", openAllCategoriesSheet);
+}
+
+function catChipHTML(cat){
+  const selected = cat.id === state.addSelectedCategory;
+  return `<button class="cat-chip ${selected ? "selected":""}" data-cat="${cat.id}">
+    <span class="em">${cat.icon}</span><span class="lbl">${escapeHTML(catName(cat))}</span>
+  </button>`;
+}
+
+function openAllCategoriesSheet(){
+  const grid = $("#all-cat-grid");
+  grid.innerHTML = getCategories().map(catChipHTML).join("") +
+    `<button class="cat-chip add-new" data-action="new-cat-from-sheet"><span class="em">＋</span><span class="lbl">${t("new_chip")}</span></button>`;
+  grid.querySelectorAll(".cat-chip[data-cat]").forEach(el => {
+    el.addEventListener("click", () => {
+      state.addSelectedCategory = el.dataset.cat;
+      renderAddCategoryGrid();
+      closeOverlay("overlay-all-categories");
+    });
+  });
+  const newBtn = grid.querySelector('[data-action="new-cat-from-sheet"]');
+  if(newBtn) newBtn.addEventListener("click", () => {
+    closeOverlay("overlay-all-categories");
+    openNewCategorySheet();
+  });
+  openOverlay("overlay-all-categories");
+}
+
+function renderMerchantSuggestions(query){
+  const suggestions = getMerchantSuggestions(query, 6);
+  const box = $("#add-merchant-suggest");
+  box.innerHTML = suggestions.map(s => `<button class="suggest-chip" data-merchant="${escapeHTML(s)}">${escapeHTML(s)}</button>`).join("");
+  box.querySelectorAll(".suggest-chip").forEach(el => {
+    el.addEventListener("click", () => { $("#add-merchant").value = el.dataset.merchant; });
+  });
+}
+
+function validateAmount(raw){
+  const normalized = String(raw).replace(",", ".").trim();
+  const num = parseFloat(normalized);
+  if(!normalized || isNaN(num)) return {valid:false, message:t("validation_empty_amount")};
+  if(num <= 0) return {valid:false, message:t("validation_amount_positive")};
+  return {valid:true, amount: Math.round(num * 100) / 100};
+}
+
+function handleSaveExpense(){
+  const raw = $("#add-amount").value;
+  const check = validateAmount(raw);
+  if(!check.valid){
+    $("#add-amount-error").textContent = check.message;
+    return;
+  }
+  const date = $("#add-date").value;
+  if(!date){
+    $("#add-amount-error").textContent = t("validation_date_required");
+    return;
+  }
+  $("#add-amount-error").textContent = "";
+
+  const payload = {
+    user: state.addSelectedWho || "shared",
+    amount: check.amount,
+    currency: state.addSelectedCurrency,
+    category: state.addSelectedCategory || "other",
+    merchant: $("#add-merchant").value.trim(),
+    date: date,
+    time: $("#add-time").value || nowTimeStr(),
+    note: $("#add-comment").value.trim()
+  };
+
+  DB.settings.lastWho = payload.user;
+
+  if(state.addMode === "edit" && state.editingExpenseId){
+    updateExpense(state.editingExpenseId, payload);
+    showToast(t("toast_updated"));
+  } else {
+    saveExpense(payload);
+    showToast(t("toast_saved"));
+  }
+
+  const backTo = (state.addMode === "edit" || state.addMode === "repeat") ? "history" : "dashboard";
+  showScreen(backTo);
+}
+
+function handleDeleteExpenseFromForm(){
+  if(!state.editingExpenseId) return;
+  askConfirm({
+    emoji: "🗑️",
+    title: t("confirm_delete_expense_title"),
+    message: t("confirm_delete_expense_msg"),
+    okLabel: t("btn_delete"),
+    onConfirm: () => {
+      deleteExpense(state.editingExpenseId);
+      showToast(t("toast_deleted"));
+      showScreen("history");
+    }
+  });
+}
+
+/* ---- Expense detail sheet ---- */
+function openExpenseDetail(id){
+  const exp = getExpenseById(id);
+  if(!exp) return;
+  state.detailExpenseId = id;
+  const cat = getCategoryById(exp.category);
+  const who = USERS[exp.user] || UNKNOWN_PERSON;
+  $("#detail-icon").textContent = cat ? cat.icon : "📦";
+  $("#detail-merchant").textContent = exp.merchant || catName(cat);
+  $("#detail-meta").textContent = `${who.emoji} ${who.name} · ${formatDateLabel(exp.date)}` + (exp.time ? ` · ${exp.time}` : "");
+  $("#detail-amount").textContent = formatMoney(exp.amount, exp.currency);
+  $("#detail-comment").textContent = exp.note || "";
+  openOverlay("overlay-expense-detail");
+}
+
+/* ---- History ----
+   Everything is shared -- this screen shows all expenses, with an optional
+   "who" filter (built dynamically from DB.settings.people) plus category and
+   search. */
+function renderWhoFilterRow(container, selected, onSelect){
+  container.innerHTML = `<button class="filter-chip ${selected==='all'?'active':''}" data-who="all">${t("all_who_chip")}</button>` +
+    getPeople().map(p => `<button class="filter-chip ${selected===p.id?'active':''}" data-who="${p.id}">${p.emoji} ${escapeHTML(p.name)}</button>`).join("");
+  container.querySelectorAll(".filter-chip").forEach(el => {
+    el.addEventListener("click", () => onSelect(el.dataset.who));
+  });
+}
+function renderHistoryWhoFilters(){
+  renderWhoFilterRow($("#hist-who-filter"), state.historyFilterWho, (who) => {
+    state.historyFilterWho = who;
+    renderHistory();
+  });
+}
+function renderStatsWhoTabs(){
+  renderWhoFilterRow($("#stats-who-tabs"), state.statsWho, (who) => {
+    state.statsWho = who;
+    renderStats();
+  });
+}
+
+function renderHistory(){
+  renderHistoryWhoFilters();
+  renderHistoryCategoryFilters();
+  const list = $("#hist-list");
+  let expenses = DB.expenses.slice();
+
+  if(state.historyFilterWho !== "all") expenses = expenses.filter(e => e.user === state.historyFilterWho);
+  if(state.historyFilterCat !== "all") expenses = expenses.filter(e => e.category === state.historyFilterCat);
+  if(state.historySearch){
+    const q = state.historySearch.toLowerCase();
+    expenses = expenses.filter(e => {
+      const cat = getCategoryById(e.category);
+      return (e.merchant||"").toLowerCase().includes(q) ||
+             (e.note||"").toLowerCase().includes(q) ||
+             (cat && catName(cat).toLowerCase().includes(q));
+    });
+  }
+
+  expenses.sort((a,b) => (b.date+b.time).localeCompare(a.date+a.time) || (b.createdAt - a.createdAt));
+
+  updateHistoryBulkBar();
+
+  if(expenses.length === 0){
+    list.innerHTML = `<div class="empty-state"><span class="em">🔎</span><div class="t1">${t("empty_search_title")}</div><div class="t2">${t("empty_search_sub")}</div></div>`;
+    return;
+  }
+
+  const groups = {};
+  const order = [];
+  expenses.forEach(e => {
+    if(!groups[e.date]){ groups[e.date] = []; order.push(e.date); }
+    groups[e.date].push(e);
+  });
+
+  let html = "";
+  order.forEach(date => {
+    html += `<div class="date-group-label">${formatDateLabel(date)}</div><div class="card" style="padding:6px 14px;">`;
+    html += groups[date].map(e => expenseItemHTML(e, state.historySelectMode)).join("");
+    html += `</div>`;
+  });
+  list.innerHTML = html;
+  bindExpenseItemClicks(list);
+}
+
+function renderHistoryCategoryFilters(){
+  const box = $("#hist-cat-filter");
+  const cats = getCategories();
+  box.innerHTML = `<button class="filter-chip ${state.historyFilterCat==='all'?'active':''}" data-cat="all">${t("all_categories_chip")}</button>` +
+    cats.map(c => `<button class="filter-chip ${state.historyFilterCat===c.id?'active':''}" data-cat="${c.id}">${c.icon} ${escapeHTML(catName(c))}</button>`).join("");
+  box.querySelectorAll(".filter-chip").forEach(el => {
+    el.addEventListener("click", () => {
+      state.historyFilterCat = el.dataset.cat;
+      renderHistory();
+    });
+  });
+}
+
+/* ---- Statistics ----
+   Everything is shared, so there's just one unified view with an optional
+   "who" filter (built dynamically from DB.settings.people). The compare
+   widget shows every person side by side, whenever the filter is "all". */
+function renderStats(){
+  renderStatsWhoTabs();
+  let range;
+  if(state.statsPeriod === "custom"){
+    range = {from: state.statsCustomFrom || todayISO(), to: state.statsCustomTo || todayISO()};
+  } else {
+    range = getPeriodRange(state.statsPeriod);
+  }
+
+  const allInPeriod = filterExpenses({from: range.from, to: range.to, who: "all"});
+  const whoExpenses = state.statsWho === "all" ? allInPeriod : allInPeriod.filter(e => e.user === state.statsWho);
+
+  const stats = computeStats(whoExpenses);
+  $("#stat-total").textContent = formatEUR(stats.total);
+  $("#stat-count").textContent = stats.count;
+  $("#stat-avg").textContent = formatEUR(stats.avg);
+  $("#stat-max").textContent = stats.max ? formatMoney(stats.max.amount, stats.max.currency) : "€0";
+
+  // per-person compare, shown only for the "Все" tab, and only when there's more than
+  // one person to compare -- a single-person account has nothing to compare against.
+  const people = getPeople();
+  const showCompare = state.statsWho === "all" && people.length > 1;
+  $("#stat-compare-card").style.display = showCompare ? "block" : "none";
+  if(showCompare){
+    const sums = people.map(p => ({ p, sum: sumEUR(allInPeriod.filter(e => e.user === p.id)) }));
+    const maxCmp = Math.max(...sums.map(s => s.sum), 1);
+    $("#stat-compare-rows").innerHTML = sums.map(({p, sum}) => `
+      <div class="compare-row">
+        <div class="cname">${p.emoji} ${escapeHTML(p.name)}</div>
+        <div class="compare-bar-bg"><div class="compare-bar-fill" style="width:${sum/maxCmp*100}%; background:${p.color};"></div></div>
+        <div class="camt">${formatEUR(sum)}</div>
+      </div>`).join("");
+  }
+
+  // vs last month (only meaningful for the "month" period)
+  const vsCard = $("#stat-vs-lastmonth-card");
+  if(state.statsPeriod === "month"){
+    const lastRange = getPeriodRange("lastmonth");
+    let lastExpenses = filterExpenses({from:lastRange.from, to:lastRange.to});
+    if(state.statsWho !== "all") lastExpenses = lastExpenses.filter(e => e.user === state.statsWho);
+    if(lastExpenses.length > 0){
+      const lastSum = sumEUR(lastExpenses);
+      const thisSum = stats.total;
+      const delta = lastSum ? ((thisSum-lastSum)/lastSum*100) : 0;
+      $("#vs-this").textContent = formatEUR(thisSum);
+      $("#vs-last").textContent = formatEUR(lastSum);
+      const deltaEl = $("#vs-delta");
+      deltaEl.textContent = (delta >= 0 ? "+":"") + delta.toFixed(1) + "%";
+      deltaEl.style.color = delta > 0 ? "var(--danger)" : "var(--success)";
+      vsCard.style.display = "block";
+    } else {
+      vsCard.style.display = "none";
+    }
+  } else {
+    vsCard.style.display = "none";
+  }
+
+  const catRows = categoryBreakdown(whoExpenses);
+  const catBox = $("#stat-categories");
+  if(catRows.length === 0){
+    catBox.innerHTML = `<div class="no-data-msg">${t("no_data_period")}</div>`;
+  } else {
+    catBox.innerHTML = catRows.map(r => `
+      <div class="cat-stat-row">
+        <div class="cat-stat-icon">${r.icon}</div>
+        <div class="cat-stat-mid">
+          <div class="cn">${escapeHTML(r.name)}</div>
+          <div class="cbar-bg"><div class="cbar-fill" style="width:${r.pct}%;"></div></div>
+        </div>
+        <div class="cat-stat-right">
+          <div class="ca">${formatEUR(r.sum)}</div>
+          <div class="cp">${r.pct.toFixed(0)}% · ${r.count} ${t("purchases_suffix")}</div>
+        </div>
+      </div>`).join("");
+  }
+
+  const biggest = biggestExpenses(whoExpenses, 5);
+  const bigBox = $("#stat-biggest");
+  if(biggest.length === 0){
+    bigBox.innerHTML = `<div class="no-data-msg">${t("no_data_period")}</div>`;
+  } else {
+    bigBox.innerHTML = biggest.map((e,i) => {
+      const cat = getCategoryById(e.category);
+      const label = e.merchant || catName(cat);
+      return `<div class="rank-row"><div class="rank-num">${i+1}</div><div class="rank-mid">${cat?cat.icon:"📦"} ${escapeHTML(label)}</div><div class="rank-amt">${formatMoney(e.amount, e.currency)}</div></div>`;
+    }).join("");
+  }
+
+  const topDay = topSpendingDay(whoExpenses);
+  const topDayBox = $("#stat-topday");
+  if(!topDay){
+    topDayBox.innerHTML = `<div class="no-data-msg">${t("no_data_period")}</div>`;
+  } else {
+    const isRelativeLabel = formatDateLabel(topDay.date) === (getLang()==="en"?"TODAY":"СЕГОДНЯ") || formatDateLabel(topDay.date) === (getLang()==="en"?"YESTERDAY":"ВЧЕРА");
+    topDayBox.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center;">
+      <div style="font-weight:700; font-size:14.5px;">${isRelativeLabel ? capitalize(formatDateLabel(topDay.date)) : formatDateLabel(topDay.date)}</div>
+      <div style="font-weight:800; font-size:16px;">${formatEUR(topDay.sum)}</div>
+    </div>`;
+  }
+}
+
+function capitalize(s){ return s.charAt(0) + s.slice(1).toLowerCase(); }
+
+/* ---- Budget ---- */
+function renderBudget(){
+  const mKey = currentMonthKey();
+  const [y,m] = mKey.split("-").map(Number);
+  $("#budget-month-title").textContent = monthsArr()[m-1].toUpperCase() + " " + y;
+
+  const monthExpenses = filterExpenses({from: mKey+"-01", to: mKey+"-"+pad2(daysInMonth(y,m))});
+  const spent = sumEUR(monthExpenses);
+  const budget = getMonthBudget(mKey) || 0;
+  const left = budget - spent;
+
+  const todayDay = Number(todayISO().split("-")[2]);
+  const totalDays = daysInMonth(y,m);
+  const avgDay = todayDay ? spent/todayDay : 0;
+  const forecast = avgDay * totalDays;
+
+  $("#mb-spent").textContent = formatEUR(spent);
+  $("#mb-budget").textContent = formatEUR(budget);
+  $("#mb-left").textContent = formatEUR(Math.max(left,0));
+  $("#mb-avgday").textContent = formatEUR(avgDay);
+
+  if(budget > 0){
+    const daysLeft = Math.max(totalDays - todayDay, 0);
+    if(left < 0){
+      $("#mb-forecast").textContent = `⚠️ ${t("over_budget_label")} ${formatEUR(-left)}`;
+    } else if(daysLeft > 0){
+      $("#mb-forecast").textContent = `${t("can_spend_label")} ${formatEUR(left/daysLeft)} ${t("per_day_label")}`;
+    } else {
+      $("#mb-forecast").textContent = `${t("forecast_label")}: ~${formatEUR(forecast)} (${t("approx_label")})`;
+    }
+  } else {
+    $("#mb-forecast").textContent = `${t("forecast_label")}: ~${formatEUR(forecast)} (${t("approx_label")})`;
+  }
+
+  // total budget bar
+  const fill = $("#budget-total-fill");
+  const pct = budget > 0 ? Math.min(spent/budget*100, 100) : 0;
+  fill.style.width = pct + "%";
+  fill.className = "budget-progress-fill" + (spent > budget && budget>0 ? " over" : (pct >= 80 && budget>0 ? " warn" : ""));
+  $("#budget-total-spent-lbl").textContent = formatEUR(spent) + " " + t("spent_label");
+  $("#budget-total-of-lbl").textContent = t("of_label") + " " + formatEUR(budget);
+
+  const alertBox = $("#budget-alert-box");
+  if(budget <= 0){
+    alertBox.className = "budget-alert ok";
+    alertBox.textContent = t("no_budget_set");
+  } else if(spent > budget){
+    alertBox.className = "budget-alert over";
+    alertBox.textContent = `${t("over_budget_label")} ${formatEUR(spent-budget)}`;
+  } else if(pct >= 80){
+    alertBox.className = "budget-alert warn";
+    alertBox.textContent = t("budget_warn");
+  } else {
+    alertBox.className = "budget-alert ok";
+    alertBox.textContent = t("budget_ok");
+  }
+
+  // category budgets
+  const catBudgets = getCategoryBudgets(mKey);
+  const catBox = $("#catbudget-list");
+  const catIds = Object.keys(catBudgets);
+  if(catIds.length === 0){
+    catBox.innerHTML = `<div class="no-data-msg">${t("no_cat_budgets")}</div>`;
+  } else {
+    catBox.innerHTML = catIds.map(catId => {
+      const cat = getCategoryById(catId);
+      const limit = catBudgets[catId];
+      const catExpenses = monthExpenses.filter(e => e.category === catId);
+      const spentCat = sumEUR(catExpenses);
+      const perPersonCat = getPeople().map(p =>
+        `${p.emoji} ${formatEUR(sumEUR(catExpenses.filter(e => e.user === p.id)))}`
+      ).join(" · ");
+      const leftCat = limit - spentCat;
+      const pctCat = limit>0 ? Math.min(spentCat/limit*100,100) : 0;
+      return `<div class="catbudget-row">
+        <div class="catbudget-top">
+          <div class="cbn">${cat?cat.icon:"📦"} ${escapeHTML(catName(cat))}</div>
+          <button class="cbedit" data-action="edit-cat-budget" data-cat="${catId}">${t("change_label")}</button>
+        </div>
+        <div class="budget-progress-bg" style="height:8px;"><div class="budget-progress-fill ${spentCat>limit?'over':(pctCat>=80?'warn':'')}" style="width:${pctCat}%; height:8px;"></div></div>
+        <div class="catbudget-nums">${t("shared_spend_label")}: ${formatEUR(spentCat)} / ${formatEUR(limit)} · ${leftCat>=0 ? t("left_label")+" "+formatEUR(leftCat) : t("over_by_label")+" "+formatEUR(-leftCat)}</div>
+        <div class="catbudget-nums">${perPersonCat}</div>
+      </div>`;
+    }).join("");
+    catBox.querySelectorAll('[data-action="edit-cat-budget"]').forEach(btn => {
+      btn.addEventListener("click", () => openCatBudgetSheet(btn.dataset.cat));
+    });
+  }
+}
+
+function openTotalBudgetSheet(){
+  const mKey = currentMonthKey();
+  const [y,m] = mKey.split("-").map(Number);
+  $("#totalbudget-title").textContent = t("budget_for") + " " + monthsGenArr()[m-1] + " " + y;
+  $("#totalbudget-amount").value = getMonthBudget(mKey) || "";
+  openOverlay("overlay-totalbudget");
+}
+
+function handleSaveTotalBudget(){
+  const raw = $("#totalbudget-amount").value;
+  const check = validateAmount(raw);
+  if(!check.valid){ showToast(check.message); return; }
+  saveBudget(currentMonthKey(), check.amount);
+  closeOverlay("overlay-totalbudget");
+  showToast(t("toast_budget_saved"));
+  renderBudget();
+}
+
+function openCatBudgetSheet(catId){
+  const select = $("#catbudget-select");
+  select.innerHTML = getCategories().map(c => `<option value="${c.id}">${c.icon} ${escapeHTML(catName(c))}</option>`).join("");
+  if(catId) select.value = catId;
+  const mKey = currentMonthKey();
+  const budgets = getCategoryBudgets(mKey);
+  $("#catbudget-amount").value = catId && budgets[catId] ? budgets[catId] : "";
+  openOverlay("overlay-catbudget");
+}
+
+function handleSaveCatBudget(){
+  const catId = $("#catbudget-select").value;
+  const raw = $("#catbudget-amount").value;
+  const check = validateAmount(raw);
+  if(!check.valid){ showToast(check.message); return; }
+  saveCategoryBudget(currentMonthKey(), catId, check.amount);
+  closeOverlay("overlay-catbudget");
+  showToast(t("toast_limit_saved"));
+  renderBudget();
+}
+
+/* ---- Settings ---- */
+function renderSettings(){
+  $("#exchange-rate").value = getExchangeRate();
+  $("#color-accent").value = DB.settings.userColors.accent;
+  $("#data-version-lbl").textContent = DB.dataVersion;
+
+  const list = $("#settings-cat-list");
+  list.innerHTML = getCategories().map(c => `
+    <div class="manage-cat-row">
+      <span class="em">${c.icon}</span>
+      <span class="nm">${escapeHTML(catName(c))}</span>
+      ${c.custom ? `<button class="del" data-cat="${c.id}">${t("delete_label")}</button>` : ""}
+    </div>`).join("");
+  list.querySelectorAll(".del").forEach(btn => {
+    btn.addEventListener("click", () => {
+      askConfirm({
+        emoji:"🗑️", title:t("confirm_delete_category_title"),
+        message:t("confirm_delete_category_msg"),
+        okLabel:t("btn_delete"),
+        onConfirm: () => { deleteCategory(btn.dataset.cat); renderSettings(); showToast(t("toast_category_deleted")); }
+      });
+    });
+  });
+
+  renderSettingsPeopleList();
+  renderSettingsSharedBudget();
+  renderSettingsColorScheme();
+}
+
+function renderSettingsPeopleList(){
+  const box = $("#settings-people-list");
+  const people = getPeople();
+  box.innerHTML = people.map(p => `
+    <div class="settings-row">
+      <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
+        <input type="color" class="people-color-input" data-person-id="${p.id}" value="${p.color}" style="width:32px;height:32px;border:none;background:none; flex-shrink:0;">
+        <input type="text" class="text-input people-name-input" data-person-id="${p.id}" value="${escapeHTML(p.name)}" placeholder="${t('person_name_placeholder')}" style="flex:1; min-width:0;">
+      </div>
+    </div>`).join("");
+  box.querySelectorAll(".people-color-input").forEach(inp => {
+    inp.addEventListener("input", (e) => {
+      const p = getPersonById(inp.dataset.personId);
+      if(!p) return;
+      p.color = e.target.value;
+      persist();
+    });
+  });
+  box.querySelectorAll(".people-name-input").forEach(inp => {
+    inp.addEventListener("change", (e) => {
+      renamePerson(inp.dataset.personId, e.target.value);
+    });
+  });
+}
+
+/* =========================================================================
+   CALENDAR MODULE
+   ========================================================================= */
+function openCalendar(){
+  const today = new Date();
+  state.calendarYear = today.getFullYear();
+  state.calendarMonth = today.getMonth()+1;
+  state.calendarSelectedDate = null;
+  renderCalendar();
+  openOverlay("overlay-calendar");
+}
+
+function renderCalendar(){
+  const y = state.calendarYear, m = state.calendarMonth;
+  $("#cal-title").textContent = monthsArr()[m-1] + " " + y;
+  const grid = $("#cal-grid");
+  const dow = dowArr();
+  let html = dow.map(d => `<div class="cal-dow">${d}</div>`).join("");
+
+  const firstDay = new Date(y, m-1, 1);
+  let startOffset = firstDay.getDay() - 1; // Monday=0
+  if(startOffset < 0) startOffset = 6;
+  const totalDays = daysInMonth(y,m);
+
+  const datesWithExpenses = {};
+  DB.expenses.forEach(e => {
+    if(monthKey(e.date) === (y + "-" + pad2(m))) datesWithExpenses[e.date] = true;
+  });
+  const todayStr = todayISO();
+
+  for(let i=0;i<startOffset;i++) html += `<div class="cal-day empty"></div>`;
+  for(let d=1; d<=totalDays; d++){
+    const dateStr = y + "-" + pad2(m) + "-" + pad2(d);
+    const has = datesWithExpenses[dateStr];
+    const isToday = dateStr === todayStr;
+    html += `<button class="cal-day ${has?'has-exp':''} ${isToday?'today':''}" data-date="${dateStr}">${d}</button>`;
+  }
+  grid.innerHTML = html;
+  grid.querySelectorAll(".cal-day[data-date]").forEach(el => {
+    el.addEventListener("click", () => { state.calendarSelectedDate = el.dataset.date; renderCalendarDayDetail(); });
+  });
+  $("#cal-day-detail").innerHTML = "";
+}
+
+function renderCalendarDayDetail(){
+  const dateStr = state.calendarSelectedDate;
+  if(!dateStr) return;
+  const dayExpenses = filterExpenses({from: dateStr, to: dateStr}); // everything, no privacy split anymore
+  const box = $("#cal-day-detail");
+  const total = sumEUR(dayExpenses);
+  const perPersonBoxes = getPeople().map(p =>
+    `<div class="stat-box"><div class="slabel">${p.emoji} ${escapeHTML(p.name)}</div><div class="sval">${formatEUR(sumEUR(dayExpenses.filter(e=>e.user===p.id)))}</div></div>`
+  ).join("");
+  const [y,m,d] = dateStr.split("-").map(Number);
+  const dayLabel = getLang() === "en" ? (monthsGenArr()[m-1] + " " + d) : (d + " " + monthsGenArr()[m-1]);
+  let html = `<div class="section-title" style="margin-top:0;">${getLang()==="en"?"Expenses for":"Расходы за"} ${dayLabel}</div>`;
+  html += `<div class="stat-grid">${perPersonBoxes}
+      <div class="stat-box"><div class="slabel">${t("day_total_label")}</div><div class="sval">${formatEUR(total)}</div></div>
+    </div>`;
+  html += `<div class="section-title" style="margin-top:14px;">${t("my_purchases_day_title")}</div>`;
+  if(dayExpenses.length === 0){
+    html += `<div class="no-data-msg">${t("no_purchases_day")}</div>`;
+  } else {
+    html += `<div class="card" style="padding:6px 14px;">` + dayExpenses.map(e => expenseItemHTML(e)).join("") + `</div>`;
+  }
+  box.innerHTML = html;
+  box.querySelectorAll(".expense-item").forEach(el => {
+    el.addEventListener("click", () => { closeOverlay("overlay-calendar"); openExpenseDetail(el.dataset.id); });
+  });
+}
+
+/* =========================================================================
+   NEW CATEGORY MODULE
+   ========================================================================= */
+function openNewCategorySheet(){
+  $("#new-cat-emoji").value = "";
+  $("#new-cat-name").value = "";
+  openOverlay("overlay-new-category");
+}
+function handleSaveNewCategory(){
+  const emoji = $("#new-cat-emoji").value.trim() || "📦";
+  const name = $("#new-cat-name").value.trim();
+  if(!name){ showToast(t("toast_enter_category_name")); return; }
+  const id = saveCategory(emoji, name);
+  closeOverlay("overlay-new-category");
+  state.addSelectedCategory = id;
+  renderAddCategoryGrid();
+  showToast(t("toast_category_created"));
+}
+
+/* =========================================================================
+   IMPORT / EXPORT / CLEAR
+   ========================================================================= */
+function exportData(){
+  const dataStr = JSON.stringify(DB, null, 2);
+  const blob = new Blob([dataStr], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "expenses-backup-" + todayISO() + ".json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast(t("toast_export_done"));
+}
+
+function triggerImport(){
+  $("#import-file-input").click();
+}
+
+function handleImportFile(file){
+  const reader = new FileReader();
+  reader.onload = function(evt){
+    try{
+      const parsed = JSON.parse(evt.target.result);
+      if(!parsed || !Array.isArray(parsed.expenses)){
+        showToast(t("toast_import_bad_format"));
+        return;
+      }
+      askConfirm({
+        emoji:"⚠️",
+        title:t("confirm_import_title"),
+        message:t("confirm_import_msg"),
+        okLabel:t("confirm_import_ok"),
+        onConfirm: () => {
+          DB = Object.assign(defaultData(), parsed);
+          DB.settings = Object.assign(defaultData().settings, parsed.settings || {});
+          persist();
+          showToast(t("toast_import_done"));
+          applyStaticTranslations();
+          applyColorTheme();
+          renderSettings();
+          showScreen("dashboard");
+        }
+      });
+    }catch(e){
+      showToast(t("toast_import_read_error"));
+    }
+  };
+  reader.readAsText(file);
+}
+
+function handleClearData(){
+  askConfirm({
+    emoji:"🚨",
+    title:t("confirm_clear_title"),
+    message:t("confirm_clear_msg"),
+    okLabel:t("confirm_clear_ok"),
+    onConfirm: () => {
+      resetAllData();
+      showToast(t("toast_all_cleared"));
+      applyStaticTranslations();
+      showScreen("dashboard");
+    }
+  });
+}
+
+/* =========================================================================
+   CONFIRM DIALOG MODULE
+   ========================================================================= */
+function askConfirm({emoji, title, message, okLabel, onConfirm}){
+  $("#confirm-emoji").textContent = emoji || "⚠️";
+  $("#confirm-title").textContent = title || t("confirm_delete_expense_title");
+  $("#confirm-msg").textContent = message || "";
+  $("#confirm-ok-btn").textContent = okLabel || t("btn_delete");
+  state.confirmCallback = onConfirm;
+  openOverlay("overlay-confirm");
+}
+
+/* =========================================================================
+   OVERLAY / NAVIGATION HELPERS
+   ========================================================================= */
+function openOverlay(id){ document.getElementById(id).classList.add("active"); }
+function closeOverlay(id){ document.getElementById(id).classList.remove("active"); }
+function closeAllOverlays(){ $all(".overlay").forEach(o => o.classList.remove("active")); }
+
+/* =========================================================================
+   EVENT BINDING (delegated where practical)
+   ========================================================================= */
+function bindStaticEvents(){
+  // Bottom nav
+  $all(".nav-btn[data-screen]").forEach(btn => {
+    btn.addEventListener("click", () => showScreen(btn.dataset.screen));
+  });
+  $all('[data-action="open-add"]').forEach(btn => btn.addEventListener("click", openAddScreen));
+  $all('[data-action="open-add-income"]').forEach(btn => btn.addEventListener("click", openAddIncomeSheet));
+  $all("#income-currency-toggle .cur-btn[data-currency]").forEach(btn => btn.addEventListener("click", () => setIncomeCurrency(btn.dataset.currency)));
+  $('[data-action="save-income"]').addEventListener("click", handleSaveIncome);
+
+  // Shared budget
+  $("#dash-shared-open-btn").addEventListener("click", () => { renderSharedScreen(); showScreen("shared"); });
+  $("#shared-add-btn").addEventListener("click", openAddSharedSheet);
+  $all("#shared-kind-toggle .who-btn[data-kind]").forEach(btn => btn.addEventListener("click", () => setSharedKind(btn.dataset.kind)));
+  $all("#shared-currency-toggle .cur-btn[data-currency]").forEach(btn => btn.addEventListener("click", () => setSharedCurrency(btn.dataset.currency)));
+  $("#shared-save-btn").addEventListener("click", saveSharedTransaction);
+
+  // Add screen
+  $('[data-action="close-add"]').addEventListener("click", closeAddScreen);
+  $all("#screen-add .cur-btn[data-currency]").forEach(btn => btn.addEventListener("click", () => setAddCurrency(btn.dataset.currency)));
+  $("#add-merchant").addEventListener("input", (e) => renderMerchantSuggestions(e.target.value));
+  $('[data-action="save-expense"]').addEventListener("click", handleSaveExpense);
+  $('[data-action="delete-expense"]').addEventListener("click", handleDeleteExpenseFromForm);
+  $("#add-amount").addEventListener("input", () => { $("#add-amount-error").textContent = ""; });
+
+  // Expense detail sheet
+  $('[data-action="detail-edit"]').addEventListener("click", () => openExpenseEdit(state.detailExpenseId));
+  $('[data-action="detail-repeat"]').addEventListener("click", () => openExpenseRepeat(state.detailExpenseId));
+  $('[data-action="detail-delete"]').addEventListener("click", () => {
+    askConfirm({
+      emoji:"🗑️", title:t("confirm_delete_expense_title"), message:t("confirm_delete_expense_msg"), okLabel:t("btn_delete"),
+      onConfirm: () => {
+        deleteExpense(state.detailExpenseId);
+        closeOverlay("overlay-expense-detail");
+        showToast(t("toast_deleted"));
+        refreshCurrentScreen();
+      }
+    });
+  });
+
+  // History (always scoped to the current user -- see renderHistory)
+  $("#hist-search").addEventListener("input", (e) => { state.historySearch = e.target.value; renderHistory(); });
+  $("#hist-select-toggle-btn").addEventListener("click", toggleHistorySelectMode);
+  $("#hist-bulk-cancel-btn").addEventListener("click", () => { exitHistorySelectMode(); renderHistory(); });
+  $("#hist-bulk-delete-btn").addEventListener("click", bulkDeleteSelectedExpenses);
+  $('[data-action="open-calendar"]').addEventListener("click", openCalendar);
+
+  // Dashboard display-currency toggle
+  $all("#dash-currency-toggle .cur-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      state.displayCurrency = btn.dataset.dispcur;
+      renderDashboard();
+    });
+  });
+
+  // Calendar
+  $('[data-action="cal-prev"]').addEventListener("click", () => {
+    state.calendarMonth--; if(state.calendarMonth<1){state.calendarMonth=12; state.calendarYear--;}
+    renderCalendar();
+  });
+  $('[data-action="cal-next"]').addEventListener("click", () => {
+    state.calendarMonth++; if(state.calendarMonth>12){state.calendarMonth=1; state.calendarYear++;}
+    renderCalendar();
+  });
+
+  $all("#stats-period-tabs .filter-chip").forEach(btn => {
+    btn.addEventListener("click", () => {
+      state.statsPeriod = btn.dataset.period;
+      $all("#stats-period-tabs .filter-chip").forEach(b => b.classList.toggle("active", b===btn));
+      $("#stats-custom-range").style.display = state.statsPeriod === "custom" ? "flex" : "none";
+      renderStats();
+    });
+  });
+  $("#stats-from").addEventListener("change", (e) => { state.statsCustomFrom = e.target.value; renderStats(); });
+  $("#stats-to").addEventListener("change", (e) => { state.statsCustomTo = e.target.value; renderStats(); });
+
+  // Budget
+  $('[data-action="edit-total-budget"]').addEventListener("click", openTotalBudgetSheet);
+  $('[data-action="save-total-budget"]').addEventListener("click", handleSaveTotalBudget);
+  $('[data-action="add-cat-budget"]').addEventListener("click", () => openCatBudgetSheet(null));
+  $('[data-action="save-cat-budget"]').addEventListener("click", handleSaveCatBudget);
+
+  // New category
+  $('[data-action="add-category-settings"]').addEventListener("click", openNewCategorySheet);
+  $('[data-action="add-person-settings"]').addEventListener("click", () => {
+    const name = (prompt(t("prompt_new_person_name")) || "").trim();
+    if(!name) return;
+    if(addPerson(name)) renderSettingsPeopleList();
+  });
+  $('[data-action="save-new-category"]').addEventListener("click", handleSaveNewCategory);
+
+  // The app's single overall accent color -- per-person tag colors live in the
+  // "People" section instead (DB.settings.people[].color), set via addPerson()/
+  // renderSettingsPeopleList(), and have nothing to do with this app-wide setting.
+  $("#color-accent").addEventListener("input", (e) => {
+    DB.settings.userColors.accent = e.target.value; persist(); applyColorTheme();
+  });
+  $("#exchange-rate").addEventListener("change", (e) => {
+    const v = parseFloat(String(e.target.value).replace(",","."));
+    if(!isNaN(v) && v>0){ DB.settings.exchangeRate = v; persist(); showToast(t("toast_rate_updated")); }
+    else { showToast(t("toast_rate_invalid")); e.target.value = getExchangeRate(); }
+  });
+
+  // Settings: language switcher -- updates every static label immediately,
+  // then re-renders whichever screen is currently open so dynamic content
+  // (amounts, dates, category names, toasts, etc.) switches language too.
+  $all("#lang-toggle .cur-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      if(btn.dataset.lang === getLang()) return;
+      DB.settings.language = btn.dataset.lang;
+      persist();
+      applyStaticTranslations();
+      refreshCurrentScreen();
+    });
+  });
+
+  // Settings: light/dark/system appearance
+  $all("#colorscheme-toggle .cur-btn[data-scheme]").forEach(btn => {
+    btn.addEventListener("click", () => setColorScheme(btn.dataset.scheme));
+  });
+
+  // Data: export/import/clear
+  $('[data-action="export-data"]').addEventListener("click", exportData);
+  $('[data-action="import-data"]').addEventListener("click", triggerImport);
+  $("#import-file-input").addEventListener("change", (e) => {
+    if(e.target.files && e.target.files[0]) handleImportFile(e.target.files[0]);
+    e.target.value = "";
+  });
+  $('[data-action="clear-data"]').addEventListener("click", handleClearData);
+
+  // Confirm dialog
+  $('[data-action="confirm-cancel"]').addEventListener("click", () => closeOverlay("overlay-confirm"));
+  $('[data-action="confirm-ok"]').addEventListener("click", () => {
+    const cb = state.confirmCallback;
+    closeOverlay("overlay-confirm");
+    if(cb) cb();
+  });
+
+  // Overlays: click outside to close (on the dim background, not the sheet/box itself)
+  $all(".overlay").forEach(ov => {
+    ov.addEventListener("click", (e) => { if(e.target === ov) ov.classList.remove("active"); });
+  });
+
+  // Settings nav entry point (accessed via a small gear — add hidden trigger through switch-user long press area not needed;
+  // Instead provide access from dashboard topbar via double route: add nav item mapping handled below)
+}
+
+function refreshCurrentScreen(){
+  showScreen(state.currentScreen);
+}
+
+/* Settings screen access: since there's no more per-user switch button on the
+   dashboard topbar, add a small gear icon there instead. */
+function addSettingsEntryPoint(){
+  const topbar = document.querySelector("#screen-dashboard .topbar");
+  const gear = document.createElement("button");
+  gear.textContent = "⚙️";
+  gear.style.cssText = "font-size:18px; background:var(--card); width:38px; height:38px; border-radius:50%; box-shadow:var(--shadow-card);";
+  gear.addEventListener("click", () => showScreen("settings"));
+  topbar.appendChild(gear);
+}
+
+/* Account card at the top of Settings: shows who's signed in (this app's own,
+   isolated account) or that this device is in offline-only mode, plus a log-out button. */
+function addAccountSection(){
+  const page = document.querySelector("#screen-settings .page");
+  if(!page) return;
+  const wrap = document.createElement("div");
+  const title = document.createElement("div");
+  title.className = "section-title";
+  title.style.marginTop = "0";
+  title.textContent = getLang() === "en" ? "Account" : "Аккаунт";
+  const card = document.createElement("div");
+  card.className = "card";
+  const row = document.createElement("div");
+  row.className = "settings-row";
+  const info = document.createElement("div");
+  if(currentUserId){
+    info.innerHTML = `<div class="srow-label">${escapeHTML(currentUserEmailForSettings || (getLang()==="en"?"Signed in":"Вы вошли"))}</div><div class="srow-sub">${getLang()==="en"?"Synced with your SVOJ account":"Синхронизировано с аккаунтом SVOJ"}</div>`;
+    const btn = document.createElement("button");
+    btn.className = "btn btn-outline";
+    btn.textContent = getLang() === "en" ? "Log out" : "Выйти";
+    btn.addEventListener("click", handleLogout);
+    row.appendChild(info);
+    row.appendChild(btn);
+  } else {
+    info.innerHTML = `<div class="srow-label">${getLang()==="en"?"This device only":"Только это устройство"}</div><div class="srow-sub">${getLang()==="en"?"Sign in to sync across devices":"Войдите, чтобы синхронизировать между устройствами"}</div>`;
+    row.appendChild(info);
+  }
+  card.appendChild(row);
+  wrap.appendChild(title);
+  wrap.appendChild(card);
+  page.insertBefore(wrap, page.firstChild);
+}
+
+/* =========================================================================
+   MIDNIGHT / DAY-CHANGE HANDLING
+   ========================================================================= */
+let lastKnownDate = todayISO();
+function checkForDayChange(){
+  const nowDate = todayISO();
+  if(nowDate !== lastKnownDate){
+    lastKnownDate = nowDate;
+    if(state.currentScreen === "add" && state.addMode === "create"){
+      $("#add-date").value = nowDate;
+      $("#add-time").value = nowTimeStr();
+    }
+    refreshCurrentScreen();
+  }
+}
+setInterval(checkForDayChange, 60000);
+
+/* =========================================================================
+   INIT
+   ========================================================================= */
+// Called from onSignedIn()/startOffline() once auth has resolved one way or
+// the other -- never on DOMContentLoaded directly, since loadData() needs
+// the cloud cache (or the offline decision) to already be in place first.
+function setColorScheme(pref){
+  DB.settings.colorScheme = pref;
+  persist();
+  try{ localStorage.setItem(COLOR_SCHEME_KEY, pref); }catch(e){}
+  applyColorScheme();
+  renderSettingsColorScheme();
+}
+function renderSettingsColorScheme(){
+  const pref = DB.settings.colorScheme || "light";
+  $all("#colorscheme-toggle .cur-btn[data-scheme]").forEach(b => b.classList.toggle("active", b.dataset.scheme === pref));
+}
+
+// Asked exactly once per account, the first time it's ever used: there is only ever
+// ONE default person ("you") on a brand-new account -- never a hardcoded pair -- so
+// this just lets that one person name themselves instead of staying "Me" forever.
+// Declining (empty/cancelled prompt) still marks onboarding done so it isn't nagged
+// again; the name can always be changed later from Settings -> People.
+function maybeRunOnboarding(){
+  if(DB.settings.onboarded) return;
+  DB.settings.onboarded = true;
+  const name = (prompt(t("prompt_your_name")) || "").trim();
+  if(name && getPeople()[0]) renamePerson(getPeople()[0].id, name);
+  else persist();
+}
+
+function startApp(){
+  loadData();
+  // Reconcile the fast pre-load mirror with the account's real synced preference --
+  // matters mainly the first time a given device loads a signed-in account, where the
+  // mirror could only guess "light" before the real settings arrived.
+  try{ localStorage.setItem(COLOR_SCHEME_KEY, DB.settings.colorScheme || "light"); }catch(e){}
+  applyColorScheme();
+  applyColorTheme();
+  applyStaticTranslations();
+  bindStaticEvents();
+  addSettingsEntryPoint();
+  addAccountSection();
+  showScreen("dashboard");
+  maybeRunOnboarding();
+}
+
+bootstrapAuth();
+
+})();
+</script>
+</body>
+</html>
