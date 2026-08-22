@@ -1240,15 +1240,37 @@ function setSyncBadge(state){
   else if(state === 'err') el.classList.add('err');
 }
 
+// Tracks which keys have a local write that hasn't been confirmed saved to the
+// cloud yet (e.g. the upsert failed because the device was offline). Without
+// this, a save() made while offline looks identical to one that succeeded --
+// so a later reload would trust the stale cloud copy fetched in
+// fetchAllCloudData() and silently roll back the offline edit. Persisted to
+// localStorage (not just in memory) so it survives the page being closed
+// before connectivity returns.
+const DIRTY_KEYS_KEY = 'svojmoney-dirty-keys-v1';
+function getDirtyKeys(){ return new Set(localLoad(DIRTY_KEYS_KEY, [])); }
+function markKeyDirty(key){
+  const s = getDirtyKeys(); s.add(key);
+  localSave(DIRTY_KEYS_KEY, Array.from(s));
+}
+function clearKeyDirty(key){
+  const s = getDirtyKeys(); s.delete(key);
+  localSave(DIRTY_KEYS_KEY, Array.from(s));
+}
+
 function save(key, val){
   localSave(key, val);
   cloudCache[key] = val;
   if(!currentUserId || !sb) return;
+  markKeyDirty(key);
   clearTimeout(pendingWrites[key]);
   setSyncBadge('busy');
   pendingWrites[key] = setTimeout(()=>{
     sb.from('app_data').upsert({ user_id: currentUserId, data_key: key, data: val, updated_at: new Date().toISOString() }, { onConflict: 'user_id,data_key' })
-      .then(({ error })=>{ setSyncBadge(error ? 'err' : 'ok'); if(error) console.error('sync error', key, error); });
+      .then(({ error })=>{
+        if(error){ setSyncBadge('err'); console.error('sync error', key, error); }
+        else { clearKeyDirty(key); setSyncBadge('ok'); }
+      });
   }, 600);
 }
 function load(key, fallback){
@@ -1262,7 +1284,29 @@ async function fetchAllCloudData(uid){
   if(error){ console.error('fetch error', error); setSyncBadge('err'); return; }
   cloudCache = {};
   (data || []).forEach(row=>{ cloudCache[row.data_key] = row.data; });
+  // Any key still marked dirty means its last save() never got confirmed by the
+  // server (most likely: the device was offline at the time). The cloud row we
+  // just fetched for that key is therefore stale -- keep the local copy as the
+  // source of truth and immediately retry pushing it now that we have a
+  // connection (fetchAllCloudData only runs right after signing in, when a
+  // network round-trip already just succeeded).
+  getDirtyKeys().forEach(key=>{
+    const localVal = localLoad(key, undefined);
+    if(localVal !== undefined) save(key, localVal);
+  });
 }
+
+// Second line of defense: if the app stays open across a connectivity drop
+// (rather than being reloaded), retry any writes that failed while offline as
+// soon as the browser reports we're back online, instead of waiting for the
+// next unrelated edit to happen to re-trigger save() for that key.
+window.addEventListener('online', () => {
+  if(!currentUserId || !sb) return;
+  getDirtyKeys().forEach(key=>{
+    const localVal = localLoad(key, undefined);
+    if(localVal !== undefined) save(key, localVal);
+  });
+});
 
 // Merge-on-login helper so a device that recorded
 // expenses offline (or before ever signing in) doesn't lose them the moment
@@ -3954,6 +3998,15 @@ function startApp(){
 bootstrapAuth();
 
 })();
+</script>
+<script>
+// Registered outside the main IIFE -- it only needs the browser's own APIs,
+// not anything the app script defines, and load must not block on it.
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch((e) => console.error('SW registration failed', e));
+  });
+}
 </script>
 </body>
 </html>
