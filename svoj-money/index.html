@@ -1219,8 +1219,8 @@ const DATA_VERSION = 1;
    key below (Project Settings -> API). The anon key is safe to ship in
    client code -- it has no privileges beyond what the RLS policies grant.
    ========================================================================= */
-const SUPABASE_URL = 'PASTE_YOUR_SVOJ_MONEY_SUPABASE_URL_HERE';
-const SUPABASE_ANON_KEY = 'PASTE_YOUR_SVOJ_MONEY_SUPABASE_ANON_KEY_HERE';
+const SUPABASE_URL = 'https://jdyxlzupsrpvmzkfhdgv.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpkeXhsenVwc3Jwdm16a2ZoZGd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODczODk5MTIsImV4cCI6MjEwMjk2NTkxMn0.isgAss7dsqJH7zU25DnxTm5A-g_Thm4JNoaCGwdxm_U';
 const sb = (SUPABASE_URL.startsWith('http') && window.supabase)
   ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
   : null;
