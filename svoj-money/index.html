@@ -665,7 +665,7 @@
   <div class="auth-card">
     <div class="auth-emoji">💶</div>
     <h1 class="auth-title">SVOJ money</h1>
-    <p class="auth-sub">Тот же аккаунт, что и в SVOJ</p>
+    <p class="auth-sub">Ваш личный аккаунт SVOJ money</p>
     <div class="auth-field">
       <label for="authEmail">Email</label>
       <input type="email" id="authEmail" autocomplete="email" placeholder="you@example.com">
@@ -3870,7 +3870,7 @@ function addAccountSection(){
   row.className = "settings-row";
   const info = document.createElement("div");
   if(currentUserId){
-    info.innerHTML = `<div class="srow-label">${escapeHTML(currentUserEmailForSettings || (getLang()==="en"?"Signed in":"Вы вошли"))}</div><div class="srow-sub">${getLang()==="en"?"Synced with your SVOJ account":"Синхронизировано с аккаунтом SVOJ"}</div>`;
+    info.innerHTML = `<div class="srow-label">${escapeHTML(currentUserEmailForSettings || (getLang()==="en"?"Signed in":"Вы вошли"))}</div><div class="srow-sub">${getLang()==="en"?"Synced across your devices":"Синхронизировано между вашими устройствами"}</div>`;
     const btn = document.createElement("button");
     btn.className = "btn btn-outline";
     btn.textContent = getLang() === "en" ? "Log out" : "Выйти";
