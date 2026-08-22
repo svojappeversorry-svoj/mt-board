@@ -693,6 +693,13 @@
       <button class="big-add-btn" data-action="open-add" data-i18n="add_expense_btn">＋ Добавить расход</button>
       <button class="btn btn-outline btn-block" style="margin-top:10px;" data-action="open-add-income" data-i18n="add_income_btn">＋ Добавить доход</button>
 
+      <div class="card" id="dash-shared-budget-card" style="display:none; margin-top:12px;">
+        <div class="settings-row">
+          <div class="srow-label" id="dash-shared-budget-label">🤝</div>
+          <button class="btn btn-outline" id="dash-shared-open-btn" data-i18n="openArrow">Открыть →</button>
+        </div>
+      </div>
+
       <div class="section-title" data-i18n="section_income">Доход</div>
       <div class="card">
         <div class="settings-row">
@@ -800,6 +807,18 @@
     </div>
   </section>
 
+  <!-- ============ SHARED BUDGET ============ -->
+  <section id="screen-shared" class="screen">
+    <div class="topbar">
+      <div class="greeting" id="shared-budget-title">🤝 <span data-i18n="section_shared_budget">Общий бюджет</span></div>
+      <button class="settings-btn" id="shared-add-btn" type="button" title="Add">＋</button>
+    </div>
+    <div class="page">
+      <div class="card" id="shared-participants-card"></div>
+      <div id="shared-tx-list"></div>
+    </div>
+  </section>
+
   <!-- ============ STATISTICS ============ -->
   <section id="screen-stats" class="screen">
     <div class="topbar"><div class="greeting" data-i18n="stats_title">Статистика</div></div>
@@ -903,6 +922,9 @@
         <div id="settings-people-list"></div>
         <button class="btn btn-ghost btn-block" style="margin-top:12px;" data-action="add-person-settings" data-i18n="btn_add_person">＋ Добавить человека</button>
       </div>
+
+      <div class="section-title">🤝 <span data-i18n="section_shared_budget">Общий бюджет</span></div>
+      <div class="card" id="settings-shared-budget"></div>
 
       <div class="section-title" data-i18n="section_colors">Цветовые темы</div>
       <div class="card">
@@ -1072,6 +1094,37 @@
   </div>
 </div>
 
+<!-- Add shared-budget transaction sheet -->
+<div class="overlay" id="overlay-add-shared">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div style="padding: 4px 22px 22px;">
+      <div class="ftitle" style="font-weight:800; font-size:16px; margin-bottom:14px;" data-i18n="shared_add_title">Новая запись</div>
+      <div class="who-toggle" id="shared-kind-toggle" style="margin-bottom:10px;">
+        <button type="button" class="who-btn active" data-kind="expense"><span data-i18n="shared_kind_expense">Расход</span></button>
+        <button type="button" class="who-btn" data-kind="income"><span data-i18n="shared_kind_income">Доход</span></button>
+      </div>
+      <div class="form-label" style="margin-top:0;" data-i18n="income_amount_label">Сумма</div>
+      <input type="text" inputmode="decimal" class="text-input" id="shared-amount" placeholder="0">
+      <div class="currency-toggle" id="shared-currency-toggle" style="margin: 10px 0 4px;">
+        <button class="cur-btn active" data-currency="EUR">€ EUR</button>
+        <button class="cur-btn" data-currency="RSD" data-i18n="cur_rsd_short">дин. RSD</button>
+      </div>
+      <div class="form-label" data-i18n="shared_category_label">Категория / источник</div>
+      <input type="text" class="text-input" id="shared-category" placeholder="Например, Продукты" data-i18n-ph="placeholder_shared_category">
+      <div class="form-label" data-i18n="label_comment">Комментарий</div>
+      <input type="text" class="text-input" id="shared-note" placeholder="Необязательно" data-i18n-ph="placeholder_comment">
+      <div class="form-label" data-i18n="shared_date_label">Дата</div>
+      <input type="date" class="text-input" id="shared-date">
+      <label style="display:flex; align-items:center; gap:8px; margin-top:16px; font-family:var(--font-ui); font-weight:700; font-size:13.5px;">
+        <input type="checkbox" id="shared-is-common">
+        <span data-i18n="shared_is_common_label">🤝 Общее (видят и редактируют все участники)</span>
+      </label>
+      <button class="btn btn-primary btn-block" style="margin-top:18px;" id="shared-save-btn">Сохранить</button>
+    </div>
+  </div>
+</div>
+
 <!-- Generic confirm dialog -->
 <div class="overlay center" id="overlay-confirm">
   <div class="confirm-box">
@@ -1217,6 +1270,11 @@ async function onSignedIn(user){
   await migrateLocalToCloud(user.id);
   setSyncBadge('ok');
   startApp();
+  ensureProfileSynced();
+  loadSharedBudgetData().then(() => {
+    if(state.currentScreen === "settings") renderSettingsSharedBudget();
+    if(state.currentScreen === "shared") renderSharedScreen();
+  });
 }
 function startOffline(){
   if(appStarted) return;
@@ -1307,6 +1365,7 @@ function defaultData(){
       exchangeRate: 117,
       userColors: { eva: "#E23F88", mark: "#5B4FE0", shared: "#C6941F" },
       people: [], // filled in by loadData() -- see the migration comment there
+      activeBudget: null, // {id, name, code} -- set once this account creates/joins a shared budget
       language: "ru",
       lastWho: "shared",
       lastCurrency: "EUR"
@@ -1528,6 +1587,27 @@ const I18N = {
     confirm_delete_income_title: "Удалить этот доход?",
     toast_income_saved: "Доход сохранён ✓",
     prompt_new_person_name: "Имя нового человека",
+    section_shared_budget: "Общий бюджет",
+    shared_add_title: "Новая запись",
+    shared_kind_expense: "Расход",
+    shared_kind_income: "Доход",
+    shared_category_label: "Категория / источник",
+    placeholder_shared_category: "Например, Продукты",
+    shared_date_label: "Дата",
+    shared_is_common_label: "🤝 Общее (видят и редактируют все участники)",
+    shared_create_btn: "Создать общий бюджет",
+    shared_join_label: "Ведёте бюджет с кем-то?",
+    shared_join_btn: "Присоединиться",
+    shared_code_label: "Код приглашения",
+    shared_leave_label: "Покинуть общий бюджет",
+    shared_leave_btn: "Покинуть",
+    shared_leave_confirm_title: "Покинуть общий бюджет?",
+    shared_leave_confirm_msg: "Ты больше не будешь видеть общие траты. Записи никуда не денутся для остальных участников.",
+    shared_empty_title: "Пока нет общих записей",
+    shared_invalid_code: "Неверный код приглашения",
+    shared_needs_account: "Сначала войдите в аккаунт",
+    shared_budget_default_name: "Общий бюджет",
+    openArrow: "Открыть →",
     default_me_name: "Я",
     section_budget: "Бюджет",
     section_currencies: "Расходы по валютам",
@@ -1702,6 +1782,27 @@ const I18N = {
     confirm_delete_income_title: "Delete this income?",
     toast_income_saved: "Income saved ✓",
     prompt_new_person_name: "New person's name",
+    section_shared_budget: "Shared budget",
+    shared_add_title: "New entry",
+    shared_kind_expense: "Expense",
+    shared_kind_income: "Income",
+    shared_category_label: "Category / source",
+    placeholder_shared_category: "E.g. Groceries",
+    shared_date_label: "Date",
+    shared_is_common_label: "🤝 Common (all members can see and edit)",
+    shared_create_btn: "Create shared budget",
+    shared_join_label: "Sharing a budget with someone?",
+    shared_join_btn: "Join",
+    shared_code_label: "Invite code",
+    shared_leave_label: "Leave shared budget",
+    shared_leave_btn: "Leave",
+    shared_leave_confirm_title: "Leave the shared budget?",
+    shared_leave_confirm_msg: "You'll stop seeing shared transactions. Records stay intact for the other members.",
+    shared_empty_title: "No shared entries yet",
+    shared_invalid_code: "Invalid invite code",
+    shared_needs_account: "Sign in first",
+    shared_budget_default_name: "Shared budget",
+    openArrow: "Open →",
     default_me_name: "Me",
     section_budget: "Budget",
     section_currencies: "Spending by currency",
@@ -1915,6 +2016,221 @@ function renamePerson(id, name){
   if(!p || !name) return;
   p.name = name;
   persist();
+}
+
+/* =========================================================================
+   SHARED BUDGET MODULE
+   Generic multi-account collaboration -- works for any two (or more) real
+   SVOJ accounts, not a hardcoded pair. Backed by real Postgres tables
+   (shared_budgets / shared_budget_members / shared_budget_transactions)
+   with row-level security enforced server-side, NOT the local JSON-blob
+   save()/load() layer everything else in this file uses: once a second
+   independent account can read this data, permissions must be enforced by
+   the database itself -- a client-side-only check is not real security,
+   since anyone could edit their own browser's JS state to bypass it.
+   Requires the migration in shared_budget_migration.sql to have been run
+   once against this Supabase project; until then these calls simply fail
+   gracefully (RPC/table not found) and the Settings section shows the
+   create/join UI without crashing.
+   ========================================================================= */
+let sharedParticipants = [];
+let sharedTransactions = [];
+
+async function ensureProfileSynced(){
+  if(!sb || !currentUserId) return;
+  const myName = (getPeople()[0] && getPeople()[0].name) || t("default_me_name");
+  try{
+    await sb.from('profiles').upsert(
+      { user_id: currentUserId, display_name: myName, updated_at: new Date().toISOString() },
+      { onConflict: 'user_id' }
+    );
+  }catch(e){ console.error('profile sync failed', e); }
+}
+
+async function createSharedBudget(){
+  if(!sb || !currentUserId){ showToast(t("shared_needs_account")); return; }
+  const { data, error } = await sb.rpc('create_shared_budget', { p_name: t("shared_budget_default_name") });
+  if(error){ console.error(error); showToast(error.message); return; }
+  const row = Array.isArray(data) ? data[0] : data;
+  DB.settings.activeBudget = { id: row.budget_id, name: t("shared_budget_default_name"), code: row.invite_code };
+  persist();
+  await loadSharedBudgetData();
+  renderSettingsSharedBudget();
+  showToast(t("toast_saved"));
+}
+
+async function joinSharedBudgetByCode(code){
+  if(!sb || !currentUserId){ showToast(t("shared_needs_account")); return; }
+  const { data, error } = await sb.rpc('join_shared_budget', { p_code: code.trim() });
+  if(error){ console.error(error); showToast(t("shared_invalid_code")); return; }
+  const row = Array.isArray(data) ? data[0] : data;
+  DB.settings.activeBudget = { id: row.budget_id, name: row.budget_name, code: code.trim().toUpperCase() };
+  persist();
+  await loadSharedBudgetData();
+  renderSettingsSharedBudget();
+  showToast(t("toast_saved"));
+}
+
+async function loadSharedBudgetData(){
+  const budget = DB.settings.activeBudget;
+  if(!sb || !currentUserId || !budget){ sharedParticipants = []; sharedTransactions = []; return; }
+  const [partsRes, txRes] = await Promise.all([
+    sb.rpc('budget_participants', { b_id: budget.id }),
+    sb.from('shared_budget_transactions').select('*').eq('budget_id', budget.id).order('date', { ascending:false })
+  ]);
+  if(partsRes.error) console.error('participants load failed', partsRes.error);
+  if(txRes.error) console.error('shared tx load failed', txRes.error);
+  sharedParticipants = partsRes.data || [];
+  sharedTransactions = txRes.data || [];
+}
+
+function leaveSharedBudget(){
+  DB.settings.activeBudget = null;
+  persist();
+  sharedParticipants = [];
+  sharedTransactions = [];
+  renderSettingsSharedBudget();
+  renderDashboard();
+}
+
+function participantName(userId){
+  const p = sharedParticipants.find(p => p.user_id === userId);
+  return p ? p.display_name : t("default_me_name");
+}
+
+function canEditSharedTx(tx){ return tx.is_common || tx.owner_id === currentUserId; }
+
+async function saveSharedTransaction(){
+  const budget = DB.settings.activeBudget;
+  if(!budget) return;
+  const check = validateAmount($("#shared-amount").value);
+  if(!check.valid){ showToast(check.message); return; }
+  const payload = {
+    budget_id: budget.id,
+    owner_id: currentUserId,
+    kind: state.sharedAddKind,
+    is_common: $("#shared-is-common").checked,
+    amount: check.amount,
+    currency: state.sharedAddCurrency,
+    category: $("#shared-category").value.trim(),
+    note: $("#shared-note").value.trim(),
+    date: $("#shared-date").value || todayISO(),
+    time: nowTimeStr()
+  };
+  const { error } = await sb.from('shared_budget_transactions').insert(payload);
+  if(error){ console.error(error); showToast(error.message); return; }
+  closeOverlay("overlay-add-shared");
+  showToast(t("toast_saved"));
+  await loadSharedBudgetData();
+  renderSharedScreen();
+}
+
+async function deleteSharedTransaction(id){
+  const { error } = await sb.from('shared_budget_transactions').delete().eq('id', id);
+  if(error){ console.error(error); showToast(error.message); return; }
+  await loadSharedBudgetData();
+  renderSharedScreen();
+}
+
+function sharedTxItemHTML(tx){
+  const who = tx.is_common ? t("user_shared") : participantName(tx.owner_id);
+  const emoji = tx.is_common ? "🤝" : "🙂";
+  const editable = canEditSharedTx(tx);
+  const label = tx.category || tx.note || (tx.kind === "income" ? t("income_source_label") : t("category_label"));
+  return `<div class="expense-item" data-shared-id="${tx.id}" style="${editable ? "cursor:pointer;" : "opacity:0.85;"}">
+    <div class="expense-icon">${tx.kind === "income" ? "💰" : "🧾"}</div>
+    <div class="expense-mid">
+      <div class="merchant">${escapeHTML(label)}</div>
+      <div class="meta"><span class="who-pill" style="background:var(--paper2);">${emoji} ${escapeHTML(who)}</span>${editable ? "" : ' <span style="font-size:10px; opacity:0.6;">🔒</span>'}</div>
+    </div>
+    <div class="expense-right">
+      <div class="amt" style="${tx.kind === "income" ? "color:#2E9E6D;" : ""}">${tx.kind === "income" ? "+" : ""}${formatMoney(tx.amount, tx.currency)}</div>
+      <div class="time">${formatDateShort(tx.date)}</div>
+    </div>
+  </div>`;
+}
+
+function renderSharedScreen(){
+  const budget = DB.settings.activeBudget;
+  if(!budget) return;
+  $("#shared-budget-title").innerHTML = `🤝 ${escapeHTML(budget.name)}`;
+  const partsCard = $("#shared-participants-card");
+  partsCard.innerHTML =
+    `<div class="settings-row"><div class="srow-label">${t("shared_code_label")}</div><div style="font-family:var(--font-mono, monospace); font-weight:800;">${escapeHTML(budget.code || "")}</div></div>` +
+    sharedParticipants.map(p => `<div class="settings-row"><div class="srow-label">🙂 ${escapeHTML(p.display_name)}</div></div>`).join("");
+  const list = $("#shared-tx-list");
+  if(!sharedTransactions.length){
+    list.innerHTML = `<div class="empty-state"><span class="em">🤝</span><div class="t1">${t("shared_empty_title")}</div></div>`;
+    return;
+  }
+  const groups = {}; const order = [];
+  sharedTransactions.forEach(tx => { if(!groups[tx.date]){ groups[tx.date] = []; order.push(tx.date); } groups[tx.date].push(tx); });
+  let html = "";
+  order.forEach(date => {
+    html += `<div class="date-group-label">${formatDateLabel(date)}</div><div class="card" style="padding:6px 14px;">`;
+    html += groups[date].map(sharedTxItemHTML).join("");
+    html += `</div>`;
+  });
+  list.innerHTML = html;
+  list.querySelectorAll("[data-shared-id]").forEach(el => {
+    el.addEventListener("click", () => {
+      const tx = sharedTransactions.find(t => t.id === el.dataset.sharedId);
+      if(!tx || !canEditSharedTx(tx)) return;
+      askConfirm({
+        emoji: "🗑️", title: t("confirm_delete_expense_title"), message: t("confirm_delete_expense_msg"), okLabel: t("btn_delete"),
+        onConfirm: () => deleteSharedTransaction(tx.id)
+      });
+    });
+  });
+}
+
+function setSharedKind(kind){
+  state.sharedAddKind = kind;
+  $all("#shared-kind-toggle .who-btn[data-kind]").forEach(b => b.classList.toggle("active", b.dataset.kind === kind));
+  $("#shared-save-btn").textContent = kind === "income" ? t("btn_save_income") : t("btn_save_expense");
+}
+function setSharedCurrency(currency){
+  state.sharedAddCurrency = currency;
+  $all("#shared-currency-toggle .cur-btn[data-currency]").forEach(b => b.classList.toggle("active", b.dataset.currency === currency));
+}
+function openAddSharedSheet(){
+  setSharedKind("expense");
+  setSharedCurrency("EUR");
+  $("#shared-amount").value = "";
+  $("#shared-category").value = "";
+  $("#shared-note").value = "";
+  $("#shared-date").value = todayISO();
+  $("#shared-is-common").checked = false;
+  openOverlay("overlay-add-shared");
+}
+
+function renderSettingsSharedBudget(){
+  const box = $("#settings-shared-budget");
+  if(!box) return;
+  const budget = DB.settings.activeBudget;
+  if(!budget){
+    box.innerHTML = `
+      <button class="btn btn-primary btn-block" id="shared-create-btn">${t("shared_create_btn")}</button>
+      <div class="form-label" style="margin-top:16px;">${t("shared_join_label")}</div>
+      <div style="display:flex; gap:8px;">
+        <input type="text" class="text-input" id="shared-join-code" placeholder="SVOJ-XXXX" style="flex:1;">
+        <button class="btn btn-outline" id="shared-join-btn">${t("shared_join_btn")}</button>
+      </div>`;
+    $("#shared-create-btn").addEventListener("click", createSharedBudget);
+    $("#shared-join-btn").addEventListener("click", () => {
+      const code = $("#shared-join-code").value.trim();
+      if(code) joinSharedBudgetByCode(code);
+    });
+  } else {
+    box.innerHTML = `
+      <div class="settings-row"><div class="srow-label">🤝 ${escapeHTML(budget.name)}</div><button class="btn btn-outline" id="shared-open-btn">${t("openArrow")}</button></div>
+      <div class="settings-row"><div class="srow-label">${t("shared_code_label")}</div><div style="font-weight:800;">${escapeHTML(budget.code || "")}</div></div>
+      <div class="settings-row"><div class="srow-label">${t("shared_leave_label")}</div><button class="btn btn-danger" id="shared-leave-btn">${t("shared_leave_btn")}</button></div>`;
+    $("#shared-open-btn").addEventListener("click", () => { renderSharedScreen(); showScreen("shared"); });
+    $("#shared-leave-btn").addEventListener("click", () => {
+      askConfirm({ emoji: "👋", title: t("shared_leave_confirm_title"), message: t("shared_leave_confirm_msg"), okLabel: t("shared_leave_btn"), onConfirm: leaveSharedBudget });
+    });
+  }
 }
 // Shown for an expense whose "user" doesn't match any current person -- either it was
 // added via the main SVOJ app (which has no per-person concept at all) or its person was
@@ -2188,6 +2504,14 @@ function incomeItemHTML(inc){
     </div>
   </div>`;
 }
+function renderDashboardSharedBudgetCard(){
+  const card = $("#dash-shared-budget-card");
+  const budget = DB.settings.activeBudget;
+  if(!budget){ card.style.display = "none"; return; }
+  card.style.display = "block";
+  $("#dash-shared-budget-label").textContent = "🤝 " + budget.name;
+}
+
 function renderIncomeSection(){
   const mKey = currentMonthKey();
   const monthIncomes = incomesForMonth(mKey);
@@ -2332,6 +2656,8 @@ const state = {
   historySelectMode: false,
   historySelectedIds: new Set(),
   incomeSelectedCurrency: "EUR",
+  sharedAddKind: "expense",
+  sharedAddCurrency: "EUR",
   displayCurrency: "EUR",  // controls how combined totals are shown on Dashboard
   statsWho: "all",         // "all" | "eva" | "mark" | "shared"
   statsPeriod: "today",
@@ -2406,6 +2732,7 @@ function showScreen(name){
   if(name === "stats") renderStats();
   if(name === "budget") renderBudget();
   if(name === "settings") renderSettings();
+  if(name === "shared") renderSharedScreen();
 }
 
 /* ---- Dashboard ----
@@ -2414,6 +2741,7 @@ function showScreen(name){
    list below shows every expense, regardless of who it belongs to. */
 function renderDashboard(){
   $all("#dash-currency-toggle .cur-btn").forEach(b => b.classList.toggle("active", b.dataset.dispcur === state.displayCurrency));
+  renderDashboardSharedBudgetCard();
   renderIncomeSection();
 
   const mKey = currentMonthKey();
@@ -3176,6 +3504,7 @@ function renderSettings(){
   });
 
   renderSettingsPeopleList();
+  renderSettingsSharedBudget();
 }
 
 function renderSettingsPeopleList(){
@@ -3397,6 +3726,13 @@ function bindStaticEvents(){
   $all('[data-action="open-add-income"]').forEach(btn => btn.addEventListener("click", openAddIncomeSheet));
   $all("#income-currency-toggle .cur-btn[data-currency]").forEach(btn => btn.addEventListener("click", () => setIncomeCurrency(btn.dataset.currency)));
   $('[data-action="save-income"]').addEventListener("click", handleSaveIncome);
+
+  // Shared budget
+  $("#dash-shared-open-btn").addEventListener("click", () => { renderSharedScreen(); showScreen("shared"); });
+  $("#shared-add-btn").addEventListener("click", openAddSharedSheet);
+  $all("#shared-kind-toggle .who-btn[data-kind]").forEach(btn => btn.addEventListener("click", () => setSharedKind(btn.dataset.kind)));
+  $all("#shared-currency-toggle .cur-btn[data-currency]").forEach(btn => btn.addEventListener("click", () => setSharedCurrency(btn.dataset.currency)));
+  $("#shared-save-btn").addEventListener("click", saveSharedTransaction);
 
   // Add screen
   $('[data-action="close-add"]').addEventListener("click", closeAddScreen);
