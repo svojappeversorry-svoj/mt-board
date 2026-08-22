@@ -421,12 +421,26 @@
   .mood-opt .e{ font-size:19px; }
   .mood-opt .l{ font-size:8px; font-weight:700; text-transform:uppercase; color: var(--ink-dim); letter-spacing:0.2px; text-align:center; line-height:1.1; }
 
-  /* ===== GLOBAL STICKER LAYER (any page, freeform) ===== */
+  /* ===== GLOBAL STICKER LAYER (any page, freeform) =====
+     Placed stickers are purely decorative until tapped: tapping an unselected
+     sticker only selects it (no move on that same gesture, so a stray touch
+     while scrolling can't drag it). Only while .selected are the resize/rotate/
+     delete handles rendered — they're children of the rotated+scaled element so
+     they'd normally inherit its transform; each handle carries an inline
+     counter-transform (rotate(-rot) scale(1/scale)) so it always renders at a
+     natural, upright size/orientation while still tracking the sticker's corner. */
   .sticker-layer{ position:absolute; inset:0; z-index:40; pointer-events:none; }
-  .stick-inst{ position:absolute; width:64px; height:64px; touch-action:none; cursor:grab; user-select:none; pointer-events:auto; }
-  .stick-inst:active{ cursor:grabbing; }
+  .stick-inst{ position:absolute; width:64px; height:64px; touch-action:none; cursor:pointer; user-select:none; pointer-events:auto; }
   .stick-inst img{ width:100%; height:100%; object-fit:contain; pointer-events:none; filter: drop-shadow(1px 4px 4px rgba(0,0,0,0.35)); }
-  .stick-inst .rm{ position:absolute; top:-9px; right:-9px; width:20px; height:20px; border-radius:50%; background: var(--rose); color:#fff; font-size:11px; font-weight:800; line-height:18px; text-align:center; font-family:var(--font-mono); cursor:pointer; border:2px solid #fff; box-shadow:0 2px 5px rgba(28,18,22,0.3); }
+  .stick-inst.selected{ cursor:grab; }
+  .stick-inst.selected:active{ cursor:grabbing; }
+  .stick-inst.selected::before{ content:''; position:absolute; inset:-6px; border:2px dashed var(--accent, #C9536B); border-radius:12px; pointer-events:none; }
+  .stick-inst .stk-handle{ display:none; position:absolute; width:26px; height:26px; border-radius:50%; align-items:center; justify-content:center; font-size:12px; cursor:pointer; box-shadow:0 2px 6px rgba(28,18,22,0.35); touch-action:none; background:var(--paper); border:2px solid var(--ink); }
+  .stick-inst.selected .stk-handle{ display:flex; }
+  .stick-inst .stk-handle.resize{ right:-13px; bottom:-13px; cursor:nwse-resize; }
+  .stick-inst .stk-handle.rotate{ top:-32px; left:50%; margin-left:-13px; cursor:grab; }
+  .stick-inst .stk-handle.rotate:active{ cursor:grabbing; }
+  .stick-inst .stk-handle.del{ top:-13px; right:-13px; background: var(--rose); color:#fff; border-color:#fff; }
 
   .sticker-fab{ position:fixed; right:18px; bottom:22px; z-index:60; width:60px; height:60px; border-radius:50%; background: var(--accent); color:#fff;
     border:3px solid var(--paper); box-shadow: 0 8px 20px rgba(28,18,22,0.35); font-size:24px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
@@ -437,6 +451,9 @@
   .sticker-sheet-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
   .sticker-sheet-title{ font-family:var(--font-xl); font-size:22px; color: var(--ink); }
   .sticker-sheet-close{ font-family:var(--font-mono); font-weight:700; background:none; border:none; color: var(--ink-dim); font-size:13px; cursor:pointer; text-decoration:underline; }
+  .sticker-pack-tabs{ display:flex; gap:7px; overflow-x:auto; padding-bottom:4px; margin-bottom:12px; }
+  .pack-tab{ flex-shrink:0; font-family:var(--font-mono); font-weight:700; font-size:11.5px; text-transform:uppercase; letter-spacing:0.3px; padding:8px 13px; border-radius:100px; border:1.5px solid var(--line); background: var(--paper2); color: var(--ink-dim); cursor:pointer; white-space:nowrap; }
+  .pack-tab.active{ background: var(--accent); border-color: var(--accent); color:#fff; }
   .sticker-sheet-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap:12px; }
   .sticker-sheet-item{ background: var(--paper2); border:1.5px solid var(--line); border-radius:12px; padding:8px; cursor:pointer; aspect-ratio:1/1; display:flex; align-items:center; justify-content:center; }
   .sticker-sheet-item img{ max-width:100%; max-height:100%; object-fit:contain; }
@@ -1045,6 +1062,7 @@
       <span class="sticker-sheet-title">Stick it!</span>
       <button class="sticker-sheet-close" id="stickerSheetClose" type="button">close</button>
     </div>
+    <div class="sticker-pack-tabs" id="stickerPackTabs"></div>
     <div class="sticker-sheet-upload-row">
       <button class="upload-btn" id="stkUploadBtn" type="button">+ Upload stickers</button>
       <input type="file" id="stkInput" accept="image/*" style="display:none" multiple>
@@ -1210,7 +1228,9 @@ const STRINGS = {
     // sticker sheet
     stickerSheetTitle:'Stick it!', stickerSheetClose:'close', uploadStickers:'+ Upload stickers',
     stickersAddedCount:'{n} / {max} added', noStickersYet:'no stickers yet — upload some above',
-    deleteSticker:'delete sticker', pickerDone:'done',
+    deleteSticker:'delete sticker', pickerDone:'done', resizeSticker:'resize', rotateSticker:'rotate',
+    stickerPackCustom:'My stickers', stickerPackDigitalChrome:'Digital Chrome', stickerPackY2kVixen:'Y2K Vixen',
+    stickerPackDarkRomance:'Dark Romance', stickerPackPetalBotanical:'Petal & Botanical',
     // sync badge
     syncSaving:'saving…', syncSynced:'synced', syncError:'sync error — saved on this device',
     // task mood picker
@@ -1315,7 +1335,9 @@ const STRINGS = {
     favMemory:'📸 Любимое воспоминание', favWin:'❤️ Главная победа месяца',
     stickerSheetTitle:'Стикеры!', stickerSheetClose:'закрыть', uploadStickers:'+ Загрузить стикеры',
     stickersAddedCount:'{n} / {max} добавлено', noStickersYet:'стикеров пока нет — загрузите их выше',
-    deleteSticker:'удалить стикер', pickerDone:'готово',
+    deleteSticker:'удалить стикер', pickerDone:'готово', resizeSticker:'изменить размер', rotateSticker:'повернуть',
+    stickerPackCustom:'Мои стикеры', stickerPackDigitalChrome:'Digital Chrome', stickerPackY2kVixen:'Y2K Vixen',
+    stickerPackDarkRomance:'Dark Romance', stickerPackPetalBotanical:'Цветы и ботаника',
     syncSaving:'сохраняем…', syncSynced:'синхронизировано', syncError:'ошибка синхронизации — сохранено на этом устройстве',
     taskMoodTooltip:'настроение задачи', taskMoodTooltipWithLabel:'настроение задачи: {label}',
     taskMoodUrgent:'Срочно', taskMoodDreading:'Не хочется', taskMoodMotivated:'Есть мотивация', taskMoodLowEnergy:'Мало сил',
@@ -1665,41 +1687,129 @@ stkInput.addEventListener('change', async (e)=>{
   stkInput.value = '';
 });
 
-/* ============ GLOBAL STICKER PLACEMENT (Date View only, freeform) ============ */
+/* ============ BUILT-IN STICKER PACKS (Digital Chrome, Y2K Vixen, Dark Romance, Petal & Botanical) ============
+   Assets live in assets/stickers/<pack>/*.webp next to this file, referenced by relative path
+   rather than inlined — unlike customStickers (user uploads, stored as base64 dataURLs so they
+   survive as pure app state), these are static files shipped alongside index.html. A placed
+   instance's `sid` for a built-in sticker is "b:<packId>:<file>"; resolveStickerSrc() checks
+   this index first, then falls back to customStickers, so one lookup covers both sources. */
+const BUILTIN_STICKER_PACKS = [
+  { id:'digital-chrome', nameKey:'stickerPackDigitalChrome', files:[
+    '01-chrome-star','02-holographic-heart','03-cd-disc','04-digital-smiley','05-tiny-computer',
+    '06-chrome-butterfly','07-holographic-bow','08-chrome-headphones','09-flip-phone','10-chrome-flower',
+    '11-holographic-planet','12-loading-character','13-starburst-sparkle','14-digital-cloud','15-mini-robot',
+  ]},
+  { id:'y2k-vixen', nameKey:'stickerPackY2kVixen', files:[
+    '01-glossy-heart','02-leopard-heart','03-cherry-friends','04-sassy-bow','05-lipstick',
+    '06-handbag','07-high-heel','08-diva-rose','09-cherry-cola','10-dreamy-butterfly',
+    '11-excited-star','12-fashion-magazine','13-shocked-flip-phone','14-leopard-compact','15-main-character-crown',
+  ]},
+  { id:'dark-romance', nameKey:'stickerPackDarkRomance', files:[
+    '01-black-rose-lady','02-cherry-duo','03-broken-heart','04-perfume-bottle','05-blood-candle',
+    '06-lace-bow','07-moon-face','08-lipstick','09-love-letter','10-hand-mirror',
+    '11-heart-locket','12-dark-ring','13-black-rose','14-black-cat','15-winged-heart',
+  ]},
+  { id:'petal-botanical', nameKey:'stickerPackPetalBotanical', files:[
+    '01-rose','02-daisy','03-sleepy-tulip','04-peony-mirror','05-lavender',
+    '06-sunflower','07-cherry-blossom','08-cactus','09-potted-plant','10-watering-can',
+    '11-snail','12-butterfly','13-bee','14-seed-packet','15-garden-journal',
+  ]},
+];
+const BUILTIN_STICKER_INDEX = {};
+BUILTIN_STICKER_PACKS.forEach(pack=>{
+  pack.files.forEach(file=>{ BUILTIN_STICKER_INDEX['b:'+pack.id+':'+file] = `assets/stickers/${pack.id}/${file}.webp`; });
+});
+function resolveStickerSrc(sid){
+  if(Object.prototype.hasOwnProperty.call(BUILTIN_STICKER_INDEX, sid)) return BUILTIN_STICKER_INDEX[sid];
+  const c = customStickers.find(x=> String(x.id) === String(sid));
+  return c ? c.src : null;
+}
+
+/* ============ GLOBAL STICKER PLACEMENT (Date View only, freeform) ============
+   Placed stickers are decorative-only until tapped: a tap on an unselected sticker only
+   selects it (shows resize/rotate/delete handles + a dashed outline) without moving it, so a
+   stray touch while scrolling can't drag it. A second, explicit drag on an already-selected
+   sticker moves it; tapping anywhere outside any sticker deselects it back to a clean, fixed
+   decoration. This mirrors the tap-to-edit / tap-outside-to-deselect pattern already used for
+   MySpace widgets elsewhere in the app. */
 let stickerZones = load('wp-stickerzones-v5', {});
 function zoneItems(zoneKey){ return stickerZones[zoneKey] || (stickerZones[zoneKey] = []); }
+function stickerTransformCSS(rot, scale){
+  return { main:`rotate(${rot}deg) scale(${scale})`, counter:`rotate(${-rot}deg) scale(${1/scale})` };
+}
+function applyStickerTransform(el, rot, scale){
+  const { main, counter } = stickerTransformCSS(rot, scale);
+  el.style.transform = main;
+  el.querySelectorAll('.stk-handle').forEach(h=> h.style.transform = counter);
+}
 function stickerLayerHtml(dataKey){
   const items = zoneItems(dataKey);
   return items.map(it=>{
-    const s = customStickers.find(x=> String(x.id) === String(it.sid));
-    if(!s) return '';
+    const src = resolveStickerSrc(it.sid);
+    if(!src) return '';
     const scale = it.scale || 1;
-    return `<div class="stick-inst" data-key="${dataKey}" data-iid="${it.iid}" style="left:${it.x}%; top:${it.y}%; transform:rotate(${it.rot}deg) scale(${scale});"><img src="${s.src}" alt="sticker"><div class="rm" data-key="${dataKey}" data-iid="${it.iid}">✕</div></div>`;
+    const rot = it.rot || 0;
+    const { main, counter } = stickerTransformCSS(rot, scale);
+    return `<div class="stick-inst" data-key="${dataKey}" data-iid="${it.iid}" style="left:${it.x}%; top:${it.y}%; transform:${main};">
+      <img src="${src}" alt="sticker">
+      <div class="stk-handle resize" style="transform:${counter};" title="${t('resizeSticker')}">⇲</div>
+      <div class="stk-handle rotate" style="transform:${counter};" title="${t('rotateSticker')}">↻</div>
+      <div class="stk-handle del" style="transform:${counter};" title="${t('deleteSticker')}">✕</div>
+    </div>`;
   }).join('');
 }
 function renderStickerLayer(domSlotKey, dataKey){
   const layer = document.getElementById('stickerLayer-'+domSlotKey);
   if(!layer) return;
+  const keepSelectedIid = (selectedStickerZoneEl === layer) ? selectedStickerIid : null;
   layer.innerHTML = stickerLayerHtml(dataKey);
+  deselectAllStickers();
   layer.querySelectorAll('.stick-inst').forEach(el=>{
     makeDraggableInZone(el, layer, dataKey);
-    el.querySelector('.rm').addEventListener('click', (ev)=>{
+    el.querySelector('.stk-handle.del').addEventListener('click', (ev)=>{
       ev.stopPropagation();
       stickerZones[dataKey] = zoneItems(dataKey).filter(s=> String(s.iid) !== el.dataset.iid);
       save('wp-stickerzones-v5', stickerZones);
+      deselectAllStickers();
       renderStickerLayer(domSlotKey, dataKey);
     });
+    if(keepSelectedIid && String(el.dataset.iid) === String(keepSelectedIid)) selectSticker(el, layer);
   });
 }
+let selectedStickerIid = null;
+let selectedStickerZoneEl = null;
+function deselectAllStickers(){
+  if(selectedStickerZoneEl){
+    const prev = selectedStickerZoneEl.querySelector('.stick-inst.selected');
+    if(prev) prev.classList.remove('selected');
+  }
+  selectedStickerIid = null; selectedStickerZoneEl = null;
+}
+function selectSticker(el, zoneEl){
+  if(selectedStickerIid === el.dataset.iid && selectedStickerZoneEl === zoneEl) return;
+  deselectAllStickers();
+  el.classList.add('selected');
+  selectedStickerIid = el.dataset.iid;
+  selectedStickerZoneEl = zoneEl;
+}
+document.addEventListener('pointerdown', (e)=>{
+  if(!selectedStickerIid) return;
+  if(e.target.closest('.stick-inst')) return;
+  deselectAllStickers();
+});
 function makeDraggableInZone(el, zone, zoneKey){
   const pointers = new Map();
-  let mode = null; // 'drag' | 'pinch'
+  let mode = null; // 'drag' | 'pinch' | 'resize' | 'rotate'
   let offX=0, offY=0;
   let pinchStartDist=0, pinchStartScale=1, liveScale = null;
+  let resizeStartDist=0, resizeStartScale=1;
+  let rotateStartAngle=0, rotateStartRot=0, liveRot = null;
 
   function getStored(){ return zoneItems(zoneKey).find(s=> String(s.iid) === el.dataset.iid); }
   function dist(a,b){ return Math.hypot(a.x-b.x, a.y-b.y); }
-  function rotOf(){ const st = getStored(); return st ? st.rot : 0; }
+  function currentRot(){ const st = getStored(); return st ? (st.rot||0) : 0; }
+  function currentScale(){ const st = getStored(); return st ? (st.scale||1) : 1; }
+  function center(){ const r = el.getBoundingClientRect(); return { x:r.left+r.width/2, y:r.top+r.height/2 }; }
 
   function startDrag(e){
     mode = 'drag';
@@ -1711,12 +1821,27 @@ function makeDraggableInZone(el, zone, zoneKey){
     mode = 'pinch';
     const pts = Array.from(pointers.values());
     pinchStartDist = dist(pts[0], pts[1]);
-    const st = getStored();
-    pinchStartScale = (st && st.scale) || 1;
+    pinchStartScale = currentScale();
+  }
+  function startResize(e){
+    mode = 'resize';
+    const c = center();
+    resizeStartDist = Math.max(1, Math.hypot(e.clientX-c.x, e.clientY-c.y));
+    resizeStartScale = currentScale();
+  }
+  function startRotate(e){
+    mode = 'rotate';
+    const c = center();
+    rotateStartAngle = Math.atan2(e.clientY-c.y, e.clientX-c.x) * 180/Math.PI;
+    rotateStartRot = currentRot();
   }
 
   el.addEventListener('pointerdown', (e)=>{
-    if(e.target.classList.contains('rm')) return;
+    if(e.target.closest('.stk-handle')) return; // handles have their own listeners below
+    if(!el.classList.contains('selected')){
+      selectSticker(el, zone);
+      return; // this tap only selects — moving it takes an explicit second gesture
+    }
     el.setPointerCapture(e.pointerId);
     pointers.set(e.pointerId, { x:e.clientX, y:e.clientY });
     if(pointers.size === 1) startDrag(e);
@@ -1734,7 +1859,7 @@ function makeDraggableInZone(el, zone, zoneKey){
         let scale = pinchStartScale * (newDist / pinchStartDist);
         scale = Math.max(0.4, Math.min(3, scale));
         liveScale = scale;
-        el.style.transform = `rotate(${rotOf()}deg) scale(${scale})`;
+        applyStickerTransform(el, currentRot(), scale);
       }
     } else if(mode === 'drag' && pointers.size === 1){
       const rect = zone.getBoundingClientRect();
@@ -1765,6 +1890,59 @@ function makeDraggableInZone(el, zone, zoneKey){
   }
   el.addEventListener('pointerup', release);
   el.addEventListener('pointercancel', release);
+
+  /* resize/rotate handles compute their gesture from the sticker's live on-screen center
+     (getBoundingClientRect already reflects the current transform), so both work correctly
+     regardless of the sticker's current rotation — no rotation-aware vector math needed for
+     resize (distance-from-center is rotation-invariant), and rotation is just the pointer's
+     angle around that same center. */
+  const resizeHandle = el.querySelector('.stk-handle.resize');
+  resizeHandle.addEventListener('pointerdown', (e)=>{
+    e.stopPropagation();
+    resizeHandle.setPointerCapture(e.pointerId);
+    startResize(e);
+  });
+  resizeHandle.addEventListener('pointermove', (e)=>{
+    if(mode !== 'resize') return;
+    const c = center();
+    const d = Math.max(1, Math.hypot(e.clientX-c.x, e.clientY-c.y));
+    let scale = resizeStartScale * (d/resizeStartDist);
+    scale = Math.max(0.4, Math.min(3, scale));
+    liveScale = scale;
+    applyStickerTransform(el, currentRot(), scale);
+  });
+  function endResize(){
+    if(mode !== 'resize') return;
+    const st = getStored();
+    if(st && liveScale !== null) st.scale = liveScale;
+    save('wp-stickerzones-v5', stickerZones);
+    liveScale = null; mode = null;
+  }
+  resizeHandle.addEventListener('pointerup', endResize);
+  resizeHandle.addEventListener('pointercancel', endResize);
+
+  const rotateHandle = el.querySelector('.stk-handle.rotate');
+  rotateHandle.addEventListener('pointerdown', (e)=>{
+    e.stopPropagation();
+    rotateHandle.setPointerCapture(e.pointerId);
+    startRotate(e);
+  });
+  rotateHandle.addEventListener('pointermove', (e)=>{
+    if(mode !== 'rotate') return;
+    const c = center();
+    const angle = Math.atan2(e.clientY-c.y, e.clientX-c.x) * 180/Math.PI;
+    liveRot = rotateStartRot + (angle - rotateStartAngle);
+    applyStickerTransform(el, liveRot, currentScale());
+  });
+  function endRotate(){
+    if(mode !== 'rotate') return;
+    const st = getStored();
+    if(st && liveRot !== null) st.rot = liveRot;
+    save('wp-stickerzones-v5', stickerZones);
+    liveRot = null; mode = null;
+  }
+  rotateHandle.addEventListener('pointerup', endRotate);
+  rotateHandle.addEventListener('pointercancel', endRotate);
 }
 let activeStickerZone = null; // {domSlotKey, dataKey} — set whenever the Date View opens a specific day
 function addStickerToCurrentPage(sid){
@@ -1772,15 +1950,21 @@ function addStickerToCurrentPage(sid){
   const { domSlotKey, dataKey } = activeStickerZone;
   const items = zoneItems(dataKey);
   if(items.length >= 14) return;
-  items.push({ iid: Date.now()+Math.random(), sid, x: 20+Math.random()*50, y: 20+Math.random()*45, rot: (Math.random()*20-10).toFixed(1), scale:1 });
+  const iid = Date.now()+Math.random();
+  items.push({ iid, sid, x: 20+Math.random()*50, y: 20+Math.random()*45, rot: Number((Math.random()*20-10).toFixed(1)), scale:1 });
   save('wp-stickerzones-v5', stickerZones);
   renderStickerLayer(domSlotKey, dataKey);
+  stickerSheet.classList.remove('open');
+  const layer = document.getElementById('stickerLayer-'+domSlotKey);
+  const newEl = layer && layer.querySelector(`.stick-inst[data-iid="${iid}"]`);
+  if(newEl) selectSticker(newEl, layer);
 }
 
 /* floating sticker button + bottom sheet */
 const stickerFab = document.getElementById('stickerFab');
 const stickerSheet = document.getElementById('stickerSheet');
 const stickerSheetGrid = document.getElementById('stickerSheetGrid');
+let activeStickerPack = 'custom'; // 'custom' | one of BUILTIN_STICKER_PACKS ids
 function applyHeaderLanguage(){
   const brandTitle = document.querySelector('.brand h1'); if(brandTitle) brandTitle.textContent = APP_NAME;
   logoutBtn.textContent = t('logOut');
@@ -1792,10 +1976,38 @@ function applyHeaderLanguage(){
   const sheetTitle = document.querySelector('.sticker-sheet-title'); if(sheetTitle) sheetTitle.textContent = t('stickerSheetTitle');
   const sheetClose = document.getElementById('stickerSheetClose'); if(sheetClose) sheetClose.textContent = t('stickerSheetClose');
   if(stkUploadBtn) stkUploadBtn.textContent = t('uploadStickers');
+  renderStickerPackTabs();
   renderStickerSheetGrid();
 }
 applyHeaderLanguage();
+function renderStickerPackTabs(){
+  const wrap = document.getElementById('stickerPackTabs');
+  if(!wrap) return;
+  const tabs = [{ id:'custom', label:t('stickerPackCustom') }, ...BUILTIN_STICKER_PACKS.map(p=> ({ id:p.id, label:t(p.nameKey) }))];
+  wrap.innerHTML = tabs.map(tb=> `<button type="button" class="pack-tab${tb.id===activeStickerPack?' active':''}" data-pack="${tb.id}">${tb.label}</button>`).join('');
+  wrap.querySelectorAll('.pack-tab').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      activeStickerPack = btn.dataset.pack;
+      renderStickerPackTabs();
+      renderStickerSheetGrid();
+    });
+  });
+}
 function renderStickerSheetGrid(){
+  const uploadRow = document.querySelector('.sticker-sheet-upload-row');
+  if(activeStickerPack !== 'custom'){
+    if(uploadRow) uploadRow.style.display = 'none';
+    const pack = BUILTIN_STICKER_PACKS.find(p=> p.id === activeStickerPack);
+    stickerSheetGrid.innerHTML = pack ? pack.files.map(file=>{
+      const sid = 'b:'+pack.id+':'+file;
+      return `<div class="sticker-lib-item"><button type="button" class="sticker-sheet-item" data-sid="${sid}"><img src="${BUILTIN_STICKER_INDEX[sid]}" alt=""></button></div>`;
+    }).join('') : '';
+    stickerSheetGrid.querySelectorAll('.sticker-sheet-item').forEach(btn=>{
+      btn.addEventListener('click', ()=> addStickerToCurrentPage(btn.dataset.sid));
+    });
+    return;
+  }
+  if(uploadRow) uploadRow.style.display = '';
   document.getElementById('stkHint').textContent = t('stickersAddedCount', { n:customStickers.length, max:MAX_STICKERS });
   stkUploadBtn.disabled = customStickers.length >= MAX_STICKERS;
   if(!customStickers.length){
@@ -1819,7 +2031,7 @@ function renderStickerSheetGrid(){
     });
   });
 }
-stickerFab.addEventListener('click', ()=>{ renderStickerSheetGrid(); stickerSheet.classList.add('open'); });
+stickerFab.addEventListener('click', ()=>{ renderStickerPackTabs(); renderStickerSheetGrid(); stickerSheet.classList.add('open'); });
 document.getElementById('stickerSheetClose').addEventListener('click', ()=> stickerSheet.classList.remove('open'));
 stickerSheet.addEventListener('click', (e)=>{ if(e.target === stickerSheet) stickerSheet.classList.remove('open'); });
 renderStickerSheetGrid();
@@ -2018,6 +2230,7 @@ function hideAllViews(){
   });
   stickerFab.style.display = 'none';
   activeStickerZone = null;
+  deselectAllStickers();
 }
 function showYearView(){
   hideAllViews();
