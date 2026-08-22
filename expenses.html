@@ -33,6 +33,7 @@
     --warning:#E8A23D;
     --danger:#E4553F;
     --danger-light:#FDEBE8;
+    --ink-btn-bg:#221F2E;
 
     --accent: var(--eva-accent);
     --accent-dark: var(--eva-accent-dark);
@@ -44,6 +45,35 @@
     --radius-sm:12px;
     --shadow-card: 0 2px 14px rgba(40,20,60,0.06);
     --shadow-pop: 0 10px 30px rgba(40,20,60,0.14);
+  }
+
+  /* Dark mode -- applied via a class (light/dark/system all resolve to either this class
+     being present or not; "system" just means JS decides based on matchMedia instead of a
+     saved preference). --eva-soft and --mark-soft feed the app background gradient below,
+     and --accent-light/--accent-soft aren't redefined here on purpose: they're aliases
+     (":root" says --accent-soft: var(--eva-soft)"), so overriding --eva-soft on body is
+     enough for them to resolve to the new dark value too via normal CSS inheritance. */
+  body.pref-dark{
+    /* -dark variants are re-aimed at "readable text ON a tinted -soft/-light surface"
+       rather than their light-mode job of "dark text on a pale surface" -- the surfaces
+       they pair with got dark-tinted above, so the text needs to get lighter, not stay
+       a medium-dark shade that now has poor contrast against its own dark background. */
+    --eva-light:#4A2436; --eva-soft: color-mix(in srgb, var(--accent) 18%, #1C1825); --eva-accent-dark:#FF8FC0;
+    --mark-light:#2A2650; --mark-soft: color-mix(in srgb, var(--mark-accent) 18%, #1C1825); --mark-accent-dark:#B0A8FF;
+    --shared-light:#3D3220; --shared-soft: color-mix(in srgb, var(--shared-accent) 18%, #1C1825); --shared-accent-dark:#F0C563;
+    --bg:#1C1825;
+    --card:#252030;
+    --text:#F1EDF7;
+    --muted:#9D97AE;
+    --muted-light:#5C5570;
+    --border:#332D42;
+    --success:#3FCB93;
+    --warning:#F0B15A;
+    --danger:#FF6B5C;
+    --danger-light: color-mix(in srgb, var(--danger) 20%, #1C1825);
+    --ink-btn-bg:#0F0D14;
+    --shadow-card: 0 2px 14px rgba(0,0,0,0.35);
+    --shadow-pop: 0 10px 30px rgba(0,0,0,0.5);
   }
 
   *{ box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
@@ -191,7 +221,7 @@
   .big-add-btn{
     width:100%;
     margin-top:16px;
-    background: var(--text);
+    background: var(--ink-btn-bg);
     color:#fff;
     border-radius: var(--radius-md);
     padding: 16px;
@@ -266,7 +296,7 @@
   .btn-ghost{ background: var(--accent-soft); color: var(--accent-dark); }
   .btn-danger{ background: var(--danger-light); color: var(--danger); }
   .btn-danger:disabled{ opacity:0.5; cursor:default; }
-  .btn-outline{ background:#fff; border:1.5px solid var(--border); color: var(--text); }
+  .btn-outline{ background: var(--card); border:1.5px solid var(--border); color: var(--text); }
   .btn-block{ width:100%; }
 
   /* ---------- Bottom nav ---------- */
@@ -911,6 +941,18 @@
         </div>
       </div>
 
+      <div class="section-title" data-i18n="section_appearance">Оформление</div>
+      <div class="card">
+        <div class="settings-row">
+          <div><div class="srow-label" data-i18n="appearance_label">Тема</div><div class="srow-sub" data-i18n="appearance_sub">Внешний вид приложения</div></div>
+          <div class="currency-toggle" id="colorscheme-toggle" style="margin:0; flex-wrap:wrap;">
+            <button class="cur-btn" data-scheme="light" style="padding:7px 12px; font-size:12.5px;" data-i18n="scheme_light">Светлая</button>
+            <button class="cur-btn" data-scheme="dark" style="padding:7px 12px; font-size:12.5px;" data-i18n="scheme_dark">Тёмная</button>
+            <button class="cur-btn" data-scheme="system" style="padding:7px 12px; font-size:12.5px;" data-i18n="scheme_system">Системная</button>
+          </div>
+        </div>
+      </div>
+
       <div class="section-title" data-i18n="section_categories_settings">Категории</div>
       <div class="card">
         <div id="settings-cat-list"></div>
@@ -1145,6 +1187,32 @@
 <script>
 (function(){
 "use strict";
+
+// Applied immediately, before auth/data even starts loading, so the very first paint
+// (including the login screen) already has the right look -- no flash of the wrong
+// theme. Reads a small mirror key directly rather than waiting for the full settings
+// blob to load; DB.settings.colorScheme (set up further down) is the synced source of
+// truth and keeps this mirror key up to date whenever it changes.
+const COLOR_SCHEME_KEY = 'wp-expense-color-scheme-v1';
+function resolveColorScheme(pref){
+  if(pref === 'system'){
+    return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+  }
+  return pref === 'dark' ? 'dark' : 'light';
+}
+function applyColorScheme(){
+  let pref;
+  try{ pref = localStorage.getItem(COLOR_SCHEME_KEY) || 'light'; }catch(e){ pref = 'light'; }
+  document.body.classList.toggle('pref-dark', resolveColorScheme(pref) === 'dark');
+}
+applyColorScheme();
+if(window.matchMedia){
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    let pref;
+    try{ pref = localStorage.getItem(COLOR_SCHEME_KEY) || 'light'; }catch(e){ pref = 'light'; }
+    if(pref === 'system') applyColorScheme();
+  });
+}
 
 // Declared this early (before the auth wiring below) on purpose: if the Supabase
 // CDN script fails to load, sb is null and the offline fallback path runs
@@ -1384,6 +1452,7 @@ function defaultData(){
       userColors: { eva: "#E23F88", mark: "#5B4FE0", shared: "#C6941F" },
       people: [], // filled in by loadData() -- see the migration comment there
       activeBudget: null, // {id, name, code} -- set once this account creates/joins a shared budget
+      colorScheme: "light", // "light" | "dark" | "system"
       language: "ru",
       lastWho: "shared",
       lastCurrency: "EUR"
@@ -1674,6 +1743,12 @@ const I18N = {
     settings_title: "Настройки",
     section_language: "Язык",
     language_sub: "Язык интерфейса приложения",
+    section_appearance: "Оформление",
+    appearance_label: "Тема",
+    appearance_sub: "Внешний вид приложения",
+    scheme_light: "Светлая",
+    scheme_dark: "Тёмная",
+    scheme_system: "Системная",
     section_categories_settings: "Категории",
     btn_new_category: "＋ Новая категория",
     section_people: "Люди",
@@ -1869,6 +1944,12 @@ const I18N = {
     settings_title: "Settings",
     section_language: "Language",
     language_sub: "App interface language",
+    section_appearance: "Appearance",
+    appearance_label: "Theme",
+    appearance_sub: "The app's visual style",
+    scheme_light: "Light",
+    scheme_dark: "Dark",
+    scheme_system: "System",
     section_categories_settings: "Categories",
     btn_new_category: "＋ New category",
     section_people: "People",
@@ -3523,6 +3604,7 @@ function renderSettings(){
 
   renderSettingsPeopleList();
   renderSettingsSharedBudget();
+  renderSettingsColorScheme();
 }
 
 function renderSettingsPeopleList(){
@@ -3851,6 +3933,11 @@ function bindStaticEvents(){
     });
   });
 
+  // Settings: light/dark/system appearance
+  $all("#colorscheme-toggle .cur-btn[data-scheme]").forEach(btn => {
+    btn.addEventListener("click", () => setColorScheme(btn.dataset.scheme));
+  });
+
   // Data: export/import/clear
   $('[data-action="export-data"]').addEventListener("click", exportData);
   $('[data-action="import-data"]').addEventListener("click", triggerImport);
@@ -3948,8 +4035,25 @@ setInterval(checkForDayChange, 60000);
 // Called from onSignedIn()/startOffline() once auth has resolved one way or
 // the other -- never on DOMContentLoaded directly, since loadData() needs
 // the cloud cache (or the offline decision) to already be in place first.
+function setColorScheme(pref){
+  DB.settings.colorScheme = pref;
+  persist();
+  try{ localStorage.setItem(COLOR_SCHEME_KEY, pref); }catch(e){}
+  applyColorScheme();
+  renderSettingsColorScheme();
+}
+function renderSettingsColorScheme(){
+  const pref = DB.settings.colorScheme || "light";
+  $all("#colorscheme-toggle .cur-btn[data-scheme]").forEach(b => b.classList.toggle("active", b.dataset.scheme === pref));
+}
+
 function startApp(){
   loadData();
+  // Reconcile the fast pre-load mirror with the account's real synced preference --
+  // matters mainly the first time a given device loads a signed-in account, where the
+  // mirror could only guess "light" before the real settings arrived.
+  try{ localStorage.setItem(COLOR_SCHEME_KEY, DB.settings.colorScheme || "light"); }catch(e){}
+  applyColorScheme();
   applyColorTheme();
   applyStaticTranslations();
   bindStaticEvents();
