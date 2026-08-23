@@ -921,6 +921,136 @@
   .myspace-lib-inner{ background: var(--paper); width:100%; max-width:640px; max-height:76vh; overflow-y:auto; border-radius:22px 22px 0 0; padding:20px 20px calc(30px + var(--safe-bottom)); box-shadow: 0 -10px 30px rgba(0,0,0,0.3); }
   .myspace-lib-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
   .myspace-lib-title{ font-family:var(--font-xl); font-size:22px; color: var(--ink); }
+
+  /* ============================================================
+     ONBOARDING — diary-style first-run experience.
+     ============================================================ */
+  .onboarding-screen{
+    position:fixed; inset:0; z-index:250; display:flex; overflow:hidden;
+    background: var(--board);
+    flex-direction:column; align-items:center; justify-content:center;
+    padding: calc(18px + var(--safe-top)) calc(16px + var(--safe-right)) calc(14px + var(--safe-bottom)) calc(16px + var(--safe-left));
+  }
+  .onboarding-screen.hidden{ display:none; }
+  .onboarding-skip{
+    position:absolute; top: calc(18px + var(--safe-top)); right: calc(16px + var(--safe-right));
+    font-family:var(--font-mono); font-weight:700; font-size:11.5px; letter-spacing:0.3px;
+    color: var(--ink-dim); background:none; border:none; cursor:pointer; text-decoration:underline;
+    padding:10px; z-index:5;
+  }
+  /* perspective lives on the wrapper (not the page itself) so the page's own rotation reads
+     as a real 3D turn rather than a flat squish */
+  .diary-book{ position:relative; width:100%; max-width:430px; flex:1; min-height:0; perspective:1500px; margin:0 auto; }
+  .diary-page{
+    position:absolute; inset:0; overflow-y:auto; -webkit-overflow-scrolling:touch;
+    background: var(--paper);
+    border-radius: 6px 18px 8px 20px / 16px 8px 20px 9px;
+    box-shadow: 0 22px 48px rgba(28,18,22,0.30), 0 3px 10px rgba(28,18,22,0.16);
+    padding: 30px 24px 22px;
+    display:flex; flex-direction:column;
+    backface-visibility:hidden; -webkit-backface-visibility:hidden;
+    transform-origin: left center;
+    transform: rotateY(0deg);
+  }
+  .diary-page::before{ /* spine shadow — a hint of the page's left binding edge */
+    content:''; position:absolute; inset:0 auto 0 0; width:26px;
+    background: linear-gradient(to right, rgba(28,18,22,0.10), transparent);
+    pointer-events:none; border-radius: inherit;
+  }
+  .diary-page.turn-anim{ transition: transform 0.46s cubic-bezier(0.62,0.03,0.38,0.97); }
+  .diary-page.turned{ transform: rotateY(-176deg); }
+  @media (prefers-reduced-motion: reduce){
+    .diary-page{ transition:none !important; }
+    .diary-page.turn-anim{ transition: opacity 0.2s ease !important; }
+    .diary-page.turned{ transform:rotateY(0deg) !important; opacity:0; pointer-events:none; }
+  }
+  .diary-eyebrow{ font-family:var(--font-mono); font-weight:700; font-size:10.5px; letter-spacing:1.2px; text-transform:uppercase; color: var(--ink-dim); margin-bottom:14px; }
+  .diary-title{ font-family:var(--font-xl); font-weight:400; font-size:34px; line-height:1.12; color:var(--ink); margin-bottom:10px; }
+  .diary-hand{ font-family:var(--font-hand); font-weight:700; font-size:22px; line-height:1.35; color:var(--ink); }
+  .diary-body{ font-family:var(--font-ui); font-size:15px; line-height:1.6; color:var(--ink); }
+  .diary-body + .diary-body{ margin-top:14px; }
+  .diary-highlight{ font-family:var(--font-hand); font-weight:700; font-size:19px; line-height:1.4; color:var(--accent); margin-top:18px; white-space:pre-line; }
+  .diary-sub{ font-family:var(--font-ui); font-size:13.5px; color:var(--ink-dim); margin-top:6px; margin-bottom:18px; }
+  .diary-spacer{ flex:1; min-height:14px; }
+  .diary-input{
+    width:100%; font-family:var(--font-hand); font-weight:700; font-size:26px; color:var(--ink);
+    border:none; border-bottom:2px solid var(--line); background:transparent; padding:8px 2px 10px;
+  }
+  .diary-input:focus{ outline:none; border-color:var(--accent); }
+  .diary-input::placeholder{ color: var(--ink-dim); opacity:0.5; }
+  .diary-text-input{
+    width:100%; font-family:var(--font-ui); font-weight:600; font-size:14.5px; color:var(--ink);
+    border:2px solid var(--line); border-radius:10px; background:var(--paper2); padding:11px 13px;
+  }
+  .diary-text-input:focus{ outline:none; border-color:var(--accent); }
+  .diary-textarea{ min-height:74px; resize:vertical; font-family:var(--font-ui); line-height:1.5; }
+
+  .onb-widget-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-top:6px; }
+  .onb-widget-card{
+    display:flex; align-items:center; gap:9px; text-align:left;
+    padding:12px 12px; border-radius:14px; border:2px solid var(--line); background:var(--paper2);
+    font-family:var(--font-ui); font-weight:700; font-size:13px; color:var(--ink); cursor:pointer;
+    min-height:44px;
+  }
+  .onb-widget-card .ic{ font-size:19px; flex-shrink:0; }
+  .onb-widget-card.selected{ border-color:var(--accent); background: var(--rose-soft); box-shadow: 0 3px 10px rgba(28,18,22,0.14); }
+  .onb-widget-cat-label{ font-family:var(--font-mono); font-weight:700; font-size:10.5px; letter-spacing:0.8px; text-transform:uppercase; color:var(--ink-dim); margin:16px 0 8px; }
+  .onb-widget-cat-label:first-of-type{ margin-top:4px; }
+
+  .onb-theme-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-top:8px; }
+  .onb-theme-card{ border:2px solid var(--line); border-radius:16px; padding:12px; cursor:pointer; text-align:center; background:var(--paper2); }
+  .onb-theme-card.selected{ border-color:var(--accent); box-shadow:0 3px 10px rgba(28,18,22,0.14); }
+  .onb-theme-swatch{ height:52px; border-radius:10px; margin-bottom:8px; display:flex; align-items:center; justify-content:center; gap:5px; }
+  .onb-theme-dot{ width:12px; height:12px; border-radius:50%; box-shadow:0 1px 3px rgba(0,0,0,0.25); }
+  .onb-theme-name{ font-family:var(--font-ui); font-weight:800; font-size:12.5px; color:var(--ink); }
+
+  .onb-choice-row{ display:flex; gap:10px; margin-top:10px; }
+  .onb-choice-btn{
+    flex:1; padding:16px 8px; border-radius:14px; border:2px solid var(--line); background:var(--paper2);
+    font-family:var(--font-ui); font-weight:800; font-size:13px; color:var(--ink); cursor:pointer; text-align:center;
+    min-height:44px;
+  }
+  .onb-choice-btn .ic{ display:block; font-size:22px; margin-bottom:6px; }
+  .onb-choice-btn.selected{ border-color:var(--accent); background:var(--rose-soft); }
+
+  .onb-avatar-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:10px; }
+  .onb-avatar-btn{
+    aspect-ratio:1; border-radius:50%; border:2.5px solid var(--line); background:var(--paper2);
+    font-size:24px; display:flex; align-items:center; justify-content:center; cursor:pointer;
+  }
+  .onb-avatar-btn.selected{ border-color:var(--accent); background:var(--rose-soft); box-shadow:0 3px 10px rgba(28,18,22,0.16); }
+
+  .onb-tour-emoji{ font-size:44px; margin-bottom:14px; }
+  .onb-tour-mock{ border:2px dashed var(--line); border-radius:14px; padding:16px; margin-top:16px; background:var(--paper2); }
+  .onb-tour-mock .mock-card{ background:var(--paper); border-radius:10px; padding:10px 12px; font-family:var(--font-ui); font-weight:700; font-size:12px; color:var(--ink-dim); margin-bottom:8px; box-shadow:0 2px 6px rgba(28,18,22,0.08); }
+  .onb-tour-mock .mock-card:last-child{ margin-bottom:0; }
+  .onb-tour-mock .mock-card.spot{ outline:2.5px solid var(--accent); outline-offset:2px; color:var(--ink); }
+
+  .onb-field-block{ margin-top:16px; }
+  .onb-field-label{ font-family:var(--font-mono); font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:0.4px; color:var(--ink-dim); margin-bottom:6px; display:flex; align-items:center; gap:6px; }
+  .onb-mood-row{ display:flex; gap:8px; margin-top:2px; }
+  .onb-mood-btn{ flex:1; font-size:24px; padding:10px 0; border-radius:12px; border:2px solid var(--line); background:var(--paper2); cursor:pointer; min-height:44px; }
+  .onb-mood-btn.selected{ border-color:var(--accent); background:var(--rose-soft); }
+
+  .onboarding-nav{
+    width:100%; max-width:430px; display:flex; align-items:center; justify-content:space-between;
+    gap:6px; padding-top:16px; flex-shrink:0;
+  }
+  .onb-nav-back{ flex-shrink:0; font-family:var(--font-mono); font-weight:700; font-size:12px; color:var(--ink-dim); background:none; border:none; cursor:pointer; padding:12px 4px; min-height:44px; white-space:nowrap; }
+  .onb-nav-back.invisible{ visibility:hidden; }
+  .onb-dots{ flex:1; display:flex; gap:4px; justify-content:center; overflow:hidden; min-width:0; }
+  .onb-dot{ flex-shrink:0; width:5px; height:5px; border-radius:50%; background:var(--line); }
+  .onb-dot.active{ background:var(--accent); width:14px; border-radius:4px; }
+  .onb-nav-next{
+    flex-shrink:0; font-family:var(--font-ui); font-weight:800; font-size:13px; letter-spacing:0.2px; text-transform:uppercase;
+    background:var(--accent); color:#fff; border:none; border-radius:100px; padding:13px 18px;
+    cursor:pointer; box-shadow:0 6px 16px rgba(164,48,50,0.3); min-height:44px; white-space:nowrap;
+  }
+  .onb-nav-next:disabled{ opacity:0.4; cursor:default; box-shadow:none; }
+  @media (min-width:820px){
+    .diary-book, .onboarding-nav{ max-width:480px; }
+    .diary-page{ padding:38px 34px 28px; }
+  }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -1021,6 +1151,23 @@
     </div>
     <div class="auth-msg" id="authMsg"></div>
     <button type="button" class="auth-skip" id="authSkipBtn">Continue without an account (this device only)</button>
+  </div>
+</div>
+
+<!-- ============ ONBOARDING (diary-style first run) ============
+     Two alternating page "slots" — content is rendered into whichever slot is currently
+     inactive, then it's revealed with a 3D page-turn as the other slot rotates away. See the
+     ONBOARDING JS module (near the end of buildApp()) for how this is driven. -->
+<div class="onboarding-screen hidden" id="onboardingScreen">
+  <button type="button" class="onboarding-skip" id="onbSkipBtn" style="display:none;"></button>
+  <div class="diary-book" id="diaryBook">
+    <div class="diary-page" id="diaryPageA"></div>
+    <div class="diary-page" id="diaryPageB" style="visibility:hidden;"></div>
+  </div>
+  <div class="onboarding-nav">
+    <button type="button" class="onb-nav-back" id="onbBackBtn"></button>
+    <div class="onb-dots" id="onbDots"></div>
+    <button type="button" class="onb-nav-next" id="onbNextBtn"></button>
   </div>
 </div>
 
@@ -1217,7 +1364,7 @@ const STRINGS = {
     settings:'Settings', account:'Account', accountSecurity:'Account security', personalization:'Personalization',
     regional:'Regional', notifications:'Notifications', media:'Media Files', dataPrivacy:'Data & Privacy',
     memberSince:'Member since', signOut:'Sign out', changeEmail:'Change email', changePassword:'Change password',
-    theme:'Theme', language:'Language', timezone:'Time zone', defaultCurrency:'Default currency',
+    theme:'Theme', language:'Language', languageSystemDefault:'System Default', timezone:'Time zone', defaultCurrency:'Default currency',
     dailyReminder:'Daily planner reminder', taskReminders:'Task reminders', eveningReminder:'Evening journal reminder',
     comingLater:'not active yet — this just saves your preference for when reminders launch',
     mediaComingSoon:"a gallery of everything you've added, organized by month, is coming in a later update.",
@@ -1249,6 +1396,29 @@ const STRINGS = {
     deleteSticker:'delete sticker', pickerDone:'done', resizeSticker:'resize', rotateSticker:'rotate',
     stickerPackCustom:'My stickers', stickerPackDigitalChrome:'Digital Chrome', stickerPackY2kVixen:'Y2K Vixen',
     stickerPackDarkRomance:'Dark Romance', stickerPackPetalBotanical:'Petal & Botanical',
+    // onboarding
+    onbNext:'next →', onbBack:'← back', onbSkip:'skip', onbSkipTour:'Skip tour', onbEnterSpace:'Enter SVOJ',
+    onbHelloTitle:'Hi.', onbHelloSub:"Let's get to know each other.",
+    onbNameLabel:'My name is…', onbNamePlaceholder:'Eve',
+    onbWhyEyebrow:'Page two', onbWhyP1:'I started this diary to write down everything that happens to me.',
+    onbWhyP2:'It can hold my plans. My money. My photos. My thoughts. My little wins. My strange days. Anything I want to keep.',
+    onbWhyHighlight:'This is your space.\nYou decide what belongs here.',
+    onbWidgetsTitle:'What belongs in your diary?', onbWidgetsSub:'Choose what you want to see in your space.',
+    onbWidgetsHint:'You can always add or remove things later, in Settings.',
+    onbThemeTitle:'How should your diary look?', onbThemeSub:'You can change this anytime.',
+    onbAppearanceTitle:'Light or dark?', onbAppearanceSub:'Pick whatever feels right to read in.',
+    appearanceLight:'Light', appearanceDark:'Dark', appearanceSystem:'System',
+    onbAvatarTitle:'Now choose yourself.', onbAvatarSub:'Pick a little face to greet you here — just for fun.',
+    onbTourStep1:'This is your space.', onbTourStep2:'Only the things you choose will live here.',
+    onbTourStep3:'Want something new? Just add it.', onbTourStep4:'And this is where your day lives.',
+    onbTourStep5:'Everything else can be made yours.',
+    onbFirstDayTitle:"Let's make your first day.", onbFirstDaySub:'Today, {date}',
+    onbFirstDayHint:'All of this is optional — just a start.',
+    onbTaskPlaceholder:'e.g. finally call the dentist', onbNotePlaceholder:'Anything on your mind…',
+    onbGenericPlaceholder:'Say something…',
+    onbFirstDayEmpty:'Write one little thing about today.',
+    onbDoneTitle:'Done.', onbDoneSub:'Your SVOJ is ready.',
+    onbTourMock1:'My Day', onbTourMock2:'Mood · Tasks · Notes', onbTourMock3:'+ Add / Customize',
     // sync badge
     syncSaving:'saving…', syncSynced:'synced', syncError:'sync error — saved on this device',
     // task mood picker
@@ -1326,7 +1496,7 @@ const STRINGS = {
     settings:'Настройки', account:'Аккаунт', accountSecurity:'Безопасность аккаунта', personalization:'Персонализация',
     regional:'Регион', notifications:'Уведомления', media:'Медиафайлы', dataPrivacy:'Данные и приватность',
     memberSince:'В сервисе с', signOut:'Выйти', changeEmail:'Сменить email', changePassword:'Сменить пароль',
-    theme:'Тема', language:'Язык', timezone:'Часовой пояс', defaultCurrency:'Валюта по умолчанию',
+    theme:'Тема', language:'Язык', languageSystemDefault:'Как в системе', timezone:'Часовой пояс', defaultCurrency:'Валюта по умолчанию',
     dailyReminder:'Напоминание о планере', taskReminders:'Напоминания о задачах', eveningReminder:'Вечернее напоминание о дневнике',
     comingLater:'ещё не активно — просто сохраняет ваш выбор на будущее',
     mediaComingSoon:'галерея всего добавленного, по месяцам, появится в одном из следующих обновлений.',
@@ -1355,6 +1525,29 @@ const STRINGS = {
     deleteSticker:'удалить стикер', pickerDone:'готово', resizeSticker:'изменить размер', rotateSticker:'повернуть',
     stickerPackCustom:'Мои стикеры', stickerPackDigitalChrome:'Digital Chrome', stickerPackY2kVixen:'Y2K Vixen',
     stickerPackDarkRomance:'Dark Romance', stickerPackPetalBotanical:'Цветы и ботаника',
+    // onboarding
+    onbNext:'дальше →', onbBack:'← назад', onbSkip:'пропустить', onbSkipTour:'Пропустить тур', onbEnterSpace:'Войти в SVOJ',
+    onbHelloTitle:'Привет.', onbHelloSub:'Давай знакомиться.',
+    onbNameLabel:'Меня зовут…', onbNamePlaceholder:'Ева',
+    onbWhyEyebrow:'Страница вторая', onbWhyP1:'Я завела этот дневник, чтобы записывать сюда всё, что происходит со мной.',
+    onbWhyP2:'Здесь могут быть мои планы. Мои деньги. Мои фотографии. Мои мысли. Мои маленькие победы. Мои странные дни. Всё, что я сама захочу сохранить.',
+    onbWhyHighlight:'Это твоё пространство.\nТы сама решаешь, что в нём будет.',
+    onbWidgetsTitle:'Что будет в твоём дневнике?', onbWidgetsSub:'Выбери то, что хочешь видеть в своём пространстве.',
+    onbWidgetsHint:'Позже всегда можно что-то добавить или убрать — в настройках.',
+    onbThemeTitle:'Как должен выглядеть твой дневник?', onbThemeSub:'Это всегда можно поменять.',
+    onbAppearanceTitle:'Светлый или тёмный?', onbAppearanceSub:'Выбери то, что приятнее глазу.',
+    appearanceLight:'Светлая', appearanceDark:'Тёмная', appearanceSystem:'Системная',
+    onbAvatarTitle:'Теперь выбери себя.', onbAvatarSub:'Выбери мордочку, которая будет тебя встречать — просто для настроения.',
+    onbTourStep1:'Это твоё пространство.', onbTourStep2:'Здесь будут только те вещи, которые ты выбрала.',
+    onbTourStep3:'Захочешь что-нибудь новое — просто добавишь.', onbTourStep4:'А здесь будет твой день.',
+    onbTourStep5:'Всё остальное можно настроить под себя.',
+    onbFirstDayTitle:'Давай запишем твой первый день.', onbFirstDaySub:'Сегодня, {date}',
+    onbFirstDayHint:'Всё это необязательно — просто начало.',
+    onbTaskPlaceholder:'например, наконец позвонить стоматологу', onbNotePlaceholder:'Что угодно, что на уме…',
+    onbGenericPlaceholder:'Напиши что-нибудь…',
+    onbFirstDayEmpty:'Напиши одну маленькую вещь про сегодня.',
+    onbDoneTitle:'Готово.', onbDoneSub:'Твой SVOJ уже здесь.',
+    onbTourMock1:'Мой день', onbTourMock2:'Настроение · Задачи · Заметки', onbTourMock3:'+ Добавить / Настроить',
     syncSaving:'сохраняем…', syncSynced:'синхронизировано', syncError:'ошибка синхронизации — сохранено на этом устройстве',
     taskMoodTooltip:'настроение задачи', taskMoodTooltipWithLabel:'настроение задачи: {label}',
     taskMoodUrgent:'Срочно', taskMoodDreading:'Не хочется', taskMoodMotivated:'Есть мотивация', taskMoodLowEnergy:'Мало сил',
@@ -1386,7 +1579,40 @@ const STRINGS = {
     deleteVibeConfirm:'Удалить этот свой настрой? Он исчезнет из всех дней, где использовался.',
   },
 };
-let currentLanguage = load('wp-language-v1', 'en');
+/* ---- language: System Default / English / Русский ----
+   currentLanguage ('en'|'ru') is what t()/localeCode() actually read — unchanged so every
+   existing call site keeps working. languagePref ('system'|'en'|'ru') is the new, slightly
+   higher-level user CHOICE layered on top of it: 'system' means "keep following whatever
+   the device/browser reports", resolved once at load and again whenever it might have
+   changed (sign-in, explicit selection). A visitor who never touched the language setting
+   gets their real device language instead of a hardcoded 'en'; anyone who already picked a
+   language before this existed keeps that exact choice (migrated below), never silently
+   reset to "system" just because the new preference key doesn't exist for them yet. */
+const LANGUAGE_PREF_KEY = 'wp-language-pref-v1';
+const LEGACY_LANGUAGE_KEY = 'wp-language-v1';
+const SUPPORTED_LANGUAGES = ['en','ru'];
+function detectSystemLanguage(){
+  try{
+    const langs = (navigator.languages && navigator.languages.length) ? navigator.languages : [navigator.language || 'en'];
+    for(const l of langs){ if(typeof l === 'string' && l.toLowerCase().startsWith('ru')) return 'ru'; }
+  }catch(e){}
+  return 'en';
+}
+function resolveLanguage(pref){ return SUPPORTED_LANGUAGES.includes(pref) ? pref : detectSystemLanguage(); }
+let languagePref = load(LANGUAGE_PREF_KEY, null);
+if(languagePref === null){
+  const legacy = load(LEGACY_LANGUAGE_KEY, null);
+  languagePref = SUPPORTED_LANGUAGES.includes(legacy) ? legacy : 'system';
+  save(LANGUAGE_PREF_KEY, languagePref); // persist the migrated/default value once, so it
+    // no longer depends on the legacy key surviving — safe pre-auth (save() just writes
+    // locally until a real sign-in exists to sync it, same as every other early preference)
+}
+let currentLanguage = resolveLanguage(languagePref);
+function setLanguagePref(pref){
+  languagePref = pref;
+  currentLanguage = resolveLanguage(pref);
+  save(LANGUAGE_PREF_KEY, pref);
+}
 function t(key, vars){
   let str = (STRINGS[currentLanguage] && STRINGS[currentLanguage][key]) || STRINGS.en[key] || key;
   if(vars) Object.keys(vars).forEach(k=> str = str.replace('{'+k+'}', vars[k]));
@@ -1530,7 +1756,10 @@ async function onSignedIn(user){
   await migrateLocalToCloud(user.id);
   setSyncBadge('ok');
   applyTheme(load('wp-theme-v5', currentTheme));
-  currentLanguage = load('wp-language-v1', currentLanguage);
+  const cloudLangPref = load(LANGUAGE_PREF_KEY, null);
+  if(cloudLangPref !== null){ languagePref = cloudLangPref; }
+  else { const legacyCloud = load(LEGACY_LANGUAGE_KEY, null); if(SUPPORTED_LANGUAGES.includes(legacyCloud)) languagePref = legacyCloud; }
+  currentLanguage = resolveLanguage(languagePref);
   buildApp();
 }
 function startOffline(){
@@ -3295,8 +3524,9 @@ function buildSettingsView(){
         <select class="settings-select" id="settingsThemeSelect">${THEMES.map(th=>`<option value="${th.key}" ${th.key===currentTheme?'selected':''}>${th.label}</option>`).join('')}</select></div>
       <div class="settings-row"><span class="settings-row-label">${t('language')}</span>
         <select class="settings-select" id="settingsLangSelect">
-          <option value="en" ${currentLanguage==='en'?'selected':''}>English</option>
-          <option value="ru" ${currentLanguage==='ru'?'selected':''}>Русский</option>
+          <option value="system" ${languagePref==='system'?'selected':''}>${t('languageSystemDefault')}</option>
+          <option value="en" ${languagePref==='en'?'selected':''}>English</option>
+          <option value="ru" ${languagePref==='ru'?'selected':''}>Русский</option>
         </select></div>
       <div class="settings-row"><span class="settings-row-label">${t('widgetLibraryLink')}</span><button type="button" class="settings-btn-outline" id="openWidgetsBtn">${t('customizeArrow')}</button></div>
     </div>
@@ -3345,7 +3575,7 @@ function buildSettingsView(){
   document.getElementById('openWidgetsBtn').addEventListener('click', showWidgetsView);
   document.getElementById('openMediaBtn').addEventListener('click', showMediaView);
   document.getElementById('settingsLangSelect').addEventListener('change', (e)=>{
-    currentLanguage = e.target.value; save('wp-language-v1', currentLanguage); applyHeaderLanguage(); buildSettingsView();
+    setLanguagePref(e.target.value); applyHeaderLanguage(); buildSettingsView();
   });
   document.getElementById('settingsTzSelect').addEventListener('change', (e)=>{
     currentTimezone = e.target.value; save('wp-timezone-v1', currentTimezone);
@@ -4448,8 +4678,484 @@ window.addEventListener('resize', ()=>{
   if(myspaceCurrentCols() !== myspaceLastCols) buildMySpaceView();
 });
 
+/* ============================================================
+   ONBOARDING — diary-style first run
+   ============================================================
+   Runs once, before showMySpaceView(), for a genuinely fresh account only (see
+   needsOnboarding()). Reuses the app's real systems end to end rather than inventing a
+   parallel one: the widgets picked here become the actual widgetConfig.enabled, the theme
+   choice calls the real setTheme(), and the "first day" inputs write straight into the
+   real daysData/widgetDailyData for today via the same fields/functions the Date View
+   itself uses — there is no separate onboarding-only data model to keep in sync. */
+const ONBOARDING_COMPLETE_KEY = 'wp-onboarding-complete-v1';
+const USER_NAME_KEY = 'wp-user-name-v1';
+const AVATAR_KEY = 'wp-avatar-v1';
+/* 'light' | 'dark' | 'system'. This stores the PREFERENCE and applies a body class as the
+   foundation for future per-theme dark palettes — none of the 4 existing themes has a
+   distinct dark visual yet, so choosing "dark" today only sets this preference; it does not
+   yet reskin Pink Pop/Dark Romance/Petal/Digital Chrome. See the phase summary. */
+const APPEARANCE_KEY = 'wp-appearance-v1';
+const AVATAR_OPTIONS = ['🐱','🦊','🐰','🐻','🐼','🦉','🐨','🐧','🦄','🐢','🦋','🐝'];
+
+function needsOnboarding(){
+  if(load(ONBOARDING_COMPLETE_KEY, false)) return false;
+  // The real "has this account ever actually used the diary" signal — never show onboarding
+  // to, or overwrite the setup of, an account with existing day data, even one that predates
+  // ONBOARDING_COMPLETE_KEY existing at all.
+  return Object.keys(daysData).length === 0;
+}
+function resolveAppearance(mode){
+  if(mode === 'light' || mode === 'dark') return mode;
+  try{ if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark'; }catch(e){}
+  return 'light';
+}
+function applyAppearance(mode){
+  document.body.classList.remove('appearance-light','appearance-dark');
+  document.body.classList.add('appearance-' + resolveAppearance(mode));
+}
+
+let onbState = {
+  name: load(USER_NAME_KEY, ''),
+  widgets: new Set(widgetConfig.enabled),
+  theme: currentTheme,
+  appearance: load(APPEARANCE_KEY, 'system'),
+  avatar: load(AVATAR_KEY, ''),
+  firstDay: { mood:null, task:'', note:'', water:false, sleepHrs:'', generic:{} },
+};
+
+const TOUR_STEPS = [
+  { emoji:'🏡', textKey:'onbTourStep1', spot:0 },
+  { emoji:'🧩', textKey:'onbTourStep2', spot:1 },
+  { emoji:'➕', textKey:'onbTourStep3', spot:2 },
+  { emoji:'📖', textKey:'onbTourStep4', spot:1 },
+  { emoji:'⚙️', textKey:'onbTourStep5', spot:2 },
+];
+function onbRenderTourStep(n){
+  const step = TOUR_STEPS[n-1];
+  const mockLabels = [t('onbTourMock1'), t('onbTourMock2'), t('onbTourMock3')];
+  return `
+    <div class="onb-tour-emoji">${step.emoji}</div>
+    <div class="diary-hand" style="font-size:24px;">${t(step.textKey)}</div>
+    <div class="onb-tour-mock">
+      ${mockLabels.map((label,i)=> `<div class="mock-card${step.spot===i?' spot':''}">${label}</div>`).join('')}
+    </div>
+    <div class="diary-spacer"></div>
+  `;
+}
+
+function onbRenderName(){
+  return `
+    <div class="diary-eyebrow">SVOJ</div>
+    <div class="diary-title">${t('onbHelloTitle')}</div>
+    <div class="diary-hand">${t('onbHelloSub')}</div>
+    <div class="onb-field-block" style="margin-top:34px;">
+      <div class="onb-field-label">${t('onbNameLabel')}</div>
+      <input type="text" class="diary-input" id="onbNameInput" placeholder="${t('onbNamePlaceholder')}" value="${(onbState.name||'').replace(/</g,'&lt;').replace(/"/g,'&quot;')}" autocomplete="given-name" maxlength="40">
+    </div>
+    <div class="diary-spacer"></div>
+  `;
+}
+function onbWireName(root){
+  const input = root.querySelector('#onbNameInput');
+  if(!input) return;
+  input.focus({ preventScroll:true });
+  input.addEventListener('input', ()=>{ onbState.name = input.value; onbUpdateNav(); });
+  input.addEventListener('keydown', (e)=>{ if(e.key==='Enter') onbHandleNext(); });
+}
+
+function onbRenderWhy(){
+  const nameLine = onbState.name.trim() ? `<div class="diary-hand" style="margin-bottom:14px;">${onbState.name.trim().replace(/</g,'&lt;')}.</div>` : '';
+  return `
+    <div class="diary-eyebrow">${t('onbWhyEyebrow')}</div>
+    ${nameLine}
+    <div class="diary-body">${t('onbWhyP1')}</div>
+    <div class="diary-body">${t('onbWhyP2')}</div>
+    <div class="diary-highlight">${t('onbWhyHighlight')}</div>
+    <div class="diary-spacer"></div>
+  `;
+}
+
+function onbRenderWidgets(){
+  const cats = WIDGET_CATEGORY_ORDER.map(cat=>{
+    const items = Object.values(SYSTEM_WIDGETS).filter(w=> w.category===cat && !w.hidden);
+    if(!items.length) return '';
+    return `<div class="onb-widget-cat-label">${t(WIDGET_CATEGORY_LABEL_KEYS[cat])}</div>
+      <div class="onb-widget-grid">${items.map(w=>`
+        <button type="button" class="onb-widget-card${onbState.widgets.has(w.id)?' selected':''}" data-widget="${w.id}">
+          <span class="ic">${w.icon}</span><span>${t(w.labelKey)}</span>
+        </button>`).join('')}</div>`;
+  }).join('');
+  return `
+    <div class="diary-title" style="font-size:26px;">${t('onbWidgetsTitle')}</div>
+    <div class="diary-sub">${t('onbWidgetsSub')}</div>
+    ${cats}
+    <div class="diary-sub" style="margin-top:16px;">${t('onbWidgetsHint')}</div>
+  `;
+}
+function onbWireWidgets(root){
+  root.querySelectorAll('.onb-widget-card').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const id = btn.dataset.widget;
+      if(onbState.widgets.has(id)){ onbState.widgets.delete(id); }
+      else { if(onbState.widgets.size >= MAX_SYSTEM_WIDGETS) return; onbState.widgets.add(id); }
+      btn.classList.toggle('selected', onbState.widgets.has(id));
+    });
+  });
+}
+
+const ONB_THEME_PREVIEW = {
+  pop:       { board:'#fff3f8', dots:['#ff2788','#fffdfa'] },
+  forest:    { board:'#0d0a0c', dots:['#a53a52','#eee1cc'] },
+  botanical: { board:'#fffaf2', dots:['#bd6f8c','#dcd2f3'] },
+  berry:     { board:'#f6f8fb', dots:['#7298ff','#cbd2de'] },
+};
+function onbRenderTheme(){
+  return `
+    <div class="diary-title" style="font-size:26px;">${t('onbThemeTitle')}</div>
+    <div class="diary-sub">${t('onbThemeSub')}</div>
+    <div class="onb-theme-grid">
+      ${THEMES.map(th=>{
+        const p = ONB_THEME_PREVIEW[th.key] || { board:'#eee', dots:['#999','#ccc'] };
+        return `<button type="button" class="onb-theme-card${onbState.theme===th.key?' selected':''}" data-theme="${th.key}">
+          <div class="onb-theme-swatch" style="background:${p.board};">
+            <span class="onb-theme-dot" style="background:${p.dots[0]};"></span>
+            <span class="onb-theme-dot" style="background:${p.dots[1]};"></span>
+          </div>
+          <div class="onb-theme-name">${th.label}</div>
+        </button>`;
+      }).join('')}
+    </div>
+    <div class="diary-spacer"></div>
+  `;
+}
+function onbWireTheme(root){
+  root.querySelectorAll('.onb-theme-card').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      onbState.theme = btn.dataset.theme;
+      root.querySelectorAll('.onb-theme-card').forEach(b=> b.classList.toggle('selected', b===btn));
+    });
+  });
+}
+
+function onbRenderAppearance(){
+  const opts = [ ['light','☀️','appearanceLight'], ['dark','🌙','appearanceDark'], ['system','⚙️','appearanceSystem'] ];
+  return `
+    <div class="diary-title" style="font-size:26px;">${t('onbAppearanceTitle')}</div>
+    <div class="diary-sub">${t('onbAppearanceSub')}</div>
+    <div class="onb-choice-row">
+      ${opts.map(([key,icon,labelKey])=>`
+        <button type="button" class="onb-choice-btn${onbState.appearance===key?' selected':''}" data-appearance="${key}">
+          <span class="ic">${icon}</span>${t(labelKey)}
+        </button>`).join('')}
+    </div>
+    <div class="diary-spacer"></div>
+  `;
+}
+function onbWireAppearance(root){
+  root.querySelectorAll('[data-appearance]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      onbState.appearance = btn.dataset.appearance;
+      root.querySelectorAll('[data-appearance]').forEach(b=> b.classList.toggle('selected', b===btn));
+    });
+  });
+}
+
+function onbRenderAvatar(){
+  return `
+    <div class="diary-title" style="font-size:26px;">${t('onbAvatarTitle')}</div>
+    <div class="diary-sub">${t('onbAvatarSub')}</div>
+    <div class="onb-avatar-grid">
+      ${AVATAR_OPTIONS.map(e=>`<button type="button" class="onb-avatar-btn${onbState.avatar===e?' selected':''}" data-avatar="${e}">${e}</button>`).join('')}
+    </div>
+    <div class="diary-spacer"></div>
+  `;
+}
+function onbWireAvatar(root){
+  root.querySelectorAll('[data-avatar]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      onbState.avatar = (onbState.avatar === btn.dataset.avatar) ? '' : btn.dataset.avatar;
+      root.querySelectorAll('[data-avatar]').forEach(b=> b.classList.toggle('selected', b.dataset.avatar===onbState.avatar));
+    });
+  });
+}
+
+/* Only asks about the widgets the user actually chose on the widgets page — an account that
+   picked just Photos/Tasks/Notes never sees Mood or Water here. The generic-kind system
+   widgets (music, movie, favoriteThing, gratitude, dailyHighlight, freeText, steps) reuse
+   their real SYSTEM_WIDGETS definitions directly rather than a second copy of their labels. */
+const ONB_FIRSTDAY_GENERIC_IDS = ['music','movie','favoriteThing','gratitude','dailyHighlight','freeText','steps'];
+function onbRenderFirstDay(){
+  const selected = onbState.widgets;
+  const blocks = [];
+  if(selected.has('mood')){
+    blocks.push(`<div class="onb-field-block">
+      <div class="onb-field-label">${SYSTEM_WIDGETS.mood.icon} ${t('widgetMood')}</div>
+      <div class="onb-mood-row">${MOOD_FACES.map((f,i)=>`<button type="button" class="onb-mood-btn${onbState.firstDay.mood===i?' selected':''}" data-mood="${i}">${f}</button>`).join('')}</div>
+    </div>`);
+  }
+  if(selected.has('tasks')){
+    blocks.push(`<div class="onb-field-block">
+      <div class="onb-field-label">${SYSTEM_WIDGETS.tasks.icon} ${t('widgetTasks')}</div>
+      <input type="text" class="diary-text-input" id="onbTaskInput" placeholder="${t('onbTaskPlaceholder')}" value="${onbState.firstDay.task.replace(/</g,'&lt;').replace(/"/g,'&quot;')}" maxlength="120">
+    </div>`);
+  }
+  if(selected.has('notes')){
+    blocks.push(`<div class="onb-field-block">
+      <div class="onb-field-label">${SYSTEM_WIDGETS.notes.icon} ${t('widgetNotes')}</div>
+      <textarea class="diary-text-input diary-textarea" id="onbNoteInput" placeholder="${t('onbNotePlaceholder')}" maxlength="400">${onbState.firstDay.note.replace(/</g,'&lt;')}</textarea>
+    </div>`);
+  }
+  if(selected.has('water')){
+    blocks.push(`<div class="onb-field-block">
+      <div class="onb-field-label">${SYSTEM_WIDGETS.water.icon} ${t('widgetWater')}</div>
+      <button type="button" class="onb-choice-btn${onbState.firstDay.water?' selected':''}" id="onbWaterBtn" style="width:100%;">${onbState.firstDay.water ? '✓' : '+'}</button>
+    </div>`);
+  }
+  if(selected.has('sleep')){
+    blocks.push(`<div class="onb-field-block">
+      <div class="onb-field-label">${SYSTEM_WIDGETS.sleep.icon} ${t('sleepLabelHrs')}</div>
+      <input type="number" class="diary-text-input" id="onbSleepInput" min="0" max="24" step="0.5" value="${onbState.firstDay.sleepHrs}" style="max-width:110px;">
+    </div>`);
+  }
+  ONB_FIRSTDAY_GENERIC_IDS.forEach(id=>{
+    if(!selected.has(id)) return;
+    const def = SYSTEM_WIDGETS[id];
+    const val = onbState.firstDay.generic[id] || '';
+    blocks.push(`<div class="onb-field-block">
+      <div class="onb-field-label">${def.icon} ${t(def.labelKey)}</div>
+      <input type="${def.kind==='number'?'number':'text'}" class="diary-text-input" data-generic="${id}" placeholder="${t('onbGenericPlaceholder')}" value="${('' + val).replace(/</g,'&lt;').replace(/"/g,'&quot;')}">
+    </div>`);
+  });
+  const body = blocks.length ? blocks.join('') : `
+    <div class="diary-body" style="margin-top:20px;">${t('onbFirstDayEmpty')}</div>
+    <div class="onb-field-block"><textarea class="diary-text-input diary-textarea" id="onbFallbackNote" placeholder="${t('onbNotePlaceholder')}">${onbState.firstDay.note.replace(/</g,'&lt;')}</textarea></div>`;
+  return `
+    <div class="diary-title" style="font-size:26px;">${t('onbFirstDayTitle')}</div>
+    <div class="diary-sub">${t('onbFirstDaySub',{date:fmtFull(todayReal)})}</div>
+    ${body}
+    <div class="diary-sub" style="margin-top:16px;">${t('onbFirstDayHint')}</div>
+  `;
+}
+function onbWireFirstDay(root){
+  const moodBtns = root.querySelectorAll('[data-mood]');
+  moodBtns.forEach(btn=> btn.addEventListener('click', ()=>{
+    onbState.firstDay.mood = parseInt(btn.dataset.mood, 10);
+    moodBtns.forEach(b=> b.classList.toggle('selected', b===btn));
+  }));
+  const task = root.querySelector('#onbTaskInput'); if(task) task.addEventListener('input', ()=>{ onbState.firstDay.task = task.value; });
+  const note = root.querySelector('#onbNoteInput'); if(note) note.addEventListener('input', ()=>{ onbState.firstDay.note = note.value; });
+  const fallbackNote = root.querySelector('#onbFallbackNote'); if(fallbackNote) fallbackNote.addEventListener('input', ()=>{ onbState.firstDay.note = fallbackNote.value; });
+  const waterBtn = root.querySelector('#onbWaterBtn');
+  if(waterBtn) waterBtn.addEventListener('click', ()=>{
+    onbState.firstDay.water = !onbState.firstDay.water;
+    waterBtn.classList.toggle('selected', onbState.firstDay.water);
+    waterBtn.textContent = onbState.firstDay.water ? '✓' : '+';
+  });
+  const sleep = root.querySelector('#onbSleepInput'); if(sleep) sleep.addEventListener('input', ()=>{ onbState.firstDay.sleepHrs = sleep.value; });
+  root.querySelectorAll('[data-generic]').forEach(inp=> inp.addEventListener('input', ()=>{ onbState.firstDay.generic[inp.dataset.generic] = inp.value; }));
+}
+
+function onbRenderDone(){
+  return `
+    <div class="diary-title">${t('onbDoneTitle')}</div>
+    <div class="diary-hand">${t('onbDoneSub')}</div>
+    <div class="diary-spacer"></div>
+  `;
+}
+
+const ONB_PAGES = [
+  { id:'name',       render:onbRenderName,            canAdvance:()=> onbState.name.trim().length>0 },
+  { id:'why',        render:onbRenderWhy },
+  { id:'widgets',    render:onbRenderWidgets,         skippable:true },
+  { id:'theme',      render:onbRenderTheme,           skippable:true },
+  { id:'appearance', render:onbRenderAppearance,      skippable:true },
+  { id:'avatar',     render:onbRenderAvatar,          skippable:true },
+  { id:'tour1',      render:()=>onbRenderTourStep(1), skippable:true, isTour:true },
+  { id:'tour2',      render:()=>onbRenderTourStep(2), skippable:true, isTour:true },
+  { id:'tour3',      render:()=>onbRenderTourStep(3), skippable:true, isTour:true },
+  { id:'tour4',      render:()=>onbRenderTourStep(4), skippable:true, isTour:true },
+  { id:'tour5',      render:()=>onbRenderTourStep(5), skippable:true, isTour:true },
+  { id:'firstday',   render:onbRenderFirstDay,        skippable:true },
+  { id:'done',       render:onbRenderDone,            isFinal:true },
+];
+function onbWirePage(root, index){
+  const id = ONB_PAGES[index].id;
+  if(id==='name') onbWireName(root);
+  else if(id==='widgets') onbWireWidgets(root);
+  else if(id==='theme') onbWireTheme(root);
+  else if(id==='appearance') onbWireAppearance(root);
+  else if(id==='avatar') onbWireAvatar(root);
+  else if(id==='firstday') onbWireFirstDay(root);
+}
+
+let onbIndex = 0;
+let onbAnimating = false;
+let onbSlotA, onbSlotB, onbFrontEl, onbBackEl;
+function onbReduceMotion(){
+  try{ return window.matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){ return false; }
+}
+
+function onbRenderInto(el, index){
+  el.innerHTML = ONB_PAGES[index].render();
+  onbWirePage(el, index);
+}
+function onbUpdateNav(){
+  const backBtn = document.getElementById('onbBackBtn');
+  const nextBtn = document.getElementById('onbNextBtn');
+  const skipBtn = document.getElementById('onbSkipBtn');
+  const dots = document.getElementById('onbDots');
+  const page = ONB_PAGES[onbIndex];
+  backBtn.textContent = t('onbBack');
+  backBtn.classList.toggle('invisible', onbIndex === 0);
+  const canAdvance = page.canAdvance ? page.canAdvance() : true;
+  nextBtn.disabled = !canAdvance;
+  nextBtn.textContent = page.isFinal ? t('onbEnterSpace') : t('onbNext');
+  if(page.skippable){
+    skipBtn.style.display = '';
+    skipBtn.textContent = page.isTour ? t('onbSkipTour') : t('onbSkip');
+  } else {
+    skipBtn.style.display = 'none';
+  }
+  dots.innerHTML = ONB_PAGES.map((_,i)=> `<span class="onb-dot${i===onbIndex?' active':''}"></span>`).join('');
+}
+function onbGoTo(newIndex, dir){
+  if(onbAnimating || newIndex===onbIndex || newIndex<0 || newIndex>=ONB_PAGES.length) return;
+  onbAnimating = true;
+  const incoming = (onbFrontEl === onbSlotA) ? onbSlotB : onbSlotA;
+  onbRenderInto(incoming, newIndex);
+  incoming.style.visibility = 'visible';
+
+  if(onbReduceMotion()){
+    incoming.style.zIndex = 1; onbFrontEl.style.zIndex = 2;
+    onbFrontEl.classList.remove('turned');
+    void onbFrontEl.offsetWidth;
+    onbFrontEl.classList.add('turn-anim');
+    requestAnimationFrame(()=> onbFrontEl.classList.add('turned'));
+    const outgoing = onbFrontEl;
+    const done = ()=>{
+      outgoing.removeEventListener('transitionend', done);
+      outgoing.classList.remove('turn-anim','turned');
+      outgoing.style.visibility = 'hidden';
+      onbFrontEl = incoming; onbBackEl = outgoing;
+      onbIndex = newIndex; onbAnimating = false; onbUpdateNav();
+    };
+    outgoing.addEventListener('transitionend', done);
+    return;
+  }
+
+  let animatedEl;
+  if(dir === 1){
+    incoming.style.zIndex = 1; incoming.classList.remove('turn-anim','turned');
+    onbFrontEl.style.zIndex = 2; onbFrontEl.classList.remove('turn-anim','turned');
+    void onbFrontEl.offsetWidth;
+    onbFrontEl.classList.add('turn-anim');
+    requestAnimationFrame(()=> onbFrontEl.classList.add('turned'));
+    animatedEl = onbFrontEl;
+  } else {
+    incoming.style.zIndex = 2; incoming.classList.remove('turn-anim'); incoming.classList.add('turned');
+    onbFrontEl.style.zIndex = 1; onbFrontEl.classList.remove('turn-anim','turned');
+    void incoming.offsetWidth;
+    incoming.classList.add('turn-anim');
+    requestAnimationFrame(()=> incoming.classList.remove('turned'));
+    animatedEl = incoming;
+  }
+  const outgoingWasFront = onbFrontEl;
+  const done = ()=>{
+    animatedEl.removeEventListener('transitionend', done);
+    if(dir === 1) outgoingWasFront.style.visibility = 'hidden';
+    onbFrontEl = incoming; onbBackEl = (incoming===onbSlotA) ? onbSlotB : onbSlotA;
+    onbIndex = newIndex; onbAnimating = false; onbUpdateNav();
+  };
+  animatedEl.addEventListener('transitionend', done);
+}
+function onbHandleNext(){
+  const page = ONB_PAGES[onbIndex];
+  if(page.canAdvance && !page.canAdvance()) return;
+  if(page.isFinal){ onbFinish(); return; }
+  onbGoTo(onbIndex + 1, 1);
+}
+function onbHandleSkip(){
+  const page = ONB_PAGES[onbIndex];
+  if(page.isTour){
+    onbGoTo(ONB_PAGES.findIndex(p=> p.id==='firstday'), 1);
+  } else {
+    onbGoTo(onbIndex + 1, 1);
+  }
+}
+function onbFinish(){
+  if(onbState.name.trim()) save(USER_NAME_KEY, onbState.name.trim());
+  widgetConfig.enabled = Array.from(onbState.widgets).slice(0, MAX_SYSTEM_WIDGETS);
+  saveWidgetConfig();
+  setTheme(onbState.theme);
+  save(APPEARANCE_KEY, onbState.appearance);
+  applyAppearance(onbState.appearance);
+  if(onbState.avatar) save(AVATAR_KEY, onbState.avatar);
+
+  const key = dateKeyOf(todayReal);
+  const dd = ensureDayData(key);
+  if(onbState.firstDay.mood !== null) dd.mood = onbState.firstDay.mood;
+  if(onbState.firstDay.task.trim()) dd.todos.push({ text: onbState.firstDay.task.trim(), done:false, vibe:'' });
+  if(onbState.firstDay.note.trim()) dd.notes = onbState.firstDay.note.trim();
+  if(onbState.firstDay.water) dd.water = Math.max(dd.water, 1);
+  if(onbState.firstDay.sleepHrs !== '' && !isNaN(parseFloat(onbState.firstDay.sleepHrs))) dd.sleep = parseFloat(onbState.firstDay.sleepHrs);
+  save('wp-days-v5', daysData);
+  const wd = ensureWidgetDay(key);
+  Object.keys(onbState.firstDay.generic).forEach(wid=>{
+    const v = onbState.firstDay.generic[wid];
+    if(v !== undefined && v !== '') wd[wid] = v;
+  });
+  saveWidgetDaily();
+
+  save(ONBOARDING_COMPLETE_KEY, true);
+  document.getElementById('onboardingScreen').classList.add('hidden');
+  showMySpaceView();
+}
+function startOnboarding(){
+  onbSlotA = document.getElementById('diaryPageA');
+  onbSlotB = document.getElementById('diaryPageB');
+  onbFrontEl = onbSlotA; onbBackEl = onbSlotB;
+  onbSlotA.style.zIndex = 2; onbSlotA.style.visibility = 'visible';
+  onbSlotB.style.zIndex = 1; onbSlotB.style.visibility = 'hidden';
+  onbIndex = 0;
+  onbRenderInto(onbSlotA, 0);
+  onbUpdateNav();
+  document.getElementById('onboardingScreen').classList.remove('hidden');
+
+  document.getElementById('onbNextBtn').addEventListener('click', onbHandleNext);
+  document.getElementById('onbBackBtn').addEventListener('click', ()=> onbGoTo(onbIndex - 1, -1));
+  document.getElementById('onbSkipBtn').addEventListener('click', onbHandleSkip);
+
+  // Swipe is a convenience gesture layered on top of the buttons (which remain the primary,
+  // always-visible way to navigate) — a tiny/aborted swipe simply never crosses the distance
+  // threshold below, so there is no partial "stuck mid-turn" state to recover from.
+  const book = document.getElementById('diaryBook');
+  let dragStartX = null, dragStartY = null, dragging = false;
+  book.addEventListener('pointerdown', (e)=>{
+    if(onbAnimating) return;
+    // Only real form controls need protecting from an accidental drag (native text
+    // selection, a date/number input's own drag handling) — plain <button>s (which cover
+    // most of the widgets/theme/appearance/avatar pages) must NOT be excluded here, or
+    // swipe-to-navigate would be silently dead almost everywhere on those pages. A real tap
+    // on a button still works fine either way: this only ever acts once the drag crosses
+    // the 60px threshold below, which a tap never does, so the button's own click still fires.
+    if(e.target.closest('input,textarea,select')) return;
+    dragStartX = e.clientX; dragStartY = e.clientY; dragging = true;
+  });
+  book.addEventListener('pointerup', (e)=>{
+    if(!dragging) return;
+    dragging = false;
+    const dx = e.clientX - dragStartX, dy = e.clientY - dragStartY;
+    if(Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5){
+      if(dx < 0) onbHandleNext();
+      else if(onbIndex > 0) onbGoTo(onbIndex - 1, -1);
+    }
+  });
+  book.addEventListener('pointercancel', ()=>{ dragging = false; });
+}
+
 /* ============ START ============ */
-showMySpaceView();
+applyAppearance(load(APPEARANCE_KEY, 'system'));
+if(needsOnboarding()) startOnboarding(); else showMySpaceView();
 } /* end buildApp() */
 </script>
 </body>
