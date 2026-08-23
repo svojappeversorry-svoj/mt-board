@@ -235,6 +235,17 @@
 
   .month-section{ margin-top:24px; }
   .month-section-title{ font-family:var(--font-l); font-weight:400; font-size:22px; color:var(--fill, var(--accent)); margin-bottom:14px; }
+  /* Monthly recap — a compact, personal "here's what your month looked like" summary that
+     only ever shows the stats a card can actually be built from (see renderMonthRecap()) —
+     never a fixed dashboard of every possible metric. */
+  .month-recap-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+  .month-recap-card{ display:flex; align-items:center; gap:10px; background:var(--paper2); border-radius:14px; padding:12px 14px; min-width:0; }
+  .month-recap-icon{ font-size:21px; line-height:1; flex-shrink:0; }
+  .month-recap-text{ display:flex; flex-direction:column; gap:1px; min-width:0; }
+  .month-recap-value{ font-family:var(--font-ui); font-weight:800; font-size:14.5px; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .month-recap-label{ font-family:var(--font-mono); font-weight:700; font-size:9.5px; text-transform:uppercase; letter-spacing:0.3px; color:var(--ink-dim); }
+  .month-recap-empty{ font-family:var(--font-ui); font-size:13.5px; color:var(--ink-dim); font-style:italic; }
+  @media (max-width:380px){ .month-recap-grid{ grid-template-columns:1fr; } }
   .month-goals-list{ list-style:none; display:flex; flex-direction:column; gap:8px; margin-bottom:12px; }
   .month-goal-item{ display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px dashed var(--line); }
   .month-goal-item.is-done .month-goal-title{ text-decoration:line-through; color:var(--ink-dim); }
@@ -1039,11 +1050,50 @@
   }
   @media (min-width:560px){ .onb-avatar-grid{ grid-template-columns:repeat(5,1fr); } }
 
-  .onb-tour-emoji{ font-size:44px; margin-bottom:14px; }
-  .onb-tour-mock{ border:2px dashed var(--line); border-radius:14px; padding:16px; margin-top:16px; background:var(--paper2); }
-  .onb-tour-mock .mock-card{ background:var(--paper); border-radius:10px; padding:10px 12px; font-family:var(--font-ui); font-weight:700; font-size:12px; color:var(--ink-dim); margin-bottom:8px; box-shadow:0 2px 6px rgba(28,18,22,0.08); }
-  .onb-tour-mock .mock-card:last-child{ margin-bottom:0; }
-  .onb-tour-mock .mock-card.spot{ outline:2.5px solid var(--accent); outline-offset:2px; color:var(--ink); }
+  /* Interactive tour — spotlights REAL app UI (bottom nav, My Space header) behind a
+     transparent onboarding-screen rather than a fake mock-up. See .onb-tour-mode below. */
+  .onboarding-screen.onb-tour-mode{ background:transparent; }
+  .onboarding-screen.onb-tour-mode .diary-book,
+  .onboarding-screen.onb-tour-mode .onboarding-nav,
+  .onboarding-screen.onb-tour-mode #onbSkipBtn{ display:none; }
+  .onb-tour-overlay{ position:fixed; inset:0; z-index:2; display:none; }
+  .onb-tour-hole{
+    position:fixed; border-radius:18px; pointer-events:none;
+    box-shadow: 0 0 0 9999px rgba(28,18,22,0.62);
+    transition: left 0.35s cubic-bezier(0.62,0.03,0.38,0.97), top 0.35s cubic-bezier(0.62,0.03,0.38,0.97),
+                width 0.35s cubic-bezier(0.62,0.03,0.38,0.97), height 0.35s cubic-bezier(0.62,0.03,0.38,0.97);
+  }
+  .onb-tour-ring{
+    position:fixed; border-radius:18px; pointer-events:none;
+    border:2.5px solid var(--accent); box-shadow:0 0 0 4px rgba(164,48,50,0.18);
+    transition: left 0.35s cubic-bezier(0.62,0.03,0.38,0.97), top 0.35s cubic-bezier(0.62,0.03,0.38,0.97),
+                width 0.35s cubic-bezier(0.62,0.03,0.38,0.97), height 0.35s cubic-bezier(0.62,0.03,0.38,0.97);
+  }
+  .onb-tour-tip{
+    position:fixed; width:min(280px, calc(100vw - 32px)); background:var(--paper); border-radius:16px;
+    padding:14px 16px 12px; box-shadow:0 14px 34px rgba(28,18,22,0.34);
+    transition: left 0.3s ease, top 0.3s ease;
+  }
+  .onb-tour-tip-arrow{ position:absolute; width:16px; height:16px; background:var(--paper); transform:rotate(45deg); }
+  .onb-tour-tip.tip-above .onb-tour-tip-arrow{ bottom:-7px; box-shadow:3px 3px 6px rgba(28,18,22,0.10); }
+  .onb-tour-tip.tip-below .onb-tour-tip-arrow{ top:-7px; box-shadow:-3px -3px 6px rgba(28,18,22,0.08); }
+  .onb-tour-skip{
+    position:absolute; top:8px; right:12px; font-family:var(--font-mono); font-weight:700; font-size:10.5px;
+    color:var(--ink-dim); background:none; border:none; cursor:pointer; text-decoration:underline; padding:6px;
+  }
+  .onb-tour-tip-head{ display:flex; align-items:flex-start; gap:8px; padding-right:52px; }
+  .onb-tour-tip-icon{ font-size:22px; line-height:1.2; flex-shrink:0; }
+  .onb-tour-tip-text{ font-family:var(--font-hand); font-weight:700; font-size:15px; line-height:1.35; color:var(--ink); }
+  .onb-tour-tip-nav{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:12px; }
+  .onb-tour-tip-back{ font-family:var(--font-mono); font-weight:700; font-size:11.5px; color:var(--ink-dim); background:none; border:none; cursor:pointer; padding:8px 2px; min-height:36px; }
+  .onb-tour-tip-dots{ display:flex; gap:3px; }
+  .onb-tour-tip-dots .onb-tour-dot{ width:5px; height:5px; border-radius:50%; background:var(--line); }
+  .onb-tour-tip-dots .onb-tour-dot.active{ background:var(--accent); width:12px; border-radius:4px; }
+  .onb-tour-next{
+    font-family:var(--font-ui); font-weight:800; font-size:12px; letter-spacing:0.2px; text-transform:uppercase;
+    background:var(--accent); color:#fff; border:none; border-radius:100px; padding:10px 16px;
+    cursor:pointer; min-height:38px; white-space:nowrap; box-shadow:0 6px 14px rgba(164,48,50,0.28);
+  }
 
   .onb-field-block{ margin-top:16px; }
   .onb-field-label{ font-family:var(--font-mono); font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:0.4px; color:var(--ink-dim); margin-bottom:6px; display:flex; align-items:center; gap:6px; }
@@ -1227,6 +1277,23 @@
     <div class="onb-dots" id="onbDots"></div>
     <button type="button" class="onb-nav-next" id="onbNextBtn"></button>
   </div>
+  <div class="onb-tour-overlay" id="onbTourOverlay">
+    <div class="onb-tour-hole" id="onbTourHole"></div>
+    <div class="onb-tour-ring" id="onbTourRing"></div>
+    <div class="onb-tour-tip" id="onbTourTip">
+      <div class="onb-tour-tip-arrow" id="onbTourTipArrow"></div>
+      <button type="button" class="onb-tour-skip" id="onbTourSkipBtn"></button>
+      <div class="onb-tour-tip-head">
+        <span class="onb-tour-tip-icon" id="onbTourTipIcon"></span>
+        <span class="onb-tour-tip-text" id="onbTourTipText"></span>
+      </div>
+      <div class="onb-tour-tip-nav">
+        <button type="button" class="onb-tour-tip-back" id="onbTourBackBtn"></button>
+        <div class="onb-tour-tip-dots" id="onbTourTipDots"></div>
+        <button type="button" class="onb-tour-next" id="onbTourNextBtn"></button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div class="myspace-view" id="mySpaceView"></div>
@@ -1398,6 +1465,9 @@ const STRINGS = {
     // month view
     monthlyGoals:'🎯 Monthly Goals', goalPlaceholder:'a goal for this month…', add:'+ Add',
     noGoalsYet:'no goals yet — add up to 5 for this month',
+    monthlyRecapTitle:'✨ Monthly recap', recapSpent:'spent', recapPhotos:'moments captured', recapSteps:'steps',
+    recapGoals:'goals completed', recapDays:'days journaled', recapMood:'average mood', recapFavorites:'favorites this month',
+    recapEmpty:'Nothing recorded yet this month — once you do, your recap will show up here.',
     monthlyExpenses:'💶 Monthly Expenses', totalIn:'Total in', amountPlaceholder:'amount', notePlaceholder:'note (optional)',
     addExpense:'+ Add expense', currenciesInUse:'currencies in use:', addCurrency:'+ currency',
     noExpensesYet:'nothing yet', checkingRates:'checking exchange rates…',
@@ -1481,16 +1551,18 @@ const STRINGS = {
     onbAppearanceTitle:'Light or dark?', onbAppearanceSub:'Pick whatever feels right to read in.',
     appearanceLight:'Light', appearanceDark:'Dark', appearanceSystem:'System',
     onbAvatarTitle:'Now choose yourself.', onbAvatarSub:'Pick a little face to greet you here — just for fun.',
-    onbTourStep1:'This is your space.', onbTourStep2:'Only the things you choose will live here.',
-    onbTourStep3:'Want something new? Just add it.', onbTourStep4:'And this is where your day lives.',
-    onbTourStep5:'Everything else can be made yours.',
+    onbTourSpaceText:'This is your space — everything you choose to track lives here.',
+    onbTourWidgetsText:"Tap Edit anytime to add, remove, or rearrange what's here.",
+    onbTourDayText:"Open today's page here, whenever you need it.",
+    onbTourBudgetText:'Track your spending and income here.',
+    onbTourMediaText:'Your favorite photos and moments live here.',
+    onbTourSettingsText:'Everything else can be customized for you here.',
     onbFirstDayTitle:"Let's make your first day.", onbFirstDaySub:'Today, {date}',
     onbFirstDayHint:'All of this is optional — just a start.',
     onbTaskPlaceholder:'e.g. finally call the dentist', onbNotePlaceholder:'Anything on your mind…',
     onbGenericPlaceholder:'Say something…',
     onbFirstDayEmpty:'Write one little thing about today.',
     onbDoneTitle:'Done.', onbDoneSub:'Your SVOJ is ready.',
-    onbTourMock1:'My Day', onbTourMock2:'Mood · Tasks · Notes', onbTourMock3:'+ Add / Customize',
     // Phase 2 — primary navigation
     navSpace:'My Space', navBudget:'Budget', navDay:'My Day', navMedia:'Media', navSettings:'Settings',
     // Phase 2 — Budget
@@ -1546,6 +1618,9 @@ const STRINGS = {
     yearCaption:'мой год', now:'сейчас',
     monthlyGoals:'🎯 Цели месяца', goalPlaceholder:'цель на этот месяц…', add:'+ Добавить',
     noGoalsYet:'пока нет целей — можно добавить до 5 на этот месяц',
+    monthlyRecapTitle:'✨ Итоги месяца', recapSpent:'потрачено', recapPhotos:'моментов', recapSteps:'шагов',
+    recapGoals:'целей выполнено', recapDays:'дней в дневнике', recapMood:'настроение в среднем', recapFavorites:'любимого за месяц',
+    recapEmpty:'В этом месяце пока нет записей — как только появятся, здесь будет твой итог.',
     monthlyExpenses:'💶 Расходы за месяц', totalIn:'Итого в', amountPlaceholder:'сумма', notePlaceholder:'заметка (необязательно)',
     addExpense:'+ Добавить расход', currenciesInUse:'используемые валюты:', addCurrency:'+ валюта',
     noExpensesYet:'пока пусто', checkingRates:'проверяем курс валют…',
@@ -1622,16 +1697,18 @@ const STRINGS = {
     onbAppearanceTitle:'Светлый или тёмный?', onbAppearanceSub:'Выбери то, что приятнее глазу.',
     appearanceLight:'Светлая', appearanceDark:'Тёмная', appearanceSystem:'Системная',
     onbAvatarTitle:'Теперь выбери себя.', onbAvatarSub:'Выбери мордочку, которая будет тебя встречать — просто для настроения.',
-    onbTourStep1:'Это твоё пространство.', onbTourStep2:'Здесь будут только те вещи, которые ты выбрала.',
-    onbTourStep3:'Захочешь что-нибудь новое — просто добавишь.', onbTourStep4:'А здесь будет твой день.',
-    onbTourStep5:'Всё остальное можно настроить под себя.',
+    onbTourSpaceText:'Это твоё пространство — здесь живёт всё, что ты решишь отслеживать.',
+    onbTourWidgetsText:'Нажми «Изменить», чтобы добавить, убрать или переставить виджеты.',
+    onbTourDayText:'Открывай сегодняшнюю страницу здесь в любой момент.',
+    onbTourBudgetText:'Здесь ты отслеживаешь расходы и доходы.',
+    onbTourMediaText:'Здесь живут твои любимые фото и моменты.',
+    onbTourSettingsText:'Всё остальное можно настроить под себя — здесь.',
     onbFirstDayTitle:'Давай запишем твой первый день.', onbFirstDaySub:'Сегодня, {date}',
     onbFirstDayHint:'Всё это необязательно — просто начало.',
     onbTaskPlaceholder:'например, наконец позвонить стоматологу', onbNotePlaceholder:'Что угодно, что на уме…',
     onbGenericPlaceholder:'Напиши что-нибудь…',
     onbFirstDayEmpty:'Напиши одну маленькую вещь про сегодня.',
     onbDoneTitle:'Готово.', onbDoneSub:'Твой SVOJ уже здесь.',
-    onbTourMock1:'Мой день', onbTourMock2:'Настроение · Задачи · Заметки', onbTourMock3:'+ Добавить / Настроить',
     // Phase 2 — primary navigation
     navSpace:'Пространство', navBudget:'Бюджет', navDay:'Мой день', navMedia:'Медиа', navSettings:'Настройки',
     // Phase 2 — Budget
@@ -2632,6 +2709,11 @@ function showMonthView(monthIdx, year){
   setActiveNavTab('space');
 }
 function monthKeyOf(monthIdx, year){ return year + '-' + String(monthIdx+1).padStart(2,'0'); }
+function shiftMonthView(delta){
+  const [y,m] = currentMonthKey.split('-').map(Number);
+  const d = new Date(y, (m-1)+delta, 1);
+  buildMonthView(d.getMonth(), d.getFullYear());
+}
 
 let monthGoals = [], monthFavorites = [];
 let currentMonthKey = null;
@@ -2854,7 +2936,7 @@ function renderExpenseList(containerId, items, opts){
 }
 function refreshAllExpenseViews(){
   const mv = document.getElementById('monthView');
-  if(mv && mv.classList.contains('active') && currentMonthKey) renderMonthExpenseSection(currentMonthKey);
+  if(mv && mv.classList.contains('active') && currentMonthKey){ renderMonthExpenseSection(currentMonthKey); renderMonthRecap(); }
   const dv = document.getElementById('dateView');
   if(dv && dv.classList.contains('active') && openDate) renderDateExpenseSection(dateKeyOf(openDate));
   const sv = document.getElementById('mySpaceView');
@@ -3268,10 +3350,15 @@ function buildMonthView(monthIdx, year){
   const monthNotes = load('wp-month-notes-v1-'+currentMonthKey, '');
 
   monthEl.innerHTML = `
-    <button type="button" class="back-link" id="backToYearBtn">← ${year}</button>
-    <h2 class="month-view-title">${monthFullName(monthIdx, year)} <span class="month-view-year">${year}</span></h2>
+    <div class="date-nav-row">
+      <button type="button" class="back-link" id="monthPrevBtn" aria-label="${t('previousMonth')}">‹</button>
+      <h2 class="month-view-title" style="margin:0;">${monthFullName(monthIdx, year)} <span class="month-view-year">${year}</span></h2>
+      <button type="button" class="back-link" id="monthNextBtn" aria-label="${t('nextMonth')}">›</button>
+    </div>
     <div class="cal-weekdays">${[0,1,2,3,4,5,6].map(i=> `<span>${weekdayShortName(new Date(REFERENCE_MONDAY.getFullYear(), REFERENCE_MONDAY.getMonth(), REFERENCE_MONDAY.getDate()+i))}</span>`).join('')}</div>
     <div class="cal-grid">${cells}</div>
+
+    <div class="note month-section month-recap-section" id="monthRecapSection"></div>
 
     <div class="note month-section">
       <div class="pin"></div>
@@ -3327,8 +3414,11 @@ function buildMonthView(monthIdx, year){
       <textarea class="month-notes-area" id="monthNotesArea" placeholder="${t('notesPlaceholder')}">${monthNotes}</textarea>
     </div>
   `;
-  document.getElementById('backToYearBtn').addEventListener('click', showYearView);
+  document.getElementById('monthPrevBtn').addEventListener('click', ()=> shiftMonthView(-1));
+  document.getElementById('monthNextBtn').addEventListener('click', ()=> shiftMonthView(1));
   monthEl.querySelectorAll('.cal-cell[data-date]').forEach(btn=> btn.addEventListener('click', ()=> showDateView(parseDateKey(btn.dataset.date))));
+
+  renderMonthRecap();
 
   renderMonthGoals();
   document.getElementById('monthGoalAddBtn').addEventListener('click', addMonthGoal);
@@ -3365,6 +3455,98 @@ function buildMonthView(monthIdx, year){
   });
 }
 
+/* A day only "counts" if the user actually put something into it — merely opening the Date
+   View already creates a daysData entry with default mood/water/sleep values (see
+   ensureDayData()), so entry-existence alone would overcount. This checks the fields that are
+   only ever non-empty because the user actively typed/tapped something. */
+function monthRecapDayHasContent(dateKey){
+  const dd = daysData[dateKey];
+  if(dd && ((dd.notes && dd.notes.trim()) || (dd.todos && dd.todos.length) || (dd.vibes && dd.vibes.length))) return true;
+  const wd = widgetDailyData[dateKey];
+  if(wd){
+    for(const id of Object.keys(wd)){
+      const v = wd[id];
+      if(typeof v === 'string' && v.trim()) return true;
+      if(typeof v === 'number' && v !== 0) return true;
+      if(typeof v === 'boolean' && v) return true;
+      if(Array.isArray(v) && v.length) return true;
+    }
+  }
+  if(photosData[dateKey] && photosData[dateKey].length) return true;
+  return false;
+}
+/* Builds the Monthly Recap purely from data the user already has — reads the SAME
+   daysData/widgetDailyData/photosData/expenses/monthGoals/monthFavorites this page's other
+   sections already load, no parallel store. A card only ever appears when there's something
+   real behind it (its feature is enabled in widgetConfig AND has data this month, or — for
+   Budget/Goals/journaling, which aren't optional widgets — there's simply something recorded),
+   so an account that hasn't used a feature yet never sees a hollow "0" card for it. */
+function renderMonthRecap(){
+  const el = document.getElementById('monthRecapSection');
+  if(!el || !currentMonthKey) return;
+  const [y, m] = currentMonthKey.split('-').map(Number);
+  const daysInMonth = new Date(y, m, 0).getDate();
+  const dateKeys = [];
+  for(let d=1; d<=daysInMonth; d++) dateKeys.push(dateKeyOf(new Date(y, m-1, d)));
+
+  const cards = [];
+
+  const monthExpenses = expensesForMonth(currentMonthKey);
+  if(monthExpenses.length){
+    const byCcy = {};
+    monthExpenses.forEach(e=> byCcy[e.currency] = (byCcy[e.currency]||0) + e.amount);
+    const value = Object.keys(byCcy).map(c=> fmtMoney(byCcy[c], c)).join(' · ');
+    cards.push({ icon:'💰', value, label:t('recapSpent') });
+  }
+
+  if(widgetConfig.enabled.includes('photos')){
+    const photoCount = dateKeys.reduce((n,k)=> n + (photosData[k] ? photosData[k].length : 0), 0);
+    if(photoCount>0) cards.push({ icon:'📸', value:String(photoCount), label:t('recapPhotos') });
+  }
+
+  if(widgetConfig.enabled.includes('steps')){
+    const stepsTotal = dateKeys.reduce((n,k)=>{
+      const v = widgetDailyData[k] && widgetDailyData[k].steps;
+      return n + (typeof v === 'number' ? v : 0);
+    }, 0);
+    if(stepsTotal>0) cards.push({ icon:'🚶', value: stepsTotal.toLocaleString('en-US'), label:t('recapSteps') });
+  }
+
+  if(widgetConfig.enabled.includes('mood')){
+    const moodDays = dateKeys.filter(k=> daysData[k] && monthRecapDayHasContent(k));
+    if(moodDays.length){
+      const avg = moodDays.reduce((n,k)=> n + (typeof daysData[k].mood==='number' ? daysData[k].mood : 2), 0) / moodDays.length;
+      const idx = Math.max(0, Math.min(MOOD_FACES.length-1, Math.round(avg)));
+      cards.push({ icon:'💭', value: MOOD_FACES[idx], label:t('recapMood') });
+    }
+  }
+
+  if(monthGoals.length){
+    const done = monthGoals.filter(g=> g.done).length;
+    cards.push({ icon:'🎯', value:`${done} / ${monthGoals.length}`, label:t('recapGoals') });
+  }
+
+  const journaledCount = dateKeys.filter(k=> monthRecapDayHasContent(k)).length;
+  if(journaledCount>0) cards.push({ icon:'📝', value:String(journaledCount), label:t('recapDays') });
+
+  const favLabels = monthFavorites.filter(c=> c.entries && c.entries.length).map(c=> c.label);
+  if(favLabels.length){
+    const value = favLabels.slice(0,3).join(', ') + (favLabels.length>3 ? '…' : '');
+    cards.push({ icon:'🎬', value, label:t('recapFavorites') });
+  }
+
+  if(!cards.length){
+    el.innerHTML = `<div class="pin"></div><h3 class="month-section-title">${t('monthlyRecapTitle')}</h3><div class="month-recap-empty">${t('recapEmpty')}</div>`;
+    return;
+  }
+  el.innerHTML = `
+    <div class="pin"></div>
+    <h3 class="month-section-title">${t('monthlyRecapTitle')}</h3>
+    <div class="month-recap-grid">
+      ${cards.map(c=> `<div class="month-recap-card"><span class="month-recap-icon">${c.icon}</span><div class="month-recap-text"><span class="month-recap-value">${(c.value+'').replace(/</g,'&lt;')}</span><span class="month-recap-label">${c.label}</span></div></div>`).join('')}
+    </div>
+  `;
+}
 function renderMonthGoals(){
   const list = document.getElementById('monthGoalsList');
   if(!monthGoals.length){ list.innerHTML = `<li class="month-goal-empty">${t('noGoalsYet')}</li>`; }
@@ -3386,6 +3568,7 @@ function renderMonthGoals(){
     renderMonthGoals();
   }));
   document.getElementById('monthGoalAddBtn').disabled = monthGoals.length >= 5;
+  renderMonthRecap();
 }
 function addMonthGoal(){
   if(monthGoals.length >= 5) return;
@@ -3404,7 +3587,7 @@ function favEntriesHtml(cat){
 }
 function renderMonthFavorites(){
   const wrap = document.getElementById('monthFavCats');
-  if(!monthFavorites.length){ wrap.innerHTML = `<div class="month-fav-empty">${t('noCategoriesYet')}</div>`; return; }
+  if(!monthFavorites.length){ wrap.innerHTML = `<div class="month-fav-empty">${t('noCategoriesYet')}</div>`; renderMonthRecap(); return; }
   wrap.innerHTML = monthFavorites.map(cat=>`
     <div class="month-fav-card">
       <div class="month-fav-card-head"><span>${cat.label.replace(/</g,'&lt;')}</span><button type="button" class="month-fav-cat-del" data-cat="${cat.id}">✕</button></div>
@@ -3425,6 +3608,7 @@ function renderMonthFavorites(){
     const cat = monthFavorites.find(c=> String(c.id) === btn.dataset.cat);
     if(cat){ cat.entries = cat.entries.filter(en=> String(en.id) !== btn.dataset.entry); save('wp-month-favorites-v1-'+currentMonthKey, monthFavorites); renderMonthFavorites(); }
   }));
+  renderMonthRecap();
 }
 function addMonthFavEntry(catId){
   const input = document.querySelector(`.month-fav-entry-input[data-cat="${catId}"]`);
@@ -5056,25 +5240,80 @@ let onbState = {
   firstDay: { mood:null, task:'', note:'', water:false, sleepHrs:'', generic:{} },
 };
 
+/* Interactive tour steps — each points at a REAL element already in the DOM (the bottom nav
+   buttons, the My Space edit button) rather than a fake mock-up of the UI. onbGoTo() drives
+   the transparent-overlay spotlight/tooltip in onbTour* below when passing through these. */
 const TOUR_STEPS = [
-  { emoji:'🏡', textKey:'onbTourStep1', spot:0 },
-  { emoji:'🧩', textKey:'onbTourStep2', spot:1 },
-  { emoji:'➕', textKey:'onbTourStep3', spot:2 },
-  { emoji:'📖', textKey:'onbTourStep4', spot:1 },
-  { emoji:'⚙️', textKey:'onbTourStep5', spot:2 },
+  { target:'navBtnSpace',    icon:'🏠', textKey:'onbTourSpaceText' },
+  { target:'mySpaceEditBtn', icon:'🧩', textKey:'onbTourWidgetsText' },
+  { target:'navBtnDay',      icon:'📔', textKey:'onbTourDayText' },
+  { target:'navBtnBudget',   icon:'💶', textKey:'onbTourBudgetText' },
+  { target:'navBtnMedia',    icon:'🖼️', textKey:'onbTourMediaText' },
+  { target:'navBtnSettings', icon:'⚙️', textKey:'onbTourSettingsText' },
 ];
-function onbRenderTourStep(n){
-  const step = TOUR_STEPS[n-1];
-  const mockLabels = [t('onbTourMock1'), t('onbTourMock2'), t('onbTourMock3')];
-  return `
-    <div class="onb-tour-emoji">${step.emoji}</div>
-    <div class="diary-hand" style="font-size:24px;">${t(step.textKey)}</div>
-    <div class="onb-tour-mock">
-      ${mockLabels.map((label,i)=> `<div class="mock-card${step.spot===i?' spot':''}">${label}</div>`).join('')}
-    </div>
-    <div class="diary-spacer"></div>
-  `;
+function onbTourRenderTip(stepIdx){
+  const step = TOUR_STEPS[stepIdx];
+  document.getElementById('onbTourTipIcon').textContent = step.icon;
+  document.getElementById('onbTourTipText').textContent = t(step.textKey);
+  document.getElementById('onbTourTipDots').innerHTML = TOUR_STEPS.map((_,i)=> `<span class="onb-tour-dot${i===stepIdx?' active':''}"></span>`).join('');
+  document.getElementById('onbTourSkipBtn').textContent = t('onbSkipTour');
+  document.getElementById('onbTourBackBtn').textContent = t('onbBack');
+  document.getElementById('onbTourNextBtn').textContent = t('onbNext');
 }
+/* Positions the hole/ring/tooltip against the target's CURRENT on-screen rect. Uses
+   position:fixed + getBoundingClientRect() (viewport coords) so it's correct regardless of
+   the onboarding-screen's own flex/padding layout, and is re-run on resize/orientation
+   change so it never drifts on rotation or Dynamic Island / safe-area differences. */
+function onbTourPosition(stepIdx){
+  const step = TOUR_STEPS[stepIdx];
+  const targetEl = document.getElementById(step.target);
+  if(!targetEl) return;
+  const r = targetEl.getBoundingClientRect();
+  const pad = 8;
+  const hx = r.left - pad, hy = r.top - pad, hw = r.width + pad*2, hh = r.height + pad*2;
+  const hole = document.getElementById('onbTourHole');
+  const ring = document.getElementById('onbTourRing');
+  [hole, ring].forEach(elm=>{
+    elm.style.left = hx+'px'; elm.style.top = hy+'px';
+    elm.style.width = hw+'px'; elm.style.height = hh+'px';
+  });
+
+  const tip = document.getElementById('onbTourTip');
+  const vh = window.innerHeight, vw = window.innerWidth;
+  const safeTop = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--safe-top')) || 0;
+  const safeBottom = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--safe-bottom')) || 0;
+  const margin = 14;
+  const showAbove = (hy + hh/2) > vh/2;
+  tip.classList.toggle('tip-above', showAbove);
+  tip.classList.toggle('tip-below', !showAbove);
+  const tipRect = tip.getBoundingClientRect();
+  let left = hx + hw/2 - tipRect.width/2;
+  left = Math.max(margin, Math.min(left, vw - tipRect.width - margin));
+  let top = showAbove ? (hy - tipRect.height - 18) : (hy + hh + 18);
+  top = Math.max(margin + safeTop, Math.min(top, vh - tipRect.height - margin - safeBottom));
+  tip.style.left = left+'px';
+  tip.style.top = top+'px';
+
+  const arrow = document.getElementById('onbTourTipArrow');
+  let arrowLeft = (hx + hw/2) - left - 8;
+  arrowLeft = Math.max(14, Math.min(arrowLeft, tipRect.width - 14 - 16));
+  arrow.style.left = arrowLeft+'px';
+}
+function onbTourShowStep(stepIdx){
+  document.getElementById('onbTourOverlay').style.display = 'block';
+  onbTourRenderTip(stepIdx);
+  onbTourPosition(stepIdx);
+  requestAnimationFrame(()=> onbTourPosition(stepIdx));
+}
+function onbTourHide(){
+  document.getElementById('onbTourOverlay').style.display = 'none';
+}
+window.addEventListener('resize', ()=>{
+  const screen = document.getElementById('onboardingScreen');
+  if(screen.classList.contains('hidden') || !screen.classList.contains('onb-tour-mode')) return;
+  const page = ONB_PAGES[onbIndex];
+  if(page && page.isTour) onbTourPosition(page.tourStep);
+});
 
 function onbRenderName(){
   return `
@@ -5303,11 +5542,12 @@ const ONB_PAGES = [
   { id:'theme',      render:onbRenderTheme,           skippable:true },
   { id:'appearance', render:onbRenderAppearance,      skippable:true },
   { id:'avatar',     render:onbRenderAvatar,          skippable:true },
-  { id:'tour1',      render:()=>onbRenderTourStep(1), skippable:true, isTour:true },
-  { id:'tour2',      render:()=>onbRenderTourStep(2), skippable:true, isTour:true },
-  { id:'tour3',      render:()=>onbRenderTourStep(3), skippable:true, isTour:true },
-  { id:'tour4',      render:()=>onbRenderTourStep(4), skippable:true, isTour:true },
-  { id:'tour5',      render:()=>onbRenderTourStep(5), skippable:true, isTour:true },
+  { id:'tour1',      render:()=>'', skippable:true, isTour:true, tourStep:0 },
+  { id:'tour2',      render:()=>'', skippable:true, isTour:true, tourStep:1 },
+  { id:'tour3',      render:()=>'', skippable:true, isTour:true, tourStep:2 },
+  { id:'tour4',      render:()=>'', skippable:true, isTour:true, tourStep:3 },
+  { id:'tour5',      render:()=>'', skippable:true, isTour:true, tourStep:4 },
+  { id:'tour6',      render:()=>'', skippable:true, isTour:true, tourStep:5 },
   { id:'firstday',   render:onbRenderFirstDay,        skippable:true },
   { id:'done',       render:onbRenderDone,            isFinal:true },
 ];
@@ -5353,6 +5593,27 @@ function onbUpdateNav(){
 }
 function onbGoTo(newIndex, dir){
   if(onbAnimating || newIndex===onbIndex || newIndex<0 || newIndex>=ONB_PAGES.length) return;
+  const oldPage = ONB_PAGES[onbIndex];
+  const newPage = ONB_PAGES[newIndex];
+
+  // Tour pages don't live on a diary page at all — they spotlight the REAL app UI behind a
+  // transparent onboarding-screen, so entering/leaving/moving between them skips the
+  // diary-page-turn machinery below entirely and just (re)positions the overlay.
+  if(newPage.isTour){
+    if(!oldPage.isTour){
+      document.getElementById('onboardingScreen').classList.add('onb-tour-mode');
+      showMySpaceView();
+    }
+    onbIndex = newIndex;
+    onbUpdateNav();
+    onbTourShowStep(newPage.tourStep);
+    return;
+  }
+  if(oldPage.isTour){
+    onbTourHide();
+    document.getElementById('onboardingScreen').classList.remove('onb-tour-mode');
+  }
+
   onbAnimating = true;
   const incoming = (onbFrontEl === onbSlotA) ? onbSlotB : onbSlotA;
   onbRenderInto(incoming, newIndex);
@@ -5463,6 +5724,13 @@ function startOnboarding(){
   document.getElementById('onbNextBtn').addEventListener('click', onbHandleNext);
   document.getElementById('onbBackBtn').addEventListener('click', ()=> onbGoTo(onbIndex - 1, -1));
   document.getElementById('onbSkipBtn').addEventListener('click', onbHandleSkip);
+
+  // The tour spotlight's own compact controls reuse the exact same handlers as the diary
+  // book's nav bar — they're just a second, differently-styled set of buttons for the
+  // moments when the diary book itself is hidden (see .onb-tour-mode).
+  document.getElementById('onbTourNextBtn').addEventListener('click', onbHandleNext);
+  document.getElementById('onbTourBackBtn').addEventListener('click', ()=> onbGoTo(onbIndex - 1, -1));
+  document.getElementById('onbTourSkipBtn').addEventListener('click', onbHandleSkip);
 
   // Swipe is a convenience gesture layered on top of the buttons (which remain the primary,
   // always-visible way to navigate) — a tiny/aborted swipe simply never crosses the distance
