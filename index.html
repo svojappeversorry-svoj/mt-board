@@ -138,6 +138,23 @@
     --font-xl: 'Space Grotesk', 'Manrope', -apple-system, sans-serif; --font-l: 'Space Grotesk', 'Manrope', -apple-system, sans-serif; --font-accent: 'Space Grotesk', 'Manrope', -apple-system, sans-serif;
     --font-ui: 'Space Grotesk', 'Golos Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; --font-mono: 'DM Mono', 'Courier Prime', 'SF Mono', Consolas, monospace; --font-hand: 'Caveat', Georgia, cursive;
   }
+  /* Digital Chrome — Dark. Same background photo/fonts as the light variant (only overridden
+     below), just the surface/ink/accent variables swapped for a dark-native palette — every
+     component in the app already reads colors through these custom properties, so this one
+     block is what makes onboarding (and the rest of the app) follow system Dark Mode when
+     Digital Chrome is active, with no per-component CSS to touch. */
+  body.theme-berry.appearance-dark{
+    --board: #12151d; --accent: #8fb0ff; --paper: #1a1e28; --paper2: #262c3a; --ink: #eef1f7; --ink-dim: #93a0ba;
+    --plum: #a3a3f5;   --plum-soft: #2c2d52;
+    --moss: #7fcab0;   --moss-soft: #1e352f;
+    --sky: #93bdf7;    --sky-soft: #21324a;
+    --rose: #8fb0ff;   --rose-soft: #33345c;
+    --coral: #a7b0d6;  --coral-soft: #262c3d;
+    --lime: #8fcab6;   --lime-soft: #1e352f;
+    --bubble: #b6a8f7; --bubble-soft: #2c2850;
+    --gold: #a3b3d6;   --gold-soft: #262d3d;
+    --black: #eef1f7; --line: #333b4d;
+  }
   *{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color: transparent; }
   html{ height:100%; }
   body{
@@ -1154,6 +1171,29 @@
   .budget-hero-stat .val{ font-family:var(--font-ui); font-weight:800; font-size:16px; color:var(--ink); }
   .budget-hero-stat.income .val{ color:#2e9e6d; }
   .budget-hero-stat.expense .val{ color:var(--accent); }
+  .budget-hero-stat.net .val.negative-net{ color:#c0392b; }
+  .budget-ccy-breakdown{ display:flex; flex-wrap:wrap; gap:10px; margin:10px 0 4px; }
+  /* ---- Wallet balance + monthly target — the "how much money do I have" hero at the top of
+     Budget. Deliberately reuses .note/.month-section/.add-btn-outline/.expense-edit/
+     .expense-cancel/.expense-edit-form verbatim (same components as the rest of Budget) so
+     this doesn't read as a bolted-on second UI language. */
+  .wallet-balance-card{ text-align:center; }
+  .wallet-balance-label{ font-family:var(--font-mono); font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:0.6px; color:var(--ink-dim); margin-bottom:6px; }
+  .wallet-empty-title{ font-family:var(--font-hand); font-weight:700; font-size:17px; color:var(--ink); margin-bottom:4px; }
+  .wallet-balance-value{ font-family:var(--font-xl); font-weight:400; font-size:clamp(32px,8vw,44px); color:var(--ink); line-height:1.05; }
+  .wallet-balance-value.negative{ color:#c0392b; }
+  .wallet-balance-status{ font-family:var(--font-ui); font-size:11.5px; color:var(--ink-dim); margin-top:4px; min-height:14px; }
+  .wallet-empty-hint{ font-family:var(--font-ui); font-size:13px; color:var(--ink-dim); margin:6px 0 2px; }
+  .wallet-initial-row{ display:flex; align-items:center; justify-content:center; gap:8px; margin-top:14px; padding-top:14px; border-top:1px dashed var(--line); font-family:var(--font-ui); font-size:13px; color:var(--ink-dim); }
+  .wallet-initial-row .val{ font-weight:800; color:var(--ink); }
+  .budget-target-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; font-family:var(--font-ui); font-weight:800; font-size:13.5px; color:var(--ink); }
+  .budget-target-value{ font-family:var(--font-ui); font-weight:800; font-size:20px; color:var(--ink); margin-bottom:8px; }
+  .budget-target-bar{ height:10px; border-radius:100px; background:var(--paper2); overflow:hidden; margin-bottom:8px; }
+  .budget-target-fill{ height:100%; background:var(--accent); border-radius:100px; transition:width 0.3s ease; }
+  .budget-target-fill.over{ background:#c0392b; }
+  .budget-target-sub{ font-family:var(--font-ui); font-size:12.5px; color:var(--ink-dim); }
+  .budget-target-sub.over{ color:#c0392b; font-weight:700; }
+  .budget-target-empty{ display:flex; align-items:center; justify-content:space-between; gap:10px; font-family:var(--font-ui); font-size:13px; color:var(--ink-dim); }
   .budget-type-toggle{ display:flex; gap:8px; margin-bottom:12px; }
   .budget-type-btn{ flex:1; font-family:var(--font-ui); font-weight:800; text-transform:uppercase; letter-spacing:0.3px; font-size:12px; padding:10px; border-radius:100px; border:2px solid var(--line); background:var(--paper); color:var(--ink); cursor:pointer; }
   .budget-type-btn.active{ background:var(--accent); border-color:var(--accent); color:#fff; }
@@ -1439,7 +1479,10 @@ function applyTheme(key){
   THEMES.forEach(t=> document.body.classList.remove('theme-'+t.key));
   document.body.classList.add('theme-'+key);
 }
-let currentTheme = localLoad('wp-theme-v5', 'pop');
+/* Digital Chrome ('berry') is the default for a brand-new install — this only affects an
+   account that has never saved a theme choice; anyone with an existing 'wp-theme-v5' value
+   (including 'pop' from before this change) keeps exactly what they already had. */
+let currentTheme = localLoad('wp-theme-v5', 'berry');
 applyTheme(currentTheme);
 function setTheme(key){
   currentTheme = key;
@@ -1570,6 +1613,11 @@ const STRINGS = {
     addTransaction:'+ Add transaction', transactionType:'Type', typeExpense:'Expense', typeIncome:'Income',
     incomeSourceLabel:'Source', incomeSourcePlaceholder:'e.g. Salary', saveTransaction:'Save',
     noTransactionsYet:'No transactions yet this month.', previousMonth:'Previous month', nextMonth:'Next month',
+    walletBalance:'My Balance', initialBalance:'Initial balance',
+    walletEmptyTitle:'Your wallet is empty for now', walletEmptyHint:'Add your initial balance or your first income.',
+    monthlyBudgetTargetPrefix:'Monthly budget for', noBudgetTargetYet:'No monthly budget set yet.',
+    setTarget:'Set target', removeTarget:'Remove', budgetOverBy:'Over budget by {amount}',
+    budgetTargetSpentLabel:'Spent', budgetTargetRemainingLabel:'Remaining',
     // Phase 2 — Settings additions
     myProfile:'My Profile', profileName:'Name', profileNamePlaceholder:'Your name', profileAvatar:'Avatar',
     appearance:'Appearance', appearanceMode:'Light / Dark', mySpaceSettingsSection:'My Space',
@@ -1712,10 +1760,15 @@ const STRINGS = {
     // Phase 2 — primary navigation
     navSpace:'Пространство', navBudget:'Бюджет', navDay:'Мой день', navMedia:'Медиа', navSettings:'Настройки',
     // Phase 2 — Budget
-    budgetTitle:'Бюджет', budgetSpent:'Потрачено', budgetIncome:'Доход', budgetNet:'Баланс',
+    budgetTitle:'Бюджет', budgetSpent:'Потрачено', budgetIncome:'Доход', budgetNet:'Итог',
     addTransaction:'+ Добавить операцию', transactionType:'Тип', typeExpense:'Расход', typeIncome:'Доход',
     incomeSourceLabel:'Источник', incomeSourcePlaceholder:'например, зарплата', saveTransaction:'Сохранить',
     noTransactionsYet:'В этом месяце пока нет операций.', previousMonth:'Предыдущий месяц', nextMonth:'Следующий месяц',
+    walletBalance:'Мой баланс', initialBalance:'Начальный баланс',
+    walletEmptyTitle:'Твой кошелёк пока пуст', walletEmptyHint:'Добавь начальный баланс или первый доход.',
+    monthlyBudgetTargetPrefix:'Бюджет на', noBudgetTargetYet:'Пока нет бюджета на месяц.',
+    setTarget:'Задать бюджет', removeTarget:'Убрать', budgetOverBy:'Бюджет превышен на {amount}',
+    budgetTargetSpentLabel:'Потрачено', budgetTargetRemainingLabel:'Осталось',
     // Phase 2 — Settings additions
     myProfile:'Мой профиль', profileName:'Имя', profileNamePlaceholder:'Твоё имя', profileAvatar:'Аватар',
     appearance:'Оформление', appearanceMode:'Светлая / тёмная', mySpaceSettingsSection:'Моё пространство',
@@ -2722,7 +2775,13 @@ let currentMonthKey = null;
 const EXPENSE_CATEGORIES = ['Food','Transport','Shopping','Bills','Entertainment','Health','Travel','Home','Subscriptions','Other'];
 const CATEGORY_LABEL_KEYS = { Food:'catFood', Transport:'catTransport', Shopping:'catShopping', Bills:'catBills',
   Entertainment:'catEntertainment', Health:'catHealth', Travel:'catTravel', Home:'catHome', Subscriptions:'catSubscriptions', Other:'catOther' };
-function categoryLabel(cat){ return cat && CATEGORY_LABEL_KEYS[cat] ? t(CATEGORY_LABEL_KEYS[cat]) : (cat||''); }
+const CATEGORY_ICONS = { Food:'🍔', Transport:'🚕', Shopping:'🛍', Bills:'🧾', Entertainment:'🎬',
+  Health:'🩺', Travel:'✈️', Home:'🏠', Subscriptions:'💻', Other:'✨' };
+function categoryLabel(cat){
+  if(!cat) return '';
+  const label = CATEGORY_LABEL_KEYS[cat] ? t(CATEGORY_LABEL_KEYS[cat]) : cat;
+  return CATEGORY_ICONS[cat] ? CATEGORY_ICONS[cat]+' '+label : label;
+}
 const ALLOWED_CURRENCIES = ['EUR','RUB','USD','RSD','GEL']; // the only currencies selectable for NEW expenses / default currency
 const CURRENCY_SYMBOLS = { EUR:'€', USD:'$', GBP:'£', JPY:'¥', RUB:'₽', GEL:'₾' };
 const NO_DECIMAL_CCY = ['RSD','JPY'];
@@ -2730,6 +2789,13 @@ function fmtMoney(amount, ccy){
   const num = NO_DECIMAL_CCY.includes(ccy) ? Math.round(amount).toLocaleString('en-US') : amount.toFixed(2);
   const sym = CURRENCY_SYMBOLS[ccy];
   return sym ? sym+num : num+' '+ccy;
+}
+/* +€1,350.00 / -€150.00 — used only where a signed net figure can go either way (wallet
+   balance, monthly net); fmtMoney itself stays untouched since every other existing caller
+   only ever passes already-nonnegative sums. */
+function fmtMoneySigned(amount, ccy, forcePlus){
+  const sign = amount < 0 ? '-' : (forcePlus ? '+' : '');
+  return sign + fmtMoney(Math.abs(amount), ccy);
 }
 function newId(){ return (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now()+'-'+Math.random().toString(36).slice(2)); }
 function timeAgo(ts){
@@ -2768,6 +2834,179 @@ function saveExpenses(){ save('wp-expenses-v1', expenses); }
 function expensesForMonth(monthKey){ return expenses.filter(e=> e.date && e.date.slice(0,7)===monthKey && e.type !== 'income'); }
 function expensesForDate(dateKey){ return expenses.filter(e=> e.date===dateKey && e.type !== 'income'); }
 function transactionsForMonth(monthKey){ return expenses.filter(e=> e.date && e.date.slice(0,7)===monthKey); }
+
+/* ============ WALLET BALANCE ============
+   The wallet balance is deliberately never its own stored number — it's always DERIVED from
+   the initial balance plus every transaction in `expenses` (the exact same array/table Month/
+   Day/Budget already read and write), so it can never drift out of sync with the transaction
+   history. The only new persisted state here is the two numbers a user actually sets: the
+   starting amount they already had, and an optional monthly spending goal. */
+const INITIAL_BALANCE_KEY = 'wp-initial-balance-v1';
+let initialBalance = load(INITIAL_BALANCE_KEY, 0);
+function saveInitialBalance(){ save(INITIAL_BALANCE_KEY, initialBalance); }
+const MONTHLY_BUDGET_TARGET_KEY = 'wp-monthly-budget-target-v1';
+let monthlyBudgetTarget = load(MONTHLY_BUDGET_TARGET_KEY, 0);
+function saveMonthlyBudgetTarget(){ save(MONTHLY_BUDGET_TARGET_KEY, monthlyBudgetTarget); }
+
+/* Every transaction ever recorded, net (income positive, expense negative), grouped by its
+   OWN currency — no conversion happens here, so a single-currency user (the common case)
+   never even touches convertMapToWalletCcy()/the network below. */
+function allTimeNetByCcy(){
+  const byCcy = {};
+  expenses.forEach(e=>{
+    const sign = e.type === 'income' ? 1 : -1;
+    byCcy[e.currency] = (byCcy[e.currency]||0) + sign*e.amount;
+  });
+  return byCcy;
+}
+/* Reduces a {currency: amount} map to ONE number in the wallet's currency (Settings' existing
+   "Default currency", defaultCurrency — no separate "wallet currency" setting invented).
+   Reuses the exact same getFxRates()/convertViaRates() pair the Month/Budget "Total in ___"
+   picker already uses — same cache, same offline/stale-rate handling, no second currency
+   system. Skips the network entirely when nothing needs converting. */
+async function convertMapToWalletCcy(byCcy){
+  const wc = defaultCurrency;
+  let total = byCcy[wc] || 0;
+  const others = Object.keys(byCcy).filter(c=> c!==wc && byCcy[c]);
+  if(!others.length) return { total, currency:wc, missing:[] };
+  const rates = await getFxRates(wc);
+  const missing = [];
+  others.forEach(c=>{
+    const v = convertViaRates(byCcy[c], c, rates);
+    if(v===null) missing.push(c); else total += v;
+  });
+  return { total, currency:wc, missing };
+}
+function bindWalletInitialEditor(){
+  const editBtn = document.getElementById('walletInitialEditBtn');
+  const displayRow = document.getElementById('walletInitialRow');
+  const editRow = document.getElementById('walletInitialEdit');
+  if(editBtn) editBtn.addEventListener('click', ()=>{
+    if(displayRow) displayRow.style.display = 'none';
+    if(editRow){ editRow.style.display = 'flex'; }
+    const input = document.getElementById('walletInitialInput');
+    if(input){ input.focus(); input.select(); }
+  });
+  const saveBtn = document.getElementById('walletInitialSaveBtn');
+  if(saveBtn) saveBtn.addEventListener('click', ()=>{
+    const v = parseFloat(document.getElementById('walletInitialInput').value);
+    initialBalance = isNaN(v) ? 0 : v;
+    saveInitialBalance();
+    renderWalletBalance();
+  });
+  const cancelBtn = document.getElementById('walletInitialCancelBtn');
+  if(cancelBtn) cancelBtn.addEventListener('click', renderWalletBalance);
+}
+function openInitialBalanceEditor(){
+  const editBtn = document.getElementById('walletInitialEditBtn');
+  if(editBtn) editBtn.click();
+}
+async function renderWalletBalance(){
+  const el = document.getElementById('walletBalanceCard');
+  if(!el) return;
+  const net = allTimeNetByCcy();
+  net[defaultCurrency] = (net[defaultCurrency]||0) + initialBalance;
+  const isEmpty = expenses.length === 0 && !initialBalance;
+  el.innerHTML = `
+    <div class="wallet-balance-label">💰 ${t('walletBalance')}</div>
+    ${isEmpty ? `<div class="wallet-empty-title">${t('walletEmptyTitle')}</div>` : ''}
+    <div class="wallet-balance-value" id="walletBalanceValue">${isEmpty ? fmtMoney(0, defaultCurrency) : '…'}</div>
+    <div class="wallet-balance-status" id="walletBalanceStatus">${isEmpty ? t('walletEmptyHint') : ''}</div>
+    <div class="wallet-initial-row" id="walletInitialRow">
+      <span>${t('initialBalance')}:</span>
+      <span class="val">${fmtMoney(initialBalance, defaultCurrency)}</span>
+      <button type="button" class="expense-edit" id="walletInitialEditBtn">${isEmpty ? t('add') : t('edit')}</button>
+    </div>
+    <div class="expense-edit-form" id="walletInitialEdit" style="display:none; justify-content:center;">
+      <input type="number" class="ee-amount" id="walletInitialInput" step="0.01" value="${initialBalance||''}" placeholder="${t('amountPlaceholder')}">
+      <button type="button" class="add-btn-outline expense-save" id="walletInitialSaveBtn">${t('save')}</button>
+      <button type="button" class="expense-cancel" id="walletInitialCancelBtn">${t('cancel')}</button>
+    </div>
+  `;
+  bindWalletInitialEditor();
+  if(isEmpty) return;
+  const { total, missing } = await convertMapToWalletCcy(net);
+  const valueEl = document.getElementById('walletBalanceValue');
+  if(!valueEl) return; // view navigated away while the fx fetch was in flight
+  valueEl.textContent = fmtMoneySigned(total, defaultCurrency, false);
+  valueEl.classList.toggle('negative', total<0);
+  document.getElementById('walletBalanceStatus').textContent = missing.length ? t('fxMissingNote') : '';
+}
+
+function bindBudgetTargetEditor(){
+  const setBtn = document.getElementById('budgetTargetSetBtn');
+  if(setBtn) setBtn.addEventListener('click', ()=>{
+    document.getElementById('budgetTargetEdit').style.display = 'flex';
+    setBtn.closest('.budget-target-empty').style.display = 'none';
+    document.getElementById('budgetTargetInput').focus();
+  });
+  const editBtn = document.getElementById('budgetTargetEditBtn');
+  if(editBtn) editBtn.addEventListener('click', ()=>{ document.getElementById('budgetTargetEdit').style.display = 'flex'; });
+  const saveBtn = document.getElementById('budgetTargetSaveBtn');
+  if(saveBtn) saveBtn.addEventListener('click', ()=>{
+    const v = parseFloat(document.getElementById('budgetTargetInput').value);
+    if(v>0){ monthlyBudgetTarget = v; saveMonthlyBudgetTarget(); }
+    renderBudgetSection(currentBudgetMonthKey);
+  });
+  const clearBtn = document.getElementById('budgetTargetClearBtn');
+  if(clearBtn) clearBtn.addEventListener('click', ()=>{
+    monthlyBudgetTarget = 0; saveMonthlyBudgetTarget(); renderBudgetSection(currentBudgetMonthKey);
+  });
+  const cancelBtn = document.getElementById('budgetTargetCancelBtn');
+  if(cancelBtn) cancelBtn.addEventListener('click', ()=> renderBudgetSection(currentBudgetMonthKey));
+}
+/* The target is a single recurring goal (not saved per-month) — it's compared each month
+   against THAT month's spending, same as a real personal budgeting habit ("I want to spend
+   under €1500 a month"), rather than requiring the user to re-enter it every month. It's a
+   goal, never enforced: exceeding it only ever changes the text/color here, nothing blocks
+   adding more transactions. */
+async function renderBudgetTargetCard(monthKey, spentByCcy, monthLabel){
+  const el = document.getElementById('budgetTargetCard');
+  if(!el) return;
+  if(!monthlyBudgetTarget){
+    el.innerHTML = `
+      <div class="budget-target-empty">
+        <span>🎯 ${t('noBudgetTargetYet')}</span>
+        <button type="button" class="add-btn-outline" id="budgetTargetSetBtn">${t('setTarget')}</button>
+      </div>
+      <div class="expense-edit-form" id="budgetTargetEdit" style="display:none;">
+        <input type="number" class="ee-amount" id="budgetTargetInput" step="0.01" placeholder="${t('amountPlaceholder')}">
+        <button type="button" class="add-btn-outline expense-save" id="budgetTargetSaveBtn">${t('save')}</button>
+        <button type="button" class="expense-cancel" id="budgetTargetCancelBtn">${t('cancel')}</button>
+      </div>
+    `;
+    bindBudgetTargetEditor();
+    return;
+  }
+  el.innerHTML = `
+    <div class="budget-target-head">
+      <span>🎯 ${t('monthlyBudgetTargetPrefix')} ${monthLabel}</span>
+      <button type="button" class="expense-edit" id="budgetTargetEditBtn">${t('edit')}</button>
+    </div>
+    <div class="budget-target-value" id="budgetTargetValueText">${fmtMoney(monthlyBudgetTarget, defaultCurrency)}</div>
+    <div class="budget-target-bar"><div class="budget-target-fill" id="budgetTargetFill" style="width:0%"></div></div>
+    <div class="budget-target-sub" id="budgetTargetSub">…</div>
+    <div class="expense-edit-form" id="budgetTargetEdit" style="display:none;">
+      <input type="number" class="ee-amount" id="budgetTargetInput" step="0.01" value="${monthlyBudgetTarget}">
+      <button type="button" class="add-btn-outline expense-save" id="budgetTargetSaveBtn">${t('save')}</button>
+      <button type="button" class="expense-cancel" id="budgetTargetClearBtn">${t('removeTarget')}</button>
+    </div>
+  `;
+  bindBudgetTargetEditor();
+  const { total: spent, missing } = await convertMapToWalletCcy(spentByCcy);
+  const fillEl = document.getElementById('budgetTargetFill');
+  const subEl = document.getElementById('budgetTargetSub');
+  if(!fillEl) return; // navigated away while converting
+  const pct = Math.max(0, Math.min(100, (spent/monthlyBudgetTarget)*100));
+  fillEl.style.width = pct+'%';
+  const over = spent > monthlyBudgetTarget;
+  fillEl.classList.toggle('over', over);
+  subEl.classList.toggle('over', over);
+  subEl.textContent = over
+    ? t('budgetOverBy', { amount: fmtMoney(spent-monthlyBudgetTarget, defaultCurrency) })
+    : `${t('budgetTargetSpentLabel')}: ${fmtMoney(spent, defaultCurrency)} · ${t('budgetTargetRemainingLabel')}: ${fmtMoney(monthlyBudgetTarget-spent, defaultCurrency)}`;
+  if(missing.length) subEl.textContent += ' ' + t('fxMissingNote');
+}
 
 let expenseCurrencies = load('wp-expense-currencies-v1', ['EUR','RSD']);
 function saveCurrencies(){ save('wp-expense-currencies-v1', expenseCurrencies); }
@@ -2900,7 +3139,7 @@ function expenseRowHtml(ex, opts){
   return `<li class="month-expense-row${isIncome?' is-income':''}" data-id="${ex.id}">
     <span class="expense-row-main">${dateBit}${noteBit}${catBit}</span>
     <span class="month-expense-right">
-      <span>${isIncome?'+':''}${fmtMoney(ex.amount, ex.currency)}</span>
+      <span>${isIncome?'+':'-'}${fmtMoney(ex.amount, ex.currency)}</span>
       <button type="button" class="expense-edit" data-id="${ex.id}">${t('edit')}</button>
       <button type="button" class="month-expense-del" data-id="${ex.id}">✕</button>
     </span>
@@ -2945,7 +3184,7 @@ function refreshAllExpenseViews(){
     if(body){ body.innerHTML = myspaceExpensesHtml(); bindMyspaceExpenses(body); }
   }
   const bv = document.getElementById('budgetView');
-  if(bv && bv.classList.contains('active') && currentBudgetMonthKey) renderBudgetSection(currentBudgetMonthKey);
+  if(bv && bv.classList.contains('active') && currentBudgetMonthKey){ renderWalletBalance(); renderBudgetSection(currentBudgetMonthKey); }
 }
 
 /* The currency-tracking list (expenseCurrencies) is one shared piece of state, but it's
@@ -3113,12 +3352,25 @@ function buildBudgetView(monthIdx, year){
   currentBudgetMonthKey = monthKeyOf(monthIdx, year);
   el.innerHTML = `
     <h2 class="month-view-title">${t('budgetTitle')}</h2>
-    <div class="date-nav-row">
+
+    <div class="note month-section" style="margin:0 0 22px;">
+      <div class="pin"></div>
+      <div class="wallet-balance-card" id="walletBalanceCard"></div>
+    </div>
+
+    <div class="date-nav-row" style="position:relative; z-index:2;">
       <button type="button" class="back-link" id="budgetPrevBtn" aria-label="${t('previousMonth')}">‹</button>
       <span class="month-view-title" style="font-size:18px; margin:0;">${monthFullName(monthIdx, year)} <span class="month-view-year">${year}</span></span>
       <button type="button" class="back-link" id="budgetNextBtn" aria-label="${t('nextMonth')}">›</button>
     </div>
+
+    <div class="note month-section" style="margin:14px 0 22px;">
+      <div class="pin"></div>
+      <div id="budgetTargetCard"></div>
+    </div>
+
     <div class="budget-hero" id="budgetHero"></div>
+    <div class="budget-ccy-breakdown" id="budgetCcyBreakdown"></div>
 
     <div class="note month-section">
       <div class="pin"></div>
@@ -3148,6 +3400,7 @@ function buildBudgetView(monthIdx, year){
   setBudgetAddType('expense');
   document.getElementById('budgetAddCurrencyBtn').addEventListener('click', ()=> addCurrencyFlow('budgetAddCurrencySelect'));
   renderCurrencyChips();
+  renderWalletBalance();
   renderBudgetSection(currentBudgetMonthKey);
 }
 function setBudgetAddType(type){
@@ -3196,7 +3449,7 @@ function addBudgetTransaction(){
   const sourceEl = document.getElementById('budgetSource'); if(sourceEl) sourceEl.value = '';
   refreshAllExpenseViews();
 }
-function renderBudgetSection(monthKey){
+async function renderBudgetSection(monthKey){
   const items = transactionsForMonth(monthKey).slice().sort((a,b)=> a.date<b.date?1:a.date>b.date?-1:0);
   const spentByCcy = {}, incomeByCcy = {};
   items.forEach(e=>{
@@ -3204,14 +3457,40 @@ function renderBudgetSection(monthKey){
     bucket[e.currency] = (bucket[e.currency]||0) + e.amount;
   });
   const ccys = Array.from(new Set([...Object.keys(spentByCcy), ...Object.keys(incomeByCcy)]));
-  const hero = document.getElementById('budgetHero');
-  if(hero){
-    hero.innerHTML = ccys.length ? ccys.map(c=> `
+
+  // Secondary per-currency detail — the exact figures the app already tracked before this
+  // change, kept verbatim below the new wallet-currency hero for anyone using >1 currency.
+  const breakdown = document.getElementById('budgetCcyBreakdown');
+  if(breakdown){
+    breakdown.innerHTML = ccys.length ? ccys.map(c=> `
       <div class="budget-hero-stat expense"><div class="lbl">${t('budgetSpent')} · ${c}</div><div class="val">${fmtMoney(spentByCcy[c]||0, c)}</div></div>
       <div class="budget-hero-stat income"><div class="lbl">${t('budgetIncome')} · ${c}</div><div class="val">${fmtMoney(incomeByCcy[c]||0, c)}</div></div>
-    `).join('') : `<div class="budget-hero-stat"><div class="lbl">${t('budgetSpent')}</div><div class="val">—</div></div>`;
+    `).join('') : '';
   }
+
   renderExpenseList('budgetTxList', items, { showDate:true, emptyKey:'noTransactionsYet' });
+
+  const hero = document.getElementById('budgetHero');
+  if(hero){
+    hero.innerHTML = `
+      <div class="budget-hero-stat income"><div class="lbl">${t('budgetIncome')}</div><div class="val" id="budgetHeroIncome">…</div></div>
+      <div class="budget-hero-stat expense"><div class="lbl">${t('budgetSpent')}</div><div class="val" id="budgetHeroSpent">…</div></div>
+      <div class="budget-hero-stat net"><div class="lbl">${t('budgetNet')}</div><div class="val" id="budgetHeroNet">…</div></div>
+    `;
+  }
+  const [incomeConv, spentConv] = await Promise.all([convertMapToWalletCcy(incomeByCcy), convertMapToWalletCcy(spentByCcy)]);
+  const incomeEl = document.getElementById('budgetHeroIncome');
+  if(incomeEl){ // still the same render pass — the view wasn't rebuilt while fx rates loaded
+    incomeEl.textContent = fmtMoneySigned(incomeConv.total, defaultCurrency, true);
+    document.getElementById('budgetHeroSpent').textContent = fmtMoneySigned(-spentConv.total, defaultCurrency, false);
+    const net = incomeConv.total - spentConv.total;
+    const netEl = document.getElementById('budgetHeroNet');
+    netEl.textContent = fmtMoneySigned(net, defaultCurrency, true);
+    netEl.classList.toggle('negative-net', net<0);
+  }
+
+  const [y, m] = monthKey.split('-').map(Number);
+  renderBudgetTargetCard(monthKey, spentByCcy, monthFullName(m-1, y));
 }
 
 /* ============ PHOTOS ============
@@ -4081,6 +4360,10 @@ function buildSettingsView(){
   document.getElementById('settingsCcySelect').addEventListener('change', (e)=>{
     defaultCurrency = e.target.value; save('wp-default-currency-v1', defaultCurrency);
     if(!expenseCurrencies.includes(defaultCurrency)){ expenseCurrencies.push(defaultCurrency); saveCurrencies(); }
+    // The wallet's "currency" IS defaultCurrency (see convertMapToWalletCcy) — changing it
+    // here changes what the balance/target numbers convert into, so refresh Budget if open.
+    const bv = document.getElementById('budgetView');
+    if(bv && bv.classList.contains('active') && currentBudgetMonthKey){ renderWalletBalance(); renderBudgetSection(currentBudgetMonthKey); }
   });
 
   el.querySelectorAll('.settings-toggle').forEach(btn=>{
