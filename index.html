@@ -1018,12 +1018,26 @@
   .onb-choice-btn .ic{ display:block; font-size:22px; margin-bottom:6px; }
   .onb-choice-btn.selected{ border-color:var(--accent); background:var(--rose-soft); }
 
-  .onb-avatar-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:10px; }
+  /* Avatar picker (onboarding + Settings, same markup/classes in both). Each button is a
+     perfect circle purely via aspect-ratio+border-radius+overflow:hidden on the CONTAINER —
+     the image itself is already an exact 1:1 square with the character's circular artwork
+     already composed/centered inside it, so object-fit:contain here never crops, stretches,
+     or letterboxes it; contain and cover would in fact look identical on a true 1:1 source,
+     contain is just the safe explicit choice per spec. Selected state is a slim accent ring
+     + small checkmark badge — no thick border, no redesign of the button shape itself. */
+  .onb-avatar-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:10px; }
   .onb-avatar-btn{
-    aspect-ratio:1; border-radius:50%; border:2.5px solid var(--line); background:var(--paper2);
-    font-size:24px; display:flex; align-items:center; justify-content:center; cursor:pointer;
+    position:relative; aspect-ratio:1/1; border-radius:50%; overflow:hidden; display:block;
+    border:none; padding:0; background:var(--paper2); cursor:pointer;
   }
-  .onb-avatar-btn.selected{ border-color:var(--accent); background:var(--rose-soft); box-shadow:0 3px 10px rgba(28,18,22,0.16); }
+  .onb-avatar-btn img{ width:100%; height:100%; object-fit:contain; display:block; pointer-events:none; }
+  .onb-avatar-btn.selected{ box-shadow: 0 0 0 3px var(--accent); }
+  .onb-avatar-btn.selected::after{
+    content:'✓'; position:absolute; bottom:3%; right:3%; width:24%; height:24%; min-width:18px; min-height:18px; max-width:26px; max-height:26px;
+    border-radius:50%; background:var(--accent); color:#fff; font-size:12px; font-weight:800; line-height:1;
+    display:flex; align-items:center; justify-content:center; box-shadow:0 1px 5px rgba(28,18,22,0.4);
+  }
+  @media (min-width:560px){ .onb-avatar-grid{ grid-template-columns:repeat(5,1fr); } }
 
   .onb-tour-emoji{ font-size:44px; margin-bottom:14px; }
   .onb-tour-mock{ border:2px dashed var(--line); border-radius:14px; padding:16px; margin-top:16px; background:var(--paper2); }
@@ -3755,7 +3769,7 @@ function buildSettingsView(){
       <div class="settings-row"><span class="settings-row-label">${t('profileName')}</span>
         <input type="text" class="settings-input" id="settingsNameInput" placeholder="${t('profileNamePlaceholder')}" maxlength="40" value="${(load(USER_NAME_KEY,'')||'').replace(/</g,'&lt;').replace(/"/g,'&quot;')}"></div>
       <div class="settings-row-label" style="margin-top:14px; margin-bottom:8px;">${t('profileAvatar')}</div>
-      <div class="onb-avatar-grid" id="settingsAvatarGrid">${AVATAR_OPTIONS.map(e=> `<button type="button" class="onb-avatar-btn${load(AVATAR_KEY,'')===e?' selected':''}" data-avatar="${e}">${e}</button>`).join('')}</div>
+      <div class="onb-avatar-grid" id="settingsAvatarGrid">${AVATAR_COLLECTION.map(a=> `<button type="button" class="onb-avatar-btn${load(AVATAR_KEY,'')===a.id?' selected':''}" data-avatar="${a.id}"><img src="${a.asset}" alt="${a.name}" draggable="false"></button>`).join('')}</div>
       <div class="settings-row" style="margin-top:14px;"><div><div class="settings-row-label">${t('email')}</div><div class="settings-row-sub">${currentUserEmail || '— (offline mode, no account) —'}</div></div></div>
       ${currentUserEmail ? `<div class="settings-row"><div><div class="settings-row-label">${t('memberSince')}</div><div class="settings-row-sub">${memberSince}</div></div></div>` : ''}
       <div class="settings-row"><span class="settings-row-label">${t('signOut')}</span><button type="button" class="settings-btn-outline" id="settingsSignOutBtn" ${!sb?'disabled':''}>${t('signOut')}</button></div>
@@ -5002,7 +5016,19 @@ const AVATAR_KEY = 'wp-avatar-v1';
    distinct dark visual yet, so choosing "dark" today only sets this preference; it does not
    yet reskin Pink Pop/Dark Romance/Petal/Digital Chrome. See the phase summary. */
 const APPEARANCE_KEY = 'wp-appearance-v1';
-const AVATAR_OPTIONS = ['🐱','🦊','🐰','🐻','🐼','🦉','🐨','🐧','🦄','🐢','🦋','🐝'];
+const AVATAR_COLLECTION = [
+  { id:'angel-pig',       name:'Angel Pig',          asset:'assets/avatars/angel-pig.webp' },
+  { id:'glam-cow',        name:'Glam Cow',           asset:'assets/avatars/glam-cow.webp' },
+  { id:'glam-dog',        name:'Glam Dog',           asset:'assets/avatars/glam-dog.webp' },
+  { id:'beach-bird',      name:'Beach Bird',         asset:'assets/avatars/beach-bird.webp' },
+  { id:'koala',           name:'Koala',              asset:'assets/avatars/koala.webp' },
+  { id:'chaotic-monkey',  name:'Chaotic Monkey',     asset:'assets/avatars/chaotic-monkey.webp' },
+  { id:'hamster-glasses', name:'Hamster with Glasses', asset:'assets/avatars/hamster-glasses.webp' },
+  { id:'duck',            name:'Duck',               asset:'assets/avatars/duck.webp' },
+  { id:'capybara-rose',   name:'Capybara with Rose', asset:'assets/avatars/capybara-rose.webp' },
+  { id:'fairy-horse',     name:'Fairy Horse',        asset:'assets/avatars/fairy-horse.webp' },
+];
+function avatarById(id){ return AVATAR_COLLECTION.find(a=>a.id===id) || null; }
 
 function needsOnboarding(){
   if(load(ONBOARDING_COMPLETE_KEY, false)) return false;
@@ -5172,7 +5198,7 @@ function onbRenderAvatar(){
     <div class="diary-title" style="font-size:26px;">${t('onbAvatarTitle')}</div>
     <div class="diary-sub">${t('onbAvatarSub')}</div>
     <div class="onb-avatar-grid">
-      ${AVATAR_OPTIONS.map(e=>`<button type="button" class="onb-avatar-btn${onbState.avatar===e?' selected':''}" data-avatar="${e}">${e}</button>`).join('')}
+      ${AVATAR_COLLECTION.map(a=>`<button type="button" class="onb-avatar-btn${onbState.avatar===a.id?' selected':''}" data-avatar="${a.id}"><img src="${a.asset}" alt="${a.name}" draggable="false"></button>`).join('')}
     </div>
     <div class="diary-spacer"></div>
   `;
