@@ -135,26 +135,79 @@
     --bubble: #8f7ce0; --bubble-soft: #e6e0fb;
     --gold: #7286a8;   --gold-soft: #e2e7f0;
     --black: #181d27; --line: #b8c2d4;
-    --font-xl: 'Space Grotesk', 'Manrope', -apple-system, sans-serif; --font-l: 'Space Grotesk', 'Manrope', -apple-system, sans-serif; --font-accent: 'Space Grotesk', 'Manrope', -apple-system, sans-serif;
-    --font-ui: 'Space Grotesk', 'Golos Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; --font-mono: 'DM Mono', 'Courier Prime', 'SF Mono', Consolas, monospace; --font-hand: 'Caveat', Georgia, cursive;
+    /* Manrope + Golos Text over Space Grotesk: Space Grotesk has no Cyrillic glyphs at all, so
+       RU headings were silently falling back anyway — Manrope/Golos Text are full-Cyrillic,
+       geometric, and already loaded (see the Google Fonts <link> in <head>), matching the
+       editorial/premium tone of the Digital Chrome reference for BOTH languages at once.
+       Digital Chrome also trades the cursive "diary-hand" voice for the same clean sans —
+       the reference reads as a sleek personal OS, not a handwritten notebook. */
+    --font-xl: 'Manrope', 'Golos Text', -apple-system, sans-serif; --font-l: 'Manrope', 'Golos Text', -apple-system, sans-serif; --font-accent: 'Manrope', 'Golos Text', -apple-system, sans-serif;
+    --font-ui: 'Golos Text', 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; --font-mono: 'JetBrains Mono', 'DM Mono', 'SF Mono', Consolas, monospace; --font-hand: 'Manrope', 'Golos Text', Georgia, sans-serif;
   }
-  /* Digital Chrome — Dark. Same background photo/fonts as the light variant (only overridden
-     below), just the surface/ink/accent variables swapped for a dark-native palette — every
-     component in the app already reads colors through these custom properties, so this one
-     block is what makes onboarding (and the rest of the app) follow system Dark Mode when
+  /* Digital Chrome — Dark. Reworked to match the approved "chrome noir" reference set: a near-
+     black board, a swirling signal-blue/violet smoke backdrop (pure CSS gradients — no new
+     binary asset — replacing the light variant's photo for THIS variant only), and translucent
+     "glass" panel/paper colors that the backdrop-filter block below turns into frosted cards.
+     Every component in the app already reads colors through these custom properties, so this
+     one block is what makes onboarding (and the rest of the app) follow system Dark Mode when
      Digital Chrome is active, with no per-component CSS to touch. */
   body.theme-berry.appearance-dark{
-    --board: #12151d; --accent: #8fb0ff; --paper: #1a1e28; --paper2: #262c3a; --ink: #eef1f7; --ink-dim: #93a0ba;
-    --plum: #a3a3f5;   --plum-soft: #2c2d52;
-    --moss: #7fcab0;   --moss-soft: #1e352f;
-    --sky: #93bdf7;    --sky-soft: #21324a;
-    --rose: #8fb0ff;   --rose-soft: #33345c;
-    --coral: #a7b0d6;  --coral-soft: #262c3d;
-    --lime: #8fcab6;   --lime-soft: #1e352f;
-    --bubble: #b6a8f7; --bubble-soft: #2c2850;
-    --gold: #a3b3d6;   --gold-soft: #262d3d;
-    --black: #eef1f7; --line: #333b4d;
+    --theme-photo-bg:
+      radial-gradient(ellipse 70% 45% at 18% 6%, rgba(80,120,255,0.24), transparent 60%),
+      radial-gradient(ellipse 55% 40% at 88% 18%, rgba(150,90,255,0.18), transparent 58%),
+      radial-gradient(ellipse 65% 55% at 45% 96%, rgba(50,70,140,0.30), transparent 62%),
+      conic-gradient(from 210deg at 50% 42%, rgba(8,9,14,0) 0deg, rgba(70,90,170,0.12) 85deg, rgba(8,9,14,0) 170deg, rgba(120,80,200,0.10) 255deg, rgba(8,9,14,0) 360deg),
+      linear-gradient(180deg, #0a0b10 0%, #0d0f16 45%, #060709 100%);
+    --board: #07080c; --accent: #4d7dff; --paper: rgba(22,25,35,0.66); --paper2: rgba(255,255,255,0.06); --ink: #f2f4fa; --ink-dim: #98a2ba;
+    --plum: #9a94f5;   --plum-soft: rgba(154,148,245,0.18);
+    --moss: #6fd8b0;   --moss-soft: rgba(111,216,176,0.16);
+    --sky: #7fb2ff;    --sky-soft: rgba(127,178,255,0.16);
+    --rose: #4d7dff;   --rose-soft: rgba(77,125,255,0.20);
+    --coral: #a9b3d6;  --coral-soft: rgba(169,179,214,0.14);
+    --lime: #7fd8b8;   --lime-soft: rgba(127,216,184,0.16);
+    --bubble: #b39dff; --bubble-soft: rgba(179,157,255,0.18);
+    --gold: #9fb0d8;   --gold-soft: rgba(159,176,216,0.14);
+    --black: #f2f4fa; --line: rgba(255,255,255,0.14);
   }
+  /* Glass-chrome surface treatment — additive selectors scoped to Digital Chrome Dark only, so
+     Pop/Dark Romance/Petal (and Digital Chrome Light) never see backdrop-filter or the flatter
+     "chrome card" radius. Frosts every existing --paper/--paper2 surface over the new smoke
+     backdrop instead of styling a new component. */
+  body.theme-berry.appearance-dark .note,
+  body.theme-berry.appearance-dark .diary-page,
+  body.theme-berry.appearance-dark .myspace-card-shell,
+  body.theme-berry.appearance-dark .bottom-nav,
+  body.theme-berry.appearance-dark .onb-tour-tip,
+  body.theme-berry.appearance-dark .myspace-lib-inner,
+  body.theme-berry.appearance-dark .sticker-sheet-inner,
+  body.theme-berry.appearance-dark .budget-hero-stat,
+  body.theme-berry.appearance-dark .month-recap-card,
+  body.theme-berry.appearance-dark .onb-widget-card,
+  body.theme-berry.appearance-dark .onb-theme-card,
+  body.theme-berry.appearance-dark .onb-choice-btn,
+  body.theme-berry.appearance-dark .settings-input,
+  body.theme-berry.appearance-dark .diary-text-input,
+  body.theme-berry.appearance-dark .expense-edit-form input,
+  body.theme-berry.appearance-dark .expense-edit-form select{
+    backdrop-filter: blur(28px) saturate(150%);
+    -webkit-backdrop-filter: blur(28px) saturate(150%);
+  }
+  body.theme-berry.appearance-dark .note,
+  body.theme-berry.appearance-dark .diary-page,
+  body.theme-berry.appearance-dark .onb-tour-tip,
+  body.theme-berry.appearance-dark .myspace-lib-inner{
+    border-radius: 22px; border: 1px solid var(--line);
+    box-shadow: 0 24px 60px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06);
+  }
+  /* The tilted "peek" backing, pin, and washi tape are a cute paper-diary flourish that reads
+     as clutter against clean chrome glass cards — hidden for this variant only, everywhere
+     else they're untouched. */
+  body.theme-berry.appearance-dark .note::before,
+  body.theme-berry.appearance-dark .pin,
+  body.theme-berry.appearance-dark .washi{ content:none; display:none; }
+  body.theme-berry.appearance-dark .myspace-card-shell{ border-radius:20px; }
+  body.theme-berry.appearance-dark .cal-cell{ border:1px solid var(--line); }
+  body.theme-berry.appearance-dark ::selection{ background: var(--accent); color:#fff; }
   *{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color: transparent; }
   html{ height:100%; }
   body{
@@ -844,6 +897,14 @@
   body.theme-berry .day-note::after{ content:''; position:absolute; top:-10px; right:-10px; width:60px; height:60px; opacity:0.55; pointer-events:none;
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140' viewBox='0 0 140 140'%3E%3Ccircle cx='50' cy='60' r='34' fill='%23526ff2' opacity='0.3'/%3E%3Ccircle cx='90' cy='80' r='26' fill='%236f9de8' opacity='0.3'/%3E%3C/svg%3E");
     background-size:contain; background-repeat:no-repeat; }
+  /* Digital Chrome typography — bolder, tighter display type for headings/titles matching the
+     reference's editorial-premium weight (applies to both Light and Dark; body/UI text keeps
+     its normal weight everywhere else). */
+  body.theme-berry h1,
+  body.theme-berry .month-view-title,
+  body.theme-berry .diary-title,
+  body.theme-berry .myspace-head-title{ font-weight:800; letter-spacing:-0.01em; }
+  body.theme-berry .diary-eyebrow{ letter-spacing:1.6px; }
 
   /* ===== MY SPACE (customizable dashboard) =====
      Functional geometry only — deliberately NOT the app's tilted-paper/note look. Widget
@@ -1484,6 +1545,21 @@ function applyTheme(key){
    (including 'pop' from before this change) keeps exactly what they already had. */
 let currentTheme = localLoad('wp-theme-v5', 'berry');
 applyTheme(currentTheme);
+/* Appearance (light/dark) is normally resolved inside buildApp() — but buildApp() itself only
+   runs once the user logs in or skips auth, so without this, the Welcome/auth screen (the very
+   first thing anyone sees) would always render in the theme's LIGHT variant regardless of the
+   device's actual dark-mode setting, then visibly flip once buildApp() runs. This applies the
+   same "system" resolution immediately, from localStorage only (nothing cloud-backed exists
+   yet at this point), so first paint is already correct; applyAppearance() inside buildApp()
+   re-resolves it properly afterward (e.g. once a signed-in user's cloud preference is known)
+   and simply replaces this class, never conflicting with it. */
+(function applyInitialAppearance(){
+  try{
+    const saved = localLoad('wp-appearance-v1', 'system');
+    const isDark = saved === 'dark' || (saved === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    document.body.classList.add(isDark ? 'appearance-dark' : 'appearance-light');
+  } catch(e){}
+})();
 function setTheme(key){
   currentTheme = key;
   applyTheme(key);
