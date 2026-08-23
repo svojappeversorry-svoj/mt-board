@@ -24,6 +24,22 @@
 <style>
 
   :root{
+    /* ===== SAFE-AREA / LAYOUT FOUNDATION =====
+       viewport-fit=cover (see <meta name="viewport"> in <head>) opts this page into
+       rendering under the iPhone notch/Dynamic Island and behind the home indicator —
+       without these, nothing is reserved for them and content renders flush with the true
+       hardware edge. env(safe-area-inset-*) only returns non-zero on an actual notched/
+       Dynamic-Island device (or its simulator); everywhere else — desktop browsers, older
+       iPhones, Android — it's 0, so these variables are safe no-ops there. The fallback
+       (the second argument to env()) covers browsers that don't support env() at all.
+       Every screen composes safe-top/bottom into its OWN existing spacing via calc() at
+       the point of use (e.g. `padding-top: calc(14px + var(--safe-top))`) rather than
+       hardcoding a single "guessed" pixel value — that's the actual fix for the Settings/
+       header-too-high bug: it wasn't a wrong constant, it was a missing inset entirely. */
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
     /* базовые значения = тема Pink Pop, применяются пока JS не проставит класс темы на body */
     --board: #fff3f8;
     --accent: #ff2788;
@@ -151,7 +167,8 @@
   input, textarea{ -webkit-user-select:text; user-select:text; touch-action:manipulation; }
 
   /* ===== HEADER ===== */
-  header{ position:relative; z-index:6; display:flex; align-items:center; justify-content:space-between; gap:12px; padding: 14px 16px 10px; }
+  header{ position:relative; z-index:6; display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding: calc(14px + var(--safe-top)) calc(16px + var(--safe-right)) 10px calc(16px + var(--safe-left)); }
   .brand{ display:flex; align-items:center; gap:10px; }
   .brand h1{ text-shadow: 0 1px 4px rgba(0,0,0,0.35), 0 2px 16px rgba(0,0,0,0.22); }
   .portal-badge{ flex-shrink:0; }
@@ -442,12 +459,12 @@
   .stick-inst .stk-handle.rotate:active{ cursor:grabbing; }
   .stick-inst .stk-handle.del{ top:-13px; right:-13px; background: var(--rose); color:#fff; border-color:#fff; }
 
-  .sticker-fab{ position:fixed; right:18px; bottom:22px; z-index:60; width:60px; height:60px; border-radius:50%; background: var(--accent); color:#fff;
+  .sticker-fab{ position:fixed; right: calc(18px + var(--safe-right)); bottom: calc(22px + var(--safe-bottom)); z-index:60; width:60px; height:60px; border-radius:50%; background: var(--accent); color:#fff;
     border:3px solid var(--paper); box-shadow: 0 8px 20px rgba(28,18,22,0.35); font-size:24px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
   .sticker-fab:hover{ filter:brightness(1.08); }
   .sticker-sheet{ display:none; position:fixed; inset:0; z-index:70; background: rgba(58,35,20,0.45); align-items:flex-end; justify-content:center; }
   .sticker-sheet.open{ display:flex; }
-  .sticker-sheet-inner{ background: var(--paper); width:100%; max-width:640px; max-height:70vh; overflow-y:auto; border-radius:22px 22px 0 0; padding:20px 20px 30px; box-shadow: 0 -10px 30px rgba(0,0,0,0.3); }
+  .sticker-sheet-inner{ background: var(--paper); width:100%; max-width:640px; max-height:70vh; overflow-y:auto; border-radius:22px 22px 0 0; padding:20px 20px calc(30px + var(--safe-bottom)); box-shadow: 0 -10px 30px rgba(0,0,0,0.3); }
   .sticker-sheet-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
   .sticker-sheet-title{ font-family:var(--font-xl); font-size:22px; color: var(--ink); }
   .sticker-sheet-close{ font-family:var(--font-mono); font-weight:700; background:none; border:none; color: var(--ink-dim); font-size:13px; cursor:pointer; text-decoration:underline; }
@@ -583,7 +600,8 @@
   #expenseTotal{ font-family:var(--font-mono); color: var(--coral); font-size:22px; }
 
   /* ===== AUTH SCREEN ===== */
-  .auth-screen{ position:fixed; inset:0; z-index:200; background: var(--board); display:flex; align-items:center; justify-content:center; padding:20px; overflow:hidden; }
+  .auth-screen{ position:fixed; inset:0; z-index:200; background: var(--board); display:flex; align-items:center; justify-content:center; overflow:hidden;
+    padding: calc(20px + var(--safe-top)) calc(20px + var(--safe-right)) calc(20px + var(--safe-bottom)) calc(20px + var(--safe-left)); }
   .auth-screen.hidden{ display:none; }
   .auth-scene{ position:absolute; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
   .auth-card{ width:100%; max-width:380px; position:relative; z-index:2; }
@@ -674,7 +692,8 @@
   .photo-thumb-row{ display:flex; flex-wrap:wrap; gap:8px; margin:8px 0; }
   .photo-thumb-wrap{ width:76px; height:76px; border-radius:8px; overflow:hidden; border:2px solid var(--line); flex-shrink:0; }
   .photo-thumb{ width:100%; height:100%; object-fit:cover; cursor:pointer; display:block; }
-  .photo-viewer{ display:none; position:fixed; inset:0; z-index:300; background:rgba(10,8,14,0.86); align-items:center; justify-content:center; padding:20px; }
+  .photo-viewer{ display:none; position:fixed; inset:0; z-index:300; background:rgba(10,8,14,0.86); align-items:center; justify-content:center;
+    padding: calc(20px + var(--safe-top)) calc(20px + var(--safe-right)) calc(20px + var(--safe-bottom)) calc(20px + var(--safe-left)); }
   .photo-viewer.open{ display:flex; }
   .photo-viewer-inner{ max-width:min(92vw, 640px); max-height:86vh; display:flex; flex-direction:column; gap:12px; align-items:center; }
   .photo-viewer-inner img{ max-width:100%; max-height:70vh; border-radius:10px; object-fit:contain; }
@@ -899,7 +918,7 @@
 
   .myspace-lib-sheet{ display:none; position:fixed; inset:0; z-index:70; background: rgba(58,35,20,0.45); align-items:flex-end; justify-content:center; }
   .myspace-lib-sheet.open{ display:flex; }
-  .myspace-lib-inner{ background: var(--paper); width:100%; max-width:640px; max-height:76vh; overflow-y:auto; border-radius:22px 22px 0 0; padding:20px 20px 30px; box-shadow: 0 -10px 30px rgba(0,0,0,0.3); }
+  .myspace-lib-inner{ background: var(--paper); width:100%; max-width:640px; max-height:76vh; overflow-y:auto; border-radius:22px 22px 0 0; padding:20px 20px calc(30px + var(--safe-bottom)); box-shadow: 0 -10px 30px rgba(0,0,0,0.3); }
   .myspace-lib-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
   .myspace-lib-title{ font-family:var(--font-xl); font-size:22px; color: var(--ink); }
 </style>
@@ -1209,7 +1228,6 @@ const STRINGS = {
     newEmailExample:'new@email.com', newPasswordExample:'new password (6+ chars)',
     back:'← Back', save:'Save', cancel:'Cancel', offlineNote:'Sign in with an account to sync settings across devices — currently saved on this device only.',
     widgetLibraryLink:'🧩 Daily Page Widgets', customizeArrow:'Customize →',
-    linkedApps:'Linked apps', moneyAppRow:'💶 SVOJ money', openArrow:'Open →',
     enterNewEmail:'enter a new email first', updating:'updating…', checkNewEmail:'check your new email to confirm the change',
     passwordTooShort:'password needs 6+ characters', passwordUpdated:'password updated',
     deleteAllConfirm:'Delete ALL your SVOJ data? This cannot be undone.',
@@ -1319,7 +1337,6 @@ const STRINGS = {
     newEmailExample:'new@email.com', newPasswordExample:'новый пароль (от 6 символов)',
     back:'← Назад', save:'Сохранить', cancel:'Отмена', offlineNote:'Войдите в аккаунт, чтобы синхронизировать настройки между устройствами — сейчас они сохраняются только на этом устройстве.',
     widgetLibraryLink:'🧩 Виджеты страницы дня', customizeArrow:'Настроить →',
-    linkedApps:'Связанные приложения', moneyAppRow:'💶 SVOJ money', openArrow:'Открыть →',
     enterNewEmail:'сначала введите новый email', updating:'обновляем…', checkNewEmail:'проверьте новую почту, чтобы подтвердить смену',
     passwordTooShort:'пароль должен быть от 6 символов', passwordUpdated:'пароль обновлён',
     deleteAllConfirm:'Удалить ВСЕ данные SVOJ? Отменить это нельзя.',
@@ -1432,15 +1449,14 @@ const MERGE_ON_LOGIN = {
 // since then look "local-only" and resurrects it back into the cloud. Gating the merge
 // behind a one-time flag keeps the legitimate case (data recorded before ever signing in
 // on this device) while making cloud authoritative on every sign-in after that, so
-// deletions actually stick. Shared flag name with expenses.html (same localStorage origin).
+// deletions actually stick.
 const CLOUD_MIGRATED_FLAG_KEY = 'wp-cloud-migrated-v1';
 // Which account this browser's local cache currently belongs to. localStorage is not
 // namespaced per-account and sign-out never clears it, so without this check, a SECOND,
 // completely unrelated account signing in on the same browser would have its (empty) cloud
 // row polluted forever: migrateLocalToCloud below treats any local key missing from the
 // cloud as "offline data waiting to be saved" and uploads it -- with no way to tell that
-// the local data actually belongs to whoever was signed in *before*. Shared key name with
-// expenses.html (same localStorage origin) so switching accounts in either app is caught.
+// the local data actually belongs to whoever was signed in *before*.
 const LAST_USER_ID_KEY = 'wp-cloud-last-user-id-v1';
 function wipeLocalDataIfAccountChanged(uid){
   let lastUserId;
@@ -3283,12 +3299,6 @@ function buildSettingsView(){
           <option value="ru" ${currentLanguage==='ru'?'selected':''}>Русский</option>
         </select></div>
       <div class="settings-row"><span class="settings-row-label">${t('widgetLibraryLink')}</span><button type="button" class="settings-btn-outline" id="openWidgetsBtn">${t('customizeArrow')}</button></div>
-    </div>
-
-    <div class="settings-section-label">${t('linkedApps')}</div>
-    <div class="note month-section">
-      <div class="pin"></div>
-      <div class="settings-row"><span class="settings-row-label">${t('moneyAppRow')}</span><a href="expenses.html" class="settings-btn-outline" style="text-decoration:none; display:inline-block;">${t('openArrow')}</a></div>
     </div>
 
     <div class="settings-section-label">${t('regional')}</div>
