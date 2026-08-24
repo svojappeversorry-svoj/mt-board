@@ -439,7 +439,7 @@
     padding: calc(14px + var(--safe-top)) calc(16px + var(--safe-right)) 10px calc(16px + var(--safe-left)); }
   .brand{ display:flex; align-items:center; gap:10px; }
   .brand h1{ text-shadow: 0 1px 4px rgba(0,0,0,0.35), 0 2px 16px rgba(0,0,0,0.22); }
-  .portal-badge{ flex-shrink:0; }
+  .portal-badge{ flex-shrink:0; border-radius:22%; object-fit:cover; box-shadow: 0 3px 10px rgba(0,0,0,0.25); }
   h1{ font-family:var(--font-xl); font-weight:400; font-size: clamp(24px, 3.6vw, 32px); line-height:0.9; letter-spacing:0.5px; color: var(--ink); }
   .week-range{ font-family:var(--font-mono); font-size:10.5px; font-weight:700; color: var(--ink-dim); margin-top:5px; letter-spacing:0.3px; }
 
@@ -1474,45 +1474,9 @@
 
 <div class="app-bg-photo" aria-hidden="true"></div>
 
-<svg width="0" height="0" style="position:absolute;overflow:hidden" aria-hidden="true">
-  <defs>
-    <linearGradient id="portalBodyGrad" x1="15%" y1="0%" x2="85%" y2="100%">
-      <stop offset="0%" stop-color="#e0568f"/>
-      <stop offset="55%" stop-color="#c2407a"/>
-      <stop offset="100%" stop-color="#9c2f63"/>
-    </linearGradient>
-    <linearGradient id="portalRimGrad" x1="10%" y1="0%" x2="90%" y2="100%">
-      <stop offset="0%" stop-color="#fbe4ef"/>
-      <stop offset="22%" stop-color="#e997bd"/>
-      <stop offset="48%" stop-color="#8a3f65"/>
-      <stop offset="74%" stop-color="#f3c3da"/>
-      <stop offset="100%" stop-color="#7a2c52"/>
-    </linearGradient>
-    <radialGradient id="portalSphereGrad" cx="35%" cy="30%" r="75%">
-      <stop offset="0%" stop-color="#ffffff"/>
-      <stop offset="40%" stop-color="#d9d9e2"/>
-      <stop offset="100%" stop-color="#5c5c6e"/>
-    </radialGradient>
-    <radialGradient id="portalSkyGrad" cx="50%" cy="28%" r="85%">
-      <stop offset="0%" stop-color="#2a2044"/>
-      <stop offset="100%" stop-color="#0d0a18"/>
-    </radialGradient>
-  </defs>
-</svg>
-
 <header>
   <div class="brand">
-    <svg class="portal-badge" width="44" height="44" viewBox="0 0 100 100" aria-hidden="true">
-      <rect x="4" y="4" width="92" height="92" rx="22" fill="url(#portalBodyGrad)"/>
-      <path d="M50 20 C60 18 68 24 70 32 C80 30 86 40 82 48 C88 54 86 64 78 68 C80 78 70 84 62 80 C58 88 46 88 42 80 C32 82 24 74 28 64 C20 60 20 48 28 44 C26 34 34 26 42 28 C42 22 46 20 50 20 Z"
-        fill="url(#portalSkyGrad)" stroke="url(#portalRimGrad)" stroke-width="5"/>
-      <path d="M47 36 a7 7 0 1 0 3 13 a9 9 0 0 1 -3 -13 Z" fill="#f3e6d8" opacity="0.92"/>
-      <circle cx="60" cy="40" r="1" fill="#fff" opacity="0.9"/>
-      <circle cx="55" cy="47" r="0.7" fill="#fff" opacity="0.7"/>
-      <ellipse cx="46" cy="64" rx="10" ry="5" fill="#efe0e8" opacity="0.85"/>
-      <ellipse cx="55" cy="66" rx="7" ry="4" fill="#f5ebef" opacity="0.9"/>
-      <circle cx="80" cy="26" r="5.5" fill="url(#portalSphereGrad)"/>
-    </svg>
+    <img class="portal-badge" src="icon-192.png" width="44" height="44" alt="SVOJ">
     <div>
       <h1>SVOJ</h1>
       <div class="sync-badge" id="syncBadge" style="display:none;"><span class="dot"></span><span class="txt">synced</span></div>
@@ -1541,20 +1505,7 @@
   <div class="auth-card note" style="--peek: var(--rose-soft); --peek-rot:-2deg;">
     <div class="pin"></div>
     <h1 class="auth-title">SVOJ</h1>
-    <svg class="portal-badge portal-badge-hero" width="92" height="92" viewBox="0 0 100 100" aria-hidden="true">
-      <rect x="4" y="4" width="92" height="92" rx="22" fill="url(#portalBodyGrad)"/>
-      <path d="M50 20 C60 18 68 24 70 32 C80 30 86 40 82 48 C88 54 86 64 78 68 C80 78 70 84 62 80 C58 88 46 88 42 80 C32 82 24 74 28 64 C20 60 20 48 28 44 C26 34 34 26 42 28 C42 22 46 20 50 20 Z"
-        fill="url(#portalSkyGrad)" stroke="url(#portalRimGrad)" stroke-width="5"/>
-      <path d="M47 36 a7 7 0 1 0 3 13 a9 9 0 0 1 -3 -13 Z" fill="#f3e6d8" opacity="0.92"/>
-      <circle cx="60" cy="40" r="1" fill="#fff" opacity="0.9"/>
-      <circle cx="55" cy="47" r="0.7" fill="#fff" opacity="0.7"/>
-      <circle cx="65" cy="52" r="0.8" fill="#fff" opacity="0.8"/>
-      <ellipse cx="46" cy="64" rx="10" ry="5" fill="#efe0e8" opacity="0.85"/>
-      <ellipse cx="55" cy="66" rx="7" ry="4" fill="#f5ebef" opacity="0.9"/>
-      <ellipse cx="38" cy="66" rx="5.5" ry="3.2" fill="#e7d6df" opacity="0.8"/>
-      <circle cx="80" cy="26" r="6" fill="url(#portalSphereGrad)"/>
-      <path d="M32 18 l1 3 l3 1 l-3 1 l-1 3 l-1 -3 l-3 -1 l3 -1 Z" fill="#fff" opacity="0.65"/>
-    </svg>
+    <img class="portal-badge portal-badge-hero" src="icon-192.png" width="92" height="92" alt="SVOJ">
     <p class="auth-sub" id="authSub">Your space. Your rules. Your story.</p>
     <div class="auth-field">
       <label for="authEmail">Email</label>
@@ -1820,6 +1771,7 @@ const STRINGS = {
     noGoalsYet:'no goals yet — add up to 5 for this month',
     monthlyRecapTitle:'✨ Monthly recap', recapSpent:'spent', recapPhotos:'moments captured', recapSteps:'steps',
     recapGoals:'goals completed', recapDays:'days journaled', recapMood:'average mood', recapFavorites:'favorites this month',
+    recapWater:'water logged',
     recapEmpty:'Nothing recorded yet this month — once you do, your recap will show up here.',
     monthlyExpenses:'💶 Monthly Expenses', totalIn:'Total in', amountPlaceholder:'amount', notePlaceholder:'note (optional)',
     addExpense:'+ Add expense', currenciesInUse:'currencies in use:', addCurrency:'+ currency',
@@ -1842,7 +1794,7 @@ const STRINGS = {
     waterAddLabel:'add', waterUndo:'Undo last', waterRemainingLabel:'{n} ml to go', waterGoalReached:'Daily goal reached',
     waterGoalMlLabel:'Daily goal (ml)', waterCompactLabel:'WATER',
     // widget names
-    widgetTasks:'Tasks', widgetNotes:'Notes', widgetDailyGoals:'Daily Goals', widgetMood:'Mood', widgetWater:'Water',
+    widgetTasks:'Tasks', widgetNotes:'Notes', widgetMood:'Mood', widgetWater:'Water',
     widgetSleep:'Sleep', widgetSteps:'Steps', widgetVibes:"Today's Vibe", widgetGratitude:'Gratitude',
     widgetDailyHighlight:'Daily Highlight', widgetFreeText:'Free Text', widgetMusic:'Music',
     widgetMovie:'Movie / Series', widgetFavoriteThing:'Favorite Thing', widgetPhotos:'Photos',
@@ -4049,6 +4001,14 @@ function renderMonthRecap(){
     }
   }
 
+  if(widgetConfig.enabled.includes('water')){
+    const waterTotal = dateKeys.reduce((n,k)=>{
+      const dd = daysData[k];
+      return n + (dd && typeof dd.waterMl === 'number' ? dd.waterMl : 0);
+    }, 0);
+    if(waterTotal>0) cards.push({ icon: widgetIcon('water'), value: fmtWaterMl(waterTotal), label:t('recapWater') });
+  }
+
   if(monthGoals.length){
     const done = monthGoals.filter(g=> g.done).length;
     cards.push({ icon:'🎯', value:`${done} / ${monthGoals.length}`, label:t('recapGoals') });
@@ -4610,7 +4570,6 @@ function buildProfileView(){
 const SYSTEM_WIDGETS = {
   tasks:          { id:'tasks',          labelKey:'widgetTasks',          icon:'✅', category:'Productivity' },
   notes:          { id:'notes',          labelKey:'widgetNotes',          icon:'📝', category:'Productivity' },
-  dailyGoals:     { id:'dailyGoals',     labelKey:'widgetDailyGoals',     icon:'🎯', category:'Productivity', kind:'checklist' },
   mood:           { id:'mood',           labelKey:'widgetMood',           icon:'🙂', category:'Lifestyle' },
   water:          { id:'water',          labelKey:'widgetWater',          icon:'💧', category:'Lifestyle' },
   sleep:          { id:'sleep',          labelKey:'widgetSleep',          icon:'🌙', category:'Lifestyle' },
@@ -4673,7 +4632,7 @@ function saveWidgetDaily(){ save('wp-widget-daily-v1', widgetDailyData); }
    universal set, applied only where My Day's energy/lifestyle widgets read visibly "off-theme"
    (a rainbow, a target, a pencil...). Other themes keep the original SYSTEM_WIDGETS icons
    untouched; a future theme can add its own map the same way without disturbing this one. */
-const BERRY_WIDGET_ICONS = { tasks:'🛰️', mood:'🌙', water:'🔷', vibes:'🪩', gratitude:'💜', dailyGoals:'🪐', steps:'🚀', freeText:'🔹' };
+const BERRY_WIDGET_ICONS = { tasks:'🛰️', mood:'🌙', water:'🔷', vibes:'🪩', gratitude:'💜', steps:'🚀', freeText:'🔹' };
 function widgetIcon(id){
   const base = SYSTEM_WIDGETS[id] ? SYSTEM_WIDGETS[id].icon : '🧩';
   return (currentTheme==='berry' && BERRY_WIDGET_ICONS[id]) ? BERRY_WIDGET_ICONS[id] : base;
@@ -4822,7 +4781,7 @@ const MYSPACE_SUMMARY = {
 };
 /* system/custom Day-page widgets that need a little more room because their content is a
    list/text area rather than a single stat — still compact, just not as tiny */
-const MYSPACE_ROOMY_IDS = ['notes','vibes','photos','dailyGoals','freeText','gratitude','dailyHighlight'];
+const MYSPACE_ROOMY_IDS = ['notes','vibes','photos','freeText','gratitude','dailyHighlight'];
 
 function mySpaceWidgetDef(id){
   if(MYSPACE_LAUNCHERS[id]){ const d = MYSPACE_LAUNCHERS[id]; return { ...d, label:t(d.labelKey) }; }
