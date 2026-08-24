@@ -239,7 +239,9 @@
   body.theme-pop .settings-input,
   body.theme-pop .diary-text-input,
   body.theme-pop .expense-edit-form input,
-  body.theme-pop .expense-edit-form select{
+  body.theme-pop .expense-edit-form select,
+  body.theme-pop .day-widget-cell,
+  body.theme-pop .wide-block{
     backdrop-filter: blur(26px) saturate(150%);
     -webkit-backdrop-filter: blur(26px) saturate(150%);
   }
@@ -906,7 +908,9 @@
   body.theme-berry.appearance-dark .settings-input,
   body.theme-berry.appearance-dark .diary-text-input,
   body.theme-berry.appearance-dark .expense-edit-form input,
-  body.theme-berry.appearance-dark .expense-edit-form select{
+  body.theme-berry.appearance-dark .expense-edit-form select,
+  body.theme-berry.appearance-dark .day-widget-cell,
+  body.theme-berry.appearance-dark .wide-block{
     backdrop-filter: blur(42px) saturate(180%);
     -webkit-backdrop-filter: blur(42px) saturate(180%);
   }
@@ -954,6 +958,15 @@
     border: 1px solid var(--line);
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), inset 0 0 0 1px rgba(255,255,255,0.04);
   }
+  /* My Day's individual widget cells (Mood/Water/Sleep/Tasks/…) had no card treatment at all
+     here — the outer day-note card got the full glass rim above, but every section inside it
+     sat directly on the page background with nothing to distinguish it. Same hairline-glass
+     language as the secondary surfaces above, sized as an actual card (radius + padding). */
+  body.theme-berry.appearance-dark .day-widget-cell,
+  body.theme-berry.appearance-dark .wide-block{
+    border: 1px solid var(--line); border-radius: 16px; padding: 14px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), inset 0 0 0 1px rgba(255,255,255,0.04);
+  }
   body.theme-berry.appearance-dark .bottom-nav{
     border-top-color: var(--line);
     box-shadow: 0 -2px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.14);
@@ -999,7 +1012,9 @@
   body.theme-berry.appearance-light .settings-input,
   body.theme-berry.appearance-light .diary-text-input,
   body.theme-berry.appearance-light .expense-edit-form input,
-  body.theme-berry.appearance-light .expense-edit-form select{
+  body.theme-berry.appearance-light .expense-edit-form select,
+  body.theme-berry.appearance-light .day-widget-cell,
+  body.theme-berry.appearance-light .wide-block{
     background: rgba(255,255,255,0.58);
     backdrop-filter: blur(28px) saturate(150%);
     -webkit-backdrop-filter: blur(28px) saturate(150%);
@@ -1035,6 +1050,11 @@
   body.theme-berry.appearance-light .expense-edit-form input,
   body.theme-berry.appearance-light .expense-edit-form select{
     border: 1px solid rgba(140,160,220,0.28);
+    box-shadow: inset 0 1.5px 0 rgba(255,255,255,0.85), inset 0 0 0 1px rgba(130,150,210,0.06);
+  }
+  body.theme-berry.appearance-light .day-widget-cell,
+  body.theme-berry.appearance-light .wide-block{
+    border: 1px solid rgba(140,160,220,0.28); border-radius: 16px; padding: 14px;
     box-shadow: inset 0 1.5px 0 rgba(255,255,255,0.85), inset 0 0 0 1px rgba(130,150,210,0.06);
   }
   body.theme-berry.appearance-light .bottom-nav{
@@ -1556,6 +1576,11 @@
      geometry or its neighbors', and promoting it to its own compositing layer keeps that
      layer's position pinned while only the thumb/track paint updates. Slider behavior itself
      is untouched — this is a container-stability fix only. */
+  /* Base glass fill for every My Day widget cell/section, same var(--paper) every other card
+     type (.note, .budget-hero-stat, …) already uses — without it a themed border+blur has
+     nothing translucent of its own to tint, and just blurs whatever's behind with no visible
+     surface of its own. Per-theme rules layer border/radius/blur on top of this. */
+  .day-widget-cell, .wide-block{ background: var(--paper); }
   .day-widget-cell{ contain: layout paint style; transform: translateZ(0); }
   .mood-row{ display:flex; align-items:center; gap:12px; contain: layout paint style; }
   .mood-face{ font-size:32px; width:40px; text-align:center; }
@@ -2089,7 +2114,12 @@
     position:relative; aspect-ratio:1/1; border-radius:50%; overflow:hidden; display:block;
     border:none; padding:0; background:var(--paper2); cursor:pointer;
   }
-  .onb-avatar-btn img{ width:100%; height:100%; object-fit:contain; display:block; pointer-events:none; }
+  /* The source artwork is a square canvas with its OWN soft circular vignette that doesn't
+     quite reach the corners — at 1:1 scale that leaves a visible ring where the button's flat
+     background peeks through between the vignette's fade and the true circular clip. Scaling
+     the image up crops that fading edge away entirely, so all that's left inside the clip is
+     solid artwork — a clean single circle instead of a circle-within-a-circle. */
+  .onb-avatar-btn img{ width:120%; height:120%; margin:-10%; object-fit:cover; display:block; pointer-events:none; }
   .onb-avatar-btn.selected{ box-shadow: 0 0 0 3px var(--accent); }
   .onb-avatar-btn.selected::after{
     content:'✓'; position:absolute; bottom:3%; right:3%; width:24%; height:24%; min-width:18px; min-height:18px; max-width:26px; max-height:26px;
@@ -2967,11 +2997,11 @@ function vibeLabel(v){ return v.labelKey ? t(v.labelKey) : (v.label||''); }
    16th entry that reuses the theme's own "add task" default icon, so that icon is also
    pickable as an actual mood tag instead of only ever appearing as the empty/unset state. */
 const TASK_MOODS_BERRY = [
-  { emoji:'🔥', labelKey:'taskMoodUrgent' }, { emoji:'😩', labelKey:'taskMoodDreading' }, { emoji:'💪', labelKey:'taskMoodMotivated' },
-  { emoji:'😴', labelKey:'taskMoodLowEnergy' }, { emoji:'🎯', labelKey:'taskMoodFocused' }, { emoji:'⚡', labelKey:'taskMoodQuickWin' },
-  { emoji:'🧠', labelKey:'taskMoodBrainHeavy' }, { emoji:'🙄', labelKey:'taskMoodMeh' }, { emoji:'🎉', labelKey:'taskMoodExcited' },
-  { emoji:'😤', labelKey:'taskMoodDetermined' }, { emoji:'⏰', labelKey:'taskMoodTimeSensitive' }, { emoji:'💤', labelKey:'taskMoodSomeday' },
-  { emoji:'🚀', labelKey:'taskMoodPriority' }, { emoji:'🤝', labelKey:'taskMoodWaiting' }, { emoji:'✅', labelKey:'taskMoodAlmostDone' },
+  { emoji:'⚡', labelKey:'taskMoodUrgent' }, { emoji:'🌑', labelKey:'taskMoodDreading' }, { emoji:'🛰️', labelKey:'taskMoodMotivated' },
+  { emoji:'🔋', labelKey:'taskMoodLowEnergy' }, { emoji:'📡', labelKey:'taskMoodFocused' }, { emoji:'💫', labelKey:'taskMoodQuickWin' },
+  { emoji:'💽', labelKey:'taskMoodBrainHeavy' }, { emoji:'🌐', labelKey:'taskMoodMeh' }, { emoji:'🪩', labelKey:'taskMoodExcited' },
+  { emoji:'🔷', labelKey:'taskMoodDetermined' }, { emoji:'⏰', labelKey:'taskMoodTimeSensitive' }, { emoji:'🌌', labelKey:'taskMoodSomeday' },
+  { emoji:'🚀', labelKey:'taskMoodPriority' }, { emoji:'🔌', labelKey:'taskMoodWaiting' }, { emoji:'✅', labelKey:'taskMoodAlmostDone' },
   { emoji:'🔮', labelKey:'taskMoodWildcard' },
 ];
 const TASK_MOODS_POP = [
