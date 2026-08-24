@@ -5825,40 +5825,6 @@ function onbWireWidgets(root){
   });
 }
 
-const ONB_THEME_PREVIEW = {
-  pop:       { board:'#fff3f8', dots:['#ff2788','#fffdfa'] },
-  forest:    { board:'#0d0a0c', dots:['#a53a52','#eee1cc'] },
-  botanical: { board:'#fffaf2', dots:['#bd6f8c','#dcd2f3'] },
-  berry:     { board:'#f6f8fb', dots:['#7298ff','#cbd2de'] },
-};
-function onbRenderTheme(){
-  return `
-    <div class="diary-title" style="font-size:26px;">${t('onbThemeTitle')}</div>
-    <div class="diary-sub">${t('onbThemeSub')}</div>
-    <div class="onb-theme-grid">
-      ${THEMES.map(th=>{
-        const p = ONB_THEME_PREVIEW[th.key] || { board:'#eee', dots:['#999','#ccc'] };
-        return `<button type="button" class="onb-theme-card${onbState.theme===th.key?' selected':''}" data-theme="${th.key}">
-          <div class="onb-theme-swatch" style="background:${p.board};">
-            <span class="onb-theme-dot" style="background:${p.dots[0]};"></span>
-            <span class="onb-theme-dot" style="background:${p.dots[1]};"></span>
-          </div>
-          <div class="onb-theme-name">${th.label}</div>
-        </button>`;
-      }).join('')}
-    </div>
-    <div class="diary-spacer"></div>
-  `;
-}
-function onbWireTheme(root){
-  root.querySelectorAll('.onb-theme-card').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      onbState.theme = btn.dataset.theme;
-      root.querySelectorAll('.onb-theme-card').forEach(b=> b.classList.toggle('selected', b===btn));
-    });
-  });
-}
-
 function onbRenderAppearance(){
   const opts = [ ['light','☀️','appearanceLight'], ['dark','🌙','appearanceDark'], ['system','⚙️','appearanceSystem'] ];
   return `
@@ -5989,7 +5955,6 @@ const ONB_PAGES = [
   { id:'name',       render:onbRenderName,            canAdvance:()=> onbState.name.trim().length>0 },
   { id:'why',        render:onbRenderWhy },
   { id:'widgets',    render:onbRenderWidgets,         skippable:true },
-  { id:'theme',      render:onbRenderTheme,           skippable:true },
   { id:'appearance', render:onbRenderAppearance,      skippable:true },
   { id:'avatar',     render:onbRenderAvatar,          skippable:true },
   { id:'tour1',      render:()=>'', skippable:true, isTour:true, tourStep:0 },
@@ -6005,7 +5970,6 @@ function onbWirePage(root, index){
   const id = ONB_PAGES[index].id;
   if(id==='name') onbWireName(root);
   else if(id==='widgets') onbWireWidgets(root);
-  else if(id==='theme') onbWireTheme(root);
   else if(id==='appearance') onbWireAppearance(root);
   else if(id==='avatar') onbWireAvatar(root);
   else if(id==='firstday') onbWireFirstDay(root);
