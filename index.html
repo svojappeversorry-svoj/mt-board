@@ -1718,16 +1718,17 @@
      owns Settings as its 5th tab, so this is deliberately not a second gear icon. */
   .header-avatar-btn{ font-size:16px; background: color-mix(in srgb, var(--paper) 55%, transparent); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); border:2px solid var(--line); border-radius:100px; width:36px; height:36px; padding:0; cursor:pointer; color:var(--ink-dim); display:flex; align-items:center; justify-content:center; overflow:hidden; }
   .header-avatar-btn:hover{ border-color: var(--accent); }
-  .header-avatar-btn img{ width:120%; height:120%; margin:-10%; object-fit:cover; display:block; pointer-events:none; }
+  /* The avatar artwork is already its own clean circular badge (drawn border, transparent
+     outside it) on a square canvas — shown at 1:1 with no zoom/crop so nothing in the art is
+     cut off; the container's own border-radius:50% still guarantees a perfectly round slot
+     regardless of what's inside. */
+  .header-avatar-btn img{ width:100%; height:100%; object-fit:cover; display:block; pointer-events:none; }
   .header-avatar-fallback{ display:flex; align-items:center; justify-content:center; width:100%; height:100%; font-size:15px; }
   .profile-avatar-hero{ display:flex; justify-content:center; margin-bottom:16px; }
-  /* Same fix as .onb-avatar-btn below: the source artwork is a square canvas whose own soft
-     circular vignette doesn't quite reach the corners, so clipping the bare image at 1:1 scale
-     left a visible ring of the square canvas (white) between the vignette's fade and the true
-     circular clip. A fixed-size clipping wrapper + scaling the image up 120% (negative-margined)
-     crops that fading edge away, leaving a clean single circle — matching the grid avatars. */
+  /* Same as .onb-avatar-btn below: a fixed-size circular clipping wrapper around the artwork,
+     shown at 1:1 (no zoom/crop) since it's already a clean self-contained circular badge. */
   .profile-avatar-hero-clip{ position:relative; width:72px; height:72px; border-radius:50%; overflow:hidden; box-shadow: 0 4px 14px rgba(0,0,0,0.18); }
-  .profile-avatar-hero-clip img{ width:120%; height:120%; margin:-10%; object-fit:cover; display:block; }
+  .profile-avatar-hero-clip img{ width:100%; height:100%; object-fit:cover; display:block; }
   .profile-avatar-hero-fallback{ width:72px; height:72px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:30px; background: var(--paper2); color: var(--ink-dim); }
   .logout-btn{ font-family:var(--font-mono); font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:0.3px; background: color-mix(in srgb, var(--paper) 55%, transparent); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); border:2px solid var(--line); border-radius:100px; padding:8px 14px; cursor:pointer; color:var(--ink-dim); }
   .logout-btn:hover{ border-color: var(--accent); color: var(--accent); }
@@ -2131,12 +2132,10 @@
     position:relative; aspect-ratio:1/1; border-radius:50%; overflow:hidden; display:block;
     border:none; padding:0; background:var(--paper2); cursor:pointer;
   }
-  /* The source artwork is a square canvas with its OWN soft circular vignette that doesn't
-     quite reach the corners — at 1:1 scale that leaves a visible ring where the button's flat
-     background peeks through between the vignette's fade and the true circular clip. Scaling
-     the image up crops that fading edge away entirely, so all that's left inside the clip is
-     solid artwork — a clean single circle instead of a circle-within-a-circle. */
-  .onb-avatar-btn img{ width:120%; height:120%; margin:-10%; object-fit:cover; display:block; pointer-events:none; }
+  /* The avatar artwork (AVATAR_COLLECTION) is itself a clean circular badge — its own drawn
+     border, transparent square canvas outside it — so it's shown at 1:1 with no zoom/crop;
+     the button's own border-radius:50%+overflow:hidden is what guarantees a round slot. */
+  .onb-avatar-btn img{ width:100%; height:100%; object-fit:cover; display:block; pointer-events:none; }
   .onb-avatar-btn.selected{ box-shadow: 0 0 0 3px var(--accent); }
   .onb-avatar-btn.selected::after{
     content:'✓'; position:absolute; bottom:3%; right:3%; width:24%; height:24%; min-width:18px; min-height:18px; max-width:26px; max-height:26px;
@@ -6683,16 +6682,21 @@ const AVATAR_KEY = 'wp-avatar-v1';
    yet reskin Pink Pop/Dark Romance/Botanical/Digital Chrome. See the phase summary. */
 const APPEARANCE_KEY = 'wp-appearance-v1';
 const AVATAR_COLLECTION = [
-  { id:'angel-pig',       name:'Angel Pig',          asset:'assets/avatars/angel-pig.webp' },
-  { id:'glam-cow',        name:'Glam Cow',           asset:'assets/avatars/glam-cow.webp' },
-  { id:'glam-dog',        name:'Glam Dog',           asset:'assets/avatars/glam-dog.webp' },
-  { id:'beach-bird',      name:'Beach Bird',         asset:'assets/avatars/beach-bird.webp' },
-  { id:'koala',           name:'Koala',              asset:'assets/avatars/koala.webp' },
-  { id:'chaotic-monkey',  name:'Chaotic Monkey',     asset:'assets/avatars/chaotic-monkey.webp' },
-  { id:'hamster-glasses', name:'Hamster with Glasses', asset:'assets/avatars/hamster-glasses.webp' },
-  { id:'duck',            name:'Duck',               asset:'assets/avatars/duck.webp' },
-  { id:'capybara-rose',   name:'Capybara with Rose', asset:'assets/avatars/capybara-rose.webp' },
-  { id:'fairy-horse',     name:'Fairy Horse',        asset:'assets/avatars/fairy-horse.webp' },
+  { id:'glamour-chihuahua',  name:'Glamour Chihuahua',  asset:'assets/avatars/glamour-chihuahua.png' },
+  { id:'surf-budgie',        name:'Surf Budgie',        asset:'assets/avatars/surf-budgie.png' },
+  { id:'cheeky-monkey',      name:'Cheeky Monkey',      asset:'assets/avatars/cheeky-monkey.png' },
+  { id:'programmer-hamster', name:'Programmer Hamster', asset:'assets/avatars/programmer-hamster.png' },
+  { id:'happy-duckling',     name:'Happy Duckling',     asset:'assets/avatars/happy-duckling.png' },
+  { id:'fairy-horse',        name:'Fairy Horse',        asset:'assets/avatars/fairy-horse.png' },
+  { id:'angel-piglet',       name:'Angel Piglet',       asset:'assets/avatars/angel-piglet.png' },
+  { id:'gangster-cow',       name:'Gangster Cow',       asset:'assets/avatars/gangster-cow.png' },
+  { id:'looksmax-koala',     name:'Looksmax Koala',     asset:'assets/avatars/looksmax-koala.png' },
+  { id:'romantic-capybara',  name:'Romantic Capybara',  asset:'assets/avatars/romantic-capybara.png' },
+  { id:'sigma-lion',         name:'Sigma Lion',         asset:'assets/avatars/sigma-lion.png' },
+  { id:'explosion-cat',      name:'Explosion Cat',      asset:'assets/avatars/explosion-cat.png' },
+  { id:'coquette-bunny',     name:'Coquette Bunny',     asset:'assets/avatars/coquette-bunny.png' },
+  { id:'rage-squirrel',      name:'Rage Squirrel',      asset:'assets/avatars/rage-squirrel.png' },
+  { id:'party-dolphin',      name:'Party Dolphin',      asset:'assets/avatars/party-dolphin.png' },
 ];
 function avatarById(id){ return AVATAR_COLLECTION.find(a=>a.id===id) || null; }
 updateHeaderAvatar = function(){

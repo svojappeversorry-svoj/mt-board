@@ -95,11 +95,24 @@ another device.
 
 ### `wp-avatar-v1`
 - **Purpose:** chosen avatar character.
-- **Shape:** string id from the 10-item `AVATAR_COLLECTION` (e.g. `"angel-pig"`, `"glam-cow"`,
-  `"beach-bird"`, `"koala"`, `"chaotic-monkey"`, `"hamster-glasses"`, `"duck"`,
-  `"capybara-rose"`, `"fairy-horse"`, `"glam-dog"`), or `""` if never chosen.
+- **Shape:** string id from the 15-item `AVATAR_COLLECTION` (`"glamour-chihuahua"`,
+  `"surf-budgie"`, `"cheeky-monkey"`, `"programmer-hamster"`, `"happy-duckling"`,
+  `"fairy-horse"`, `"angel-piglet"`, `"gangster-cow"`, `"looksmax-koala"`,
+  `"romantic-capybara"`, `"sigma-lion"`, `"explosion-cat"`, `"coquette-bunny"`,
+  `"rage-squirrel"`, `"party-dolphin"`), or `""` if never chosen. Each id's artwork is a real
+  PNG file under `assets/avatars/<id>.png` — already a self-contained circular badge (its own
+  drawn border, transparent square canvas around it), shown at 1:1 inside a
+  `border-radius:50%` clipping container with no zoom/crop.
 - **Default:** `""`.
 - **Write:** Settings avatar grid; once during onboarding.
+- **Replaced set (this pass):** the previous 10-item collection (`angel-pig`, `glam-cow`,
+  `glam-dog`, `beach-bird`, `koala`, `chaotic-monkey`, `hamster-glasses`, `duck`,
+  `capybara-rose`, and an earlier `fairy-horse` piece of art) was removed wholesale and its
+  `.webp` files deleted. An account whose `wp-avatar-v1` still holds one of those old ids
+  (other than `fairy-horse`, which the new collection reuses under the same id but with new
+  artwork) simply gets `avatarById()` returning `null` for it — the app's existing "no avatar
+  chosen" fallback (a plain face glyph) renders instead, same as any other orphaned id
+  elsewhere in this codebase. Nothing crashes; the user just needs to pick again.
 
 ### `wp-onboarding-complete-v1`
 - **Purpose:** whether the onboarding flow has run.
