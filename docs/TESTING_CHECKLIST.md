@@ -65,23 +65,31 @@ Verified in this pass via direct `onSignedIn(...)`/`loginJustSucceeded` calls in
 note above about what can't be tested from here. All 8 checks above passed with zero console
 errors, across all 4 themes.
 
-## 4-tab restructuring (Today / Budget / Journal / You)
+## 5-tab restructuring (Budget / Journal / Today / Media / Settings)
 
-Bottom nav is now Today / Budget / Journal / You instead of the old My Space / Budget / My Day /
-Media / Settings. "Today" is exactly the old My Day page promoted to the main daily dashboard;
-My Space, Media, and the old separate Settings/Profile screens still exist, just reached from
-"You" now instead of being separate bottom-nav destinations.
+Bottom nav is now Budget / Journal / Today / Media / Settings, in that left-to-right order,
+instead of the old My Space / Budget / My Day / Media / Settings. "Today" is exactly the old My
+Day page, promoted to the main daily dashboard and the app's home (replacing My Space in that
+role). Media and Settings are real bottom-nav tabs again (an intermediate pass had briefly
+folded them under a "You" tab together with Profile — that was reverted per follow-up feedback).
+My Profile (avatar, name, email, password, sign out) is its own screen again, reached via the
+header avatar button, separate from Settings — also as before. My Space is still not a bottom-nav
+tab; it's reached from Settings ("Manage My Space").
 
-- [ ] All 4 tabs (Today, Budget, Journal, You) open without console errors
+- [ ] All 5 tabs (Budget, Journal, Today, Media, Settings) open without console errors, in that
+      left-to-right order
 - [ ] Logging in (or reopening the app, or finishing onboarding) lands on **Today**, not My Space
-- [ ] "You" tab shows Profile (avatar/name/email/sign out) stacked directly above Settings
-      (appearance/My Space/Daily Page Widgets/regional/notifications/data & privacy/about) — one
-      continuous scroll, no back button needed since it's a bottom-nav tab
-- [ ] From You → "Manage My Space" opens My Space, which now has its **own** back button
-      (top-left) that returns to You
-- [ ] From You → Data & Privacy → "Media Files" opens Media, whose back button returns to You
-- [ ] From You → "Daily Page Widgets" → customize opens the Widget Library, whose back button
-      returns to You
+- [ ] Tapping the header avatar opens **My Profile** (avatar picker, name, email, change
+      email/password when signed in, sign out) — a separate screen from Settings, with its own
+      back button that returns to Today
+- [ ] **Settings** tab shows appearance/My Space/Daily Page Widgets/regional/notifications/
+      data & privacy (incl. Media Files link)/about — its own back button also returns to Today
+- [ ] From Settings → "Manage My Space" opens My Space, whose back button returns to **Settings**
+      (not Today)
+- [ ] From Settings → "Daily Page Widgets" → customize opens the Widget Library, whose back
+      button also returns to Settings
+- [ ] **Media** tab opens the year/month photo browser directly; its own back button returns to
+      Today (same as before this whole restructuring)
 - [ ] Tapping the header brand logo goes to Today (not My Space)
 - [ ] **Journal**: composer at the top (date, text, mood slider + face, vibe tag chips, photo
       attach, optional "link a transaction" dropdown) and a chronological timeline below
@@ -97,17 +105,19 @@ My Space, Media, and the old separate Settings/Profile screens still exist, just
         amount/note under the entry
   - [ ] Deleting an entry (with confirmation) removes it from the timeline; deleting the last
         entry shows the "No entries yet" empty state
-- [ ] Onboarding's interactive tour spotlights exactly the 4 new nav buttons (Today → Budget →
-      Journal → You) with no console error — this depends on `TOUR_STEPS` and the `tour1..tour4`
-      pages in `ONB_PAGES` staying the same length; a mismatch throws when the tour tries to
-      render a step that doesn't exist
+- [ ] Onboarding's interactive tour spotlights exactly the 5 real nav buttons, in order Budget →
+      Journal → Today → Media → Settings, with no console error — this depends on `TOUR_STEPS`
+      and the `tour1..tour5` pages in `ONB_PAGES` staying the same length; a mismatch throws when
+      the tour tries to render a step that doesn't exist
 - [ ] Finishing onboarding lands on Today with the Today tab visibly active
 
-**Result as of this pass:** verified via Playwright across all 4 themes at 390×844 — nav to all 4
-tabs, You showing both Profile and Settings sections, My Space/Media reachable and returning to
-You, a full Journal create→link-transaction→delete cycle, onboarding driven through real
-Next/Skip button clicks into and out of the tour and to completion, brand-logo click. Zero
-console errors in any of it.
+**Result as of this pass:** verified via Playwright — nav to all 5 tabs in the correct order,
+Media/Settings working as standalone tabs, the avatar opening a separate My Profile screen
+distinct from Settings, Profile/Settings back buttons returning to Today, My Space reachable from
+Settings and returning to Settings, a full Journal create→link-transaction→delete cycle (from the
+earlier pass, unaffected by this nav-order follow-up), and onboarding driven through the real
+Next/Skip UI into and out of the tour to completion landing on Today. Zero console errors
+throughout.
 
 **Known pre-existing issue, unrelated to this restructuring:** at 375px width, the Today tab
 (`.day-widget-cell` mood widget) overflows horizontally by ~20px. Confirmed via a fresh, isolated

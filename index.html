@@ -2469,10 +2469,11 @@
      completely until dismissed, same layering as <header>. Populated/labelled by JS
      (bindBottomNav()) so it stays in sync with the localization system. -->
 <nav class="bottom-nav" id="bottomNav">
-  <button type="button" class="bottom-nav-btn is-central" id="navBtnToday" data-nav="today"><span class="ic">📔</span><span class="lbl"></span></button>
   <button type="button" class="bottom-nav-btn" id="navBtnBudget" data-nav="budget"><span class="ic">💶</span><span class="lbl"></span></button>
   <button type="button" class="bottom-nav-btn" id="navBtnJournal" data-nav="journal"><span class="ic">📖</span><span class="lbl"></span></button>
-  <button type="button" class="bottom-nav-btn" id="navBtnYou" data-nav="you"><span class="ic">👤</span><span class="lbl"></span></button>
+  <button type="button" class="bottom-nav-btn is-central" id="navBtnToday" data-nav="today"><span class="ic">📔</span><span class="lbl"></span></button>
+  <button type="button" class="bottom-nav-btn" id="navBtnMedia" data-nav="media"><span class="ic">🖼️</span><span class="lbl"></span></button>
+  <button type="button" class="bottom-nav-btn" id="navBtnSettings" data-nav="settings"><span class="ic">⚙️</span><span class="lbl"></span></button>
 </nav>
 
 <script>
@@ -2695,10 +2696,11 @@ const STRINGS = {
     onbAppearanceTitle:'Light or dark?', onbAppearanceSub:'Pick whatever feels right to read in.',
     appearanceLight:'Light', appearanceDark:'Dark', appearanceSystem:'System',
     onbAvatarTitle:'Now choose yourself.', onbAvatarSub:'Pick a little face to greet you here — just for fun.',
-    onbTourTodayText:'Your day, all in one place — tasks, mood, water, sleep and more.',
     onbTourBudgetText:'Track your spending and income here.',
     onbTourJournalText:'Capture moments, thoughts and photos here — your own timeline.',
-    onbTourYouText:'Your profile, theme and settings — everything about you, in one place.',
+    onbTourTodayText:'Your day, all in one place — tasks, mood, water, sleep and more.',
+    onbTourMediaText:'Your favorite photos and moments live here.',
+    onbTourSettingsText:'Everything else can be customized for you here.',
     onbFirstDayTitle:"Let's make your first day.", onbFirstDaySub:'Today, {date}',
     onbFirstDayHint:'All of this is optional — just a start.',
     onbTaskPlaceholder:'e.g. finally call the dentist', onbNotePlaceholder:'Anything on your mind…',
@@ -2706,7 +2708,7 @@ const STRINGS = {
     onbFirstDayEmpty:'Write one little thing about today.',
     onbDoneTitle:'Done.', onbDoneSub:'Your SVOJ is ready.',
     // Phase 2 — primary navigation
-    navToday:'Today', navBudget:'Budget', navJournal:'Journal', navYou:'You',
+    navBudget:'Budget', navJournal:'Journal', navToday:'Today', navMedia:'Media', navSettings:'Settings',
     // Phase 2 — Budget
     budgetTitle:'Budget', budgetSpent:'Spent', budgetIncome:'Income', budgetNet:'Net',
     addTransaction:'+ Add transaction', transactionType:'Type', typeExpense:'Expense', typeIncome:'Income',
@@ -3461,33 +3463,35 @@ function applyHeaderLanguage(){
 }
 applyHeaderLanguage();
 
-/* ============ PRIMARY BOTTOM NAVIGATION (Phase 3: Today / Budget / Journal / You) ============
-   A thin routing layer over the existing show*View() functions. Four primary destinations,
-   each an always-reachable entry point instead of only via My Space cards / the header gear
-   icon. "Today" always opens TODAY, never whatever date was last viewed — it is exactly the
-   former "My Day" page, just promoted to the app's main daily dashboard. My Space, Media and
-   the old Settings/Profile split still exist as real screens, just reached from "You" now
-   instead of being separate bottom-nav destinations (see showYouView). */
+/* ============ PRIMARY BOTTOM NAVIGATION (Budget / Journal / Today / Media / Settings) ============
+   A thin routing layer over the existing show*View() functions. 5 primary destinations. "Today"
+   always opens TODAY, never whatever date was last viewed — it is exactly the former "My Day"
+   page, just promoted to the app's main daily dashboard and the app's home. My Space is still a
+   real screen, reached from Settings ("Manage My Space") rather than its own bottom-nav
+   destination. My Profile (avatar/name/email/password/sign out) is reached via the header
+   avatar button, separate from Settings, exactly as before. */
 function applyBottomNavLanguage(){
   const set = (id, key) => { const el = document.querySelector('#'+id+' .lbl'); if(el) el.textContent = t(key); };
-  set('navBtnToday', 'navToday');
   set('navBtnBudget', 'navBudget');
   set('navBtnJournal', 'navJournal');
-  set('navBtnYou', 'navYou');
+  set('navBtnToday', 'navToday');
+  set('navBtnMedia', 'navMedia');
+  set('navBtnSettings', 'navSettings');
 }
 const BG_CONTEXTS = ['auth','space','day','budget','media','settings'];
-// The 4 bottom-nav tabs reuse the existing per-theme photo-background contexts above instead of
-// inventing new ones — Today looks like the old My Day background, Journal reuses Media's
-// (both are about photos/memories), You reuses Settings' — zero new CSS needed for any theme.
-const NAV_TAB_BG_CTX = { today:'day', journal:'media', you:'settings' };
+// Today and Journal reuse existing per-theme photo-background contexts instead of inventing
+// new ones — Today looks like the old My Day background, Journal reuses Media's (both are
+// about photos/memories) — zero new CSS needed for any theme. Budget/Media/Settings already
+// match a BG_CONTEXTS name directly, so they need no entry here.
+const NAV_TAB_BG_CTX = { today:'day', journal:'media' };
 function setActiveNavTab(tab, bgCtxOverride){
   document.querySelectorAll('.bottom-nav-btn').forEach(b=> b.classList.toggle('active', b.dataset.nav===tab));
   // Digital Chrome's per-screen photo backgrounds (see the bg-ctx-* CSS rules) key off this
-  // same class. `bgCtxOverride` lets a screen that isn't itself one of the 4 bottom-nav tabs
-  // (My Space, Media, the Widget/Year/Month sub-pages — all reached from "You" now) still
-  // highlight its parent tab while keeping its OWN original background untouched, so no new
-  // bg-ctx-* CSS is needed anywhere for this restructuring. Other themes don't define
-  // bg-ctx-* rules, so this is a no-op for them beyond an unused class name.
+  // same class. `bgCtxOverride` lets a screen that isn't itself one of the 5 bottom-nav tabs
+  // (My Space, the Widget/Year/Month sub-pages — all reached from Settings) still highlight
+  // its parent tab while keeping its OWN original background untouched, so no new bg-ctx-*
+  // CSS is needed anywhere. Other themes don't define bg-ctx-* rules, so this is a no-op for
+  // them beyond an unused class name.
   const bgCtx = bgCtxOverride || NAV_TAB_BG_CTX[tab] || tab;
   if(BG_CONTEXTS.includes(bgCtx)){
     document.body.classList.remove(...BG_CONTEXTS.map(c=>'bg-ctx-'+c));
@@ -3496,10 +3500,11 @@ function setActiveNavTab(tab, bgCtxOverride){
 }
 function showTodayView(){ showDateView(todayReal); }
 function bindBottomNav(){
-  document.getElementById('navBtnToday').addEventListener('click', ()=> showTodayView());
   document.getElementById('navBtnBudget').addEventListener('click', ()=> showBudgetView());
   document.getElementById('navBtnJournal').addEventListener('click', ()=> showJournalView());
-  document.getElementById('navBtnYou').addEventListener('click', ()=> showYouView());
+  document.getElementById('navBtnToday').addEventListener('click', ()=> showTodayView());
+  document.getElementById('navBtnMedia').addEventListener('click', ()=> showMediaView());
+  document.getElementById('navBtnSettings').addEventListener('click', ()=> showSettingsView());
 }
 bindBottomNav();
 function renderStickerPackTabs(){
@@ -3870,7 +3875,7 @@ function showYearView(){
   hideAllViews();
   document.getElementById('yearView').classList.add('active');
   buildYearView();
-  setActiveNavTab('you', 'space');
+  setActiveNavTab('settings', 'space');
 }
 function buildYearView(){
   document.getElementById('yearBackToSpaceBtn').textContent = '← ' + t('myspaceBackHome');
@@ -3896,7 +3901,7 @@ function showMonthView(monthIdx, year){
   hideAllViews();
   document.getElementById('monthView').classList.add('active');
   buildMonthView(monthIdx, year==null ? APP_YEAR : year);
-  setActiveNavTab('you', 'space');
+  setActiveNavTab('settings', 'space');
 }
 function monthKeyOf(monthIdx, year){ return year + '-' + String(monthIdx+1).padStart(2,'0'); }
 function shiftMonthView(delta){
@@ -5484,14 +5489,18 @@ let defaultCurrency = load('wp-default-currency-v1', 'EUR');
 let notifPrefs = load('wp-notif-prefs-v1', { dailyReminder:false, taskReminders:false, eveningReminder:false });
 function saveNotifPrefs(){ save('wp-notif-prefs-v1', notifPrefs); }
 
-/* Settings is no longer its own bottom-nav destination or standalone screen — it renders as
-   the second half of the "You" tab (see buildYouView), stacked directly under Profile. Kept
-   as its own builder function/container (#settingsView) since it's independently useful and
-   nothing else about it changed; it just no longer has its own back button or nav entry. */
+function showSettingsView(){
+  hideAllViews();
+  document.getElementById('settingsView').classList.add('active');
+  buildSettingsView();
+  setActiveNavTab('settings');
+}
+
 function buildSettingsView(){
   const el = document.getElementById('settingsView');
 
   el.innerHTML = `
+    <button type="button" class="back-link" id="settingsBackBtn">${t('back')}</button>
     <h2 class="month-view-title" style="font-size:36px;">${t('settings')}</h2>
     ${!sb ? `<div class="settings-note">${t('offlineNote')}</div>` : ''}
 
@@ -5566,6 +5575,8 @@ function buildSettingsView(){
     </div>
   `;
 
+  document.getElementById('settingsBackBtn').addEventListener('click', showTodayView);
+
   document.getElementById('settingsThemeSelect').addEventListener('change', (e)=> setTheme(e.target.value));
   document.getElementById('settingsAppearanceSelect').addEventListener('change', (e)=>{ save(APPEARANCE_KEY, e.target.value); applyAppearance(e.target.value); });
   document.getElementById('openMySpaceBtn').addEventListener('click', showMySpaceView);
@@ -5619,39 +5630,23 @@ function buildSettingsView(){
   });
 }
 
-/* ============ YOU (Profile + Settings, one place) ============
-   The 4th bottom-nav tab: "who I am + how SVOJ is configured" per spec. Renders the exact
-   same Profile card (identity/security) and Settings sections (appearance/My Space/My Day
-   widgets/regional/notifications/SVOJ+/data & privacy incl. Media Files/about) stacked in one
-   scroll — nothing about either was rewritten, they just lost their own back buttons and
-   mount together instead of as two separate screens. */
-function showYouView(){
-  hideAllViews();
-  buildProfileView();
-  buildSettingsView();
-  const profileEl = document.getElementById('profileView');
-  const settingsEl = document.getElementById('settingsView');
-  profileEl.classList.add('active');
-  settingsEl.classList.add('active');
-  // Two stacked .settings-view.active sections would otherwise each reserve bottom-nav
-  // clearance padding — only the LAST one on screen needs that, so the first one's is zeroed
-  // out here rather than in CSS (this pairing is the only place these two ever render together).
-  profileEl.style.paddingBottom = '4px';
-  setActiveNavTab('you');
-}
-headerAvatarBtnEl.addEventListener('click', showYouView);
+headerAvatarBtnEl.addEventListener('click', showProfileView);
 
 /* ============ MY PROFILE ============
-   Identity/account controls (avatar, name, email, password, sign out). Used to be its own
-   screen behind the header avatar button; now renders as the first half of the "You" tab
-   (see buildYouView), stacked above Settings — "profile + settings in one place" per spec.
-   Kept as its own builder function/container (#profileView) since nothing about its own
-   markup/bindings needed to change, only its back button and top-level entry point. */
+   Identity/account controls (avatar, name, email, password, sign out) live here behind the
+   header avatar button, separate from Settings (appearance/My Space/My Day/regional/etc.) —
+   see the header avatar button's click handler above. Nothing here is duplicated in Settings. */
+function showProfileView(){
+  hideAllViews();
+  document.getElementById('profileView').classList.add('active');
+  buildProfileView();
+}
 function buildProfileView(){
   const el = document.getElementById('profileView');
   const memberSince = currentUserCreatedAt ? new Date(currentUserCreatedAt).toLocaleDateString(undefined, { year:'numeric', month:'long', day:'numeric' }) : '—';
 
   el.innerHTML = `
+    <button type="button" class="back-link" id="profileBackBtn">${t('back')}</button>
     <h2 class="month-view-title" style="font-size:36px;">${t('myProfile')}</h2>
     ${!sb ? `<div class="settings-note">${t('offlineNote')}</div>` : ''}
 
@@ -5681,6 +5676,7 @@ function buildProfileView(){
     </div>` : ''}
   `;
 
+  document.getElementById('profileBackBtn').addEventListener('click', showTodayView);
   document.getElementById('settingsSignOutBtn').addEventListener('click', ()=>{ if(sb) logoutBtn.click(); });
 
   function renderAvatarHero(){
@@ -6222,7 +6218,7 @@ function showMySpaceView(){
   hideAllViews();
   document.getElementById('mySpaceView').classList.add('active');
   buildMySpaceView();
-  setActiveNavTab('you', 'space');
+  setActiveNavTab('settings', 'space');
 }
 function myspaceCardShellHtml(w){
   const def = mySpaceWidgetDef(w.id);
@@ -6274,7 +6270,7 @@ function buildMySpaceView(){
     const card = el.querySelector(`.myspace-card[data-wid="${w.id}"]`);
     if(card) myspaceBindCard(w.id, card);
   });
-  document.getElementById('mySpaceBackBtn').addEventListener('click', showYouView);
+  document.getElementById('mySpaceBackBtn').addEventListener('click', showSettingsView);
   document.getElementById('mySpaceEditBtn').addEventListener('click', ()=>{
     mySpaceEditing = !mySpaceEditing;
     saveMySpaceLayout();
@@ -6551,7 +6547,7 @@ function showWidgetsView(){
   hideAllViews();
   document.getElementById('widgetsView').classList.add('active');
   buildWidgetsView();
-  setActiveNavTab('you', 'settings');
+  setActiveNavTab('settings');
 }
 /* ============ MEDIA FILES (Settings → Media Files) ============
    Reads the SAME photosData records the Day page writes — there is no separate media
@@ -6567,7 +6563,7 @@ function showMediaView(){
   currentMediaMonth = null;
   currentMediaYear = null;
   buildMediaYearList();
-  setActiveNavTab('you', 'media');
+  setActiveNavTab('media');
 }
 function monthPhotoCounts(){
   const counts = {};
@@ -6608,7 +6604,7 @@ function buildMediaYearList(){
       </div>
     `).join('')}
   `;
-  document.getElementById('mediaBackBtn').addEventListener('click', showYouView);
+  document.getElementById('mediaBackBtn').addEventListener('click', showTodayView);
   el.querySelectorAll('.media-month-row').forEach(row=> row.addEventListener('click', ()=> buildMediaMonthView(+row.dataset.month, +row.dataset.year)));
 }
 function buildMediaMonthView(monthIdx, year){
@@ -6739,7 +6735,7 @@ function buildWidgetsView(){
     </div>
   `;
 
-  document.getElementById('widgetsBackBtn').addEventListener('click', showYouView);
+  document.getElementById('widgetsBackBtn').addEventListener('click', showSettingsView);
   el.querySelectorAll('[data-move]').forEach(btn=> btn.addEventListener('click', ()=> moveWidget(btn.dataset.move, +btn.dataset.delta)));
   el.querySelectorAll('[data-remove]').forEach(btn=> btn.addEventListener('click', ()=> removeWidgetFromPage(btn.dataset.remove)));
   el.querySelectorAll('[data-add]').forEach(btn=> btn.addEventListener('click', ()=> addWidgetToPage(btn.dataset.add)));
@@ -6851,14 +6847,15 @@ let onbState = {
   firstDay: { mood:null, task:'', note:'', water:false, sleepHrs:'', generic:{} },
 };
 
-/* Interactive tour steps — each points at a REAL element already in the DOM (the 4 bottom
+/* Interactive tour steps — each points at a REAL element already in the DOM (the 5 bottom
    nav buttons) rather than a fake mock-up of the UI. onbGoTo() drives the transparent-overlay
    spotlight/tooltip in onbTour* below when passing through these. */
 const TOUR_STEPS = [
-  { target:'navBtnToday',   icon:'📔', textKey:'onbTourTodayText' },
-  { target:'navBtnBudget',  icon:'💶', textKey:'onbTourBudgetText' },
-  { target:'navBtnJournal', icon:'📖', textKey:'onbTourJournalText' },
-  { target:'navBtnYou',     icon:'👤', textKey:'onbTourYouText' },
+  { target:'navBtnBudget',   icon:'💶', textKey:'onbTourBudgetText' },
+  { target:'navBtnJournal',  icon:'📖', textKey:'onbTourJournalText' },
+  { target:'navBtnToday',    icon:'📔', textKey:'onbTourTodayText' },
+  { target:'navBtnMedia',    icon:'🖼️', textKey:'onbTourMediaText' },
+  { target:'navBtnSettings', icon:'⚙️', textKey:'onbTourSettingsText' },
 ];
 function onbTourRenderTip(stepIdx){
   const step = TOUR_STEPS[stepIdx];
@@ -7120,6 +7117,7 @@ const ONB_PAGES = [
   { id:'tour2',      render:()=>'', skippable:true, isTour:true, tourStep:1 },
   { id:'tour3',      render:()=>'', skippable:true, isTour:true, tourStep:2 },
   { id:'tour4',      render:()=>'', skippable:true, isTour:true, tourStep:3 },
+  { id:'tour5',      render:()=>'', skippable:true, isTour:true, tourStep:4 },
   { id:'firstday',   render:onbRenderFirstDay,        skippable:true },
   { id:'done',       render:onbRenderDone,            isFinal:true },
 ];
