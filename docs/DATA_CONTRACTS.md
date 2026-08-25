@@ -159,6 +159,40 @@ another device.
   edit, delete, or reorder.
 - **Merge-on-first-sign-in:** yes, per-date-key union.
 
+### `wp-journal-v1`
+- **Purpose:** the Journal tab's timeline — freeform personal entries, each its own
+  self-contained record (a day can have zero, one, or several). Added for the 4-tab
+  restructuring (Today / Budget / Journal / You); not present in earlier versions of the app.
+- **Shape:** a flat array of:
+
+  | field       | type       | notes |
+  |-------------|------------|-------|
+  | `id`        | string     | `crypto.randomUUID()`, or a timestamp+random fallback string |
+  | `date`      | string     | `dateKey` (`YYYY-MM-DD`) the entry is *about* — independent of `createdAt` |
+  | `text`      | string     | freeform entry text, default `""` |
+  | `mood`      | number \| `null` | 0–4, same scale/faces as `wp-days-v5.mood` (`moodFace()`) |
+  | `vibes`     | `string[]` | up to 4 ids from the same `VIBES` table (and any `wp-vibes-custom-v1` custom vibes) used on My Day — **not** a separate tag vocabulary |
+  | `photos`    | array      | own attachments, **not** shared with `wp-photos-v1`: `{ id: string, src: string (data: URL, same resizeImageJPEG pipeline as Day photos) }[]`, capped at `MAX_PHOTOS_PER_DAY` (20) per entry |
+  | `expenseId` | string     | optional — id of a row in `wp-expenses-v1` for the same `date`, or `""` for no link |
+  | `createdAt` | number     | `Date.now()` at save time; also the tiebreaker for ordering multiple entries on the same `date` |
+  | `updatedAt` | number     | set equal to `createdAt` at save time (entries are delete-only today, never edited in place, so this never actually diverges from `createdAt` yet) |
+
+- **Default:** `[]`.
+- **Deliberately NOT shared storage:** an entry's photos are its own array, not
+  `wp-photos-v1[date]` — a day can have several journal entries, so there's no single "the
+  day's photos" slot to write into. `expenseId` is a reference by id into `wp-expenses-v1`,
+  not a copy of that transaction's fields, so editing/deleting the linked transaction in
+  Budget is not reflected back onto the journal entry (a dangling `expenseId` is simply
+  treated as "no linked transaction" — `journalEntryHtml()` looks it up by id at render time
+  and shows nothing if it's gone).
+- **Write:** the whole array is re-saved on every entry add or delete.
+- **Merge-on-first-sign-in:** **no** — not one of the four keys with special merge behavior
+  (see above). A first sign-in on a browser with local-only journal entries and an account
+  that already has cloud journal entries will have the cloud copy win, same as every other
+  key not in that special list. If Journal turns out to need the same offline-safety
+  guarantee as Days/Photos/Widget-daily/Expenses, add it to that merge list explicitly rather
+  than assuming it already behaves that way.
+
 ### `wp-widget-config-v1`
 - **Purpose:** which optional widgets appear on the **My Day** detail page, in what order, plus
   any user-defined custom widgets. (Separate from My Space's own layout — key below.)

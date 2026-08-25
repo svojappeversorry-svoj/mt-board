@@ -65,6 +65,58 @@ Verified in this pass via direct `onSignedIn(...)`/`loginJustSucceeded` calls in
 note above about what can't be tested from here. All 8 checks above passed with zero console
 errors, across all 4 themes.
 
+## 4-tab restructuring (Today / Budget / Journal / You)
+
+Bottom nav is now Today / Budget / Journal / You instead of the old My Space / Budget / My Day /
+Media / Settings. "Today" is exactly the old My Day page promoted to the main daily dashboard;
+My Space, Media, and the old separate Settings/Profile screens still exist, just reached from
+"You" now instead of being separate bottom-nav destinations.
+
+- [ ] All 4 tabs (Today, Budget, Journal, You) open without console errors
+- [ ] Logging in (or reopening the app, or finishing onboarding) lands on **Today**, not My Space
+- [ ] "You" tab shows Profile (avatar/name/email/sign out) stacked directly above Settings
+      (appearance/My Space/Daily Page Widgets/regional/notifications/data & privacy/about) — one
+      continuous scroll, no back button needed since it's a bottom-nav tab
+- [ ] From You → "Manage My Space" opens My Space, which now has its **own** back button
+      (top-left) that returns to You
+- [ ] From You → Data & Privacy → "Media Files" opens Media, whose back button returns to You
+- [ ] From You → "Daily Page Widgets" → customize opens the Widget Library, whose back button
+      returns to You
+- [ ] Tapping the header brand logo goes to Today (not My Space)
+- [ ] **Journal**: composer at the top (date, text, mood slider + face, vibe tag chips, photo
+      attach, optional "link a transaction" dropdown) and a chronological timeline below
+  - [ ] Saving an entry with text appears in the timeline immediately, grouped under a date header
+  - [ ] Mood slider updates the face shown in the composer live, and the saved entry shows that
+        same mood face
+  - [ ] Picking a vibe chip adds a pill (same colors/emoji as My Day's vibe pills); clicking the
+        pill's ✕ removes it before saving
+  - [ ] Adding a photo shows a thumbnail with a remove (✕) button before saving; the saved entry
+        shows the photo without the remove button
+  - [ ] Adding a transaction in Budget for today's date, then opening Journal, shows that
+        transaction as a linkable option; saving an entry with it linked shows the transaction's
+        amount/note under the entry
+  - [ ] Deleting an entry (with confirmation) removes it from the timeline; deleting the last
+        entry shows the "No entries yet" empty state
+- [ ] Onboarding's interactive tour spotlights exactly the 4 new nav buttons (Today → Budget →
+      Journal → You) with no console error — this depends on `TOUR_STEPS` and the `tour1..tour4`
+      pages in `ONB_PAGES` staying the same length; a mismatch throws when the tour tries to
+      render a step that doesn't exist
+- [ ] Finishing onboarding lands on Today with the Today tab visibly active
+
+**Result as of this pass:** verified via Playwright across all 4 themes at 390×844 — nav to all 4
+tabs, You showing both Profile and Settings sections, My Space/Media reachable and returning to
+You, a full Journal create→link-transaction→delete cycle, onboarding driven through real
+Next/Skip button clicks into and out of the tour and to completion, brand-logo click. Zero
+console errors in any of it.
+
+**Known pre-existing issue, unrelated to this restructuring:** at 375px width, the Today tab
+(`.day-widget-cell` mood widget) overflows horizontally by ~20px. Confirmed via a fresh, isolated
+landing on Today with zero navigation — `buildDateView()`/the mood widget markup were not
+touched by this restructuring (Today is exactly the old My Day page), so this is a latent issue
+in that existing layout, not something the 4-tab change introduced. Left as-is; worth a small
+follow-up fix (likely the `.mood-row`/mood-slider width at very narrow viewports) outside the
+scope of this pass.
+
 ## Things that can't be tested from this sandboxed environment
 
 - **Real Supabase sign-up/sign-in against PROD** — deliberately not attempted, to avoid touching
