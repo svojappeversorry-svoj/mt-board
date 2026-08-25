@@ -5,6 +5,14 @@ This is a from-the-code inventory of every `data_key` the Web app reads or write
 client can read and write the *exact* same shapes without guessing — nothing here was
 redesigned; it's a transcription of `index.html` as it stands.
 
+**Re-verified against the code on 2026-08-25.** Four small discrepancies from the first pass
+of this document were found and corrected (nothing in the *app* changed, only the doc):
+`wp-photos-v1` was missing its 20-photos-per-day limit and the note that `caption`/`event`/
+`favorite`/`location`/`tags` have no UI yet; the built-in `steps` widget's `kind` was
+mis-described as implicit when it's actually declared explicitly (`kind:'number'`); and
+`wp-expense-currencies-v1` was missing the note that only 5 currency codes are actually
+selectable through the UI today. See the relevant sections below for details.
+
 ## How storage actually works (applies to every key below)
 
 Every key goes through two functions defined near the top of the app's `<script>`:
@@ -142,6 +150,11 @@ another device.
   | `createdAt` | number  | `Date.now()` at upload time |
   | `order`     | number  | position among that day's photos |
 
+- **Limit:** at most 20 photos per day (`MAX_PHOTOS_PER_DAY`) — the add button disables past that.
+- **Fields with no UI yet:** `caption`, `event`, `favorite`, `location`, and `tags` are part of the
+  stored shape and initialized on every upload, but nothing in the current app reads or lets a
+  user set them — there is no caption/tag editor anywhere today. Treat them as reserved for a
+  future feature, not as data any existing screen depends on.
 - **Write:** the whole array (for that day, inside the whole object) is re-saved on any add,
   edit, delete, or reorder.
 - **Merge-on-first-sign-in:** yes, per-date-key union.
@@ -189,7 +202,7 @@ another device.
   | `counter`   | number ≥ 0 |
   | `rating`    | number, 0–5 |
   | `checklist` | `{ id: number, title: string, done: boolean }[]` |
-  | *(the built-in `steps` widget has no explicit `kind` but is stored as a plain number)* | number |
+  | *(the built-in `steps` widget explicitly declares `kind:'number'`)* | number |
 
 - **Write:** the whole object re-saved on every widget-value change.
 - **Merge-on-first-sign-in:** yes, per-date-key union.
@@ -254,6 +267,10 @@ another device.
 - **Purpose:** which currencies are currently tracked in Budget.
 - **Shape:** `string[]` of currency codes.
 - **Default:** `["EUR","RSD"]`.
+- **Current selectable domain:** the "+ Currency" picker only offers
+  `["EUR","RUB","USD","RSD","GEL"]` (`ALLOWED_CURRENCIES`) — this is a UI constraint, not
+  something storage enforces, so don't assume every stored currency code is necessarily one of
+  these five (older/edited records could in principle hold anything).
 - **Write:** on "+ Currency".
 
 ### `wp-expense-display-ccy-v1`

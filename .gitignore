@@ -1,0 +1,23 @@
+# Local secrets — nothing in this repo currently needs a .env (the Web app's Supabase anon
+# key is meant to be public and is committed directly in index.html by design), but the
+# upcoming iOS/Capacitor work will likely introduce local config files that must never be
+# committed. Ignoring these patterns now costs nothing and closes that door before it opens.
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.mobileprovision
+*.keystore
+*.jks
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+
+# Common iOS/Xcode build output, in case the future Capacitor project lives in this same repo
+xcuserdata/
+DerivedData/
+build/
+Pods/

@@ -120,9 +120,65 @@ create policy "individuals can delete their own app_data"
 
 Either sign up normally through a future test client once it exists, or create them directly:
 **Authentication → Users → Add user**. This gives you a ready-made account to test against
-before any iOS code exists.
+before any iOS code exists — and you'll need one anyway for step 6 below.
+
+### 6. (Optional) Seed some realistic test data
+
+Once you have a test user (step 5), you can pre-populate their account with data shaped exactly
+like what the real Web app writes — useful for testing an iOS reader before it can write its own
+data yet. This is optional; skip it if you'd rather start from a genuinely empty account.
+
+1. **Authentication → Users**, click your test user, and copy their **User UID**.
+2. **SQL Editor → New query**, paste the block below, replace `'PASTE-USER-UID-HERE'` (both
+   places) with that UID, and run it.
+
+```sql
+-- Seeds one theme choice + one day record (today) with a mood, some water, and one task —
+-- matching the exact shapes documented in docs/DATA_CONTRACTS.md. Adjust the date and values
+-- freely; this is just a realistic starting point, not a fixed requirement.
+insert into public.app_data (user_id, data_key, data) values
+  ('PASTE-USER-UID-HERE', 'wp-theme-v5', '"berry"'),
+  ('PASTE-USER-UID-HERE', 'wp-appearance-v1', '"system"'),
+  ('PASTE-USER-UID-HERE', 'wp-onboarding-complete-v1', 'true'),
+  ('PASTE-USER-UID-HERE', 'wp-days-v5', jsonb_build_object(
+     to_char(now(), 'YYYY-MM-DD'), jsonb_build_object(
+       'mood', 3,
+       'water', 0,
+       'waterMl', 500,
+       'waterLog', jsonb_build_array(250, 250),
+       'sleep', 7.5,
+       'todos', jsonb_build_array(
+         jsonb_build_object('text', 'Try the DEV environment', 'done', false, 'vibe', '')
+       ),
+       'notes', 'Seeded test data — safe to delete.',
+       'vibes', jsonb_build_array()
+     )
+   ))
+on conflict (user_id, data_key) do update set data = excluded.data, updated_at = now();
+```
+
+3. Sign into that test account (through the Web app pointed at DEV, if you ever run it there, or
+   later through the iOS client) and confirm the seeded day/theme show up correctly.
 
 ---
+
+## Indexes
+
+No indexes beyond the table's own primary key are needed. Every query the app makes
+(`select`/`upsert`/`delete`, all filtered by `user_id`, sometimes also by `data_key`) is already
+covered by the `primary key (user_id, data_key)` in the schema above — Postgres uses that same
+key as its lookup index for free. Nothing to add here unless a future admin/sync tool needs to
+query by `updated_at` across users, which nothing does today.
+
+## Storage buckets
+
+**Not needed.** The current app doesn't use Supabase Storage at all — photos and custom stickers
+are stored as base64 `data:` URLs directly inside `app_data`'s `jsonb` column (see
+`docs/DATA_CONTRACTS.md` → `wp-photos-v1` / `wp-customstickers-v5`). A DEV project needs no
+Storage bucket to be a faithful match of PROD's current architecture. Moving photos to real
+Storage buckets is a real future improvement (smaller `app_data` rows, a CDN for images) but it's
+a deliberate architecture change, not a prerequisite for iOS parity — do it later, as its own
+task, against DEV first, once it's actually being planned.
 
 ## Why this separation matters
 
@@ -130,3 +186,21 @@ Without a separate project, any iOS-side experiment (signing up test users, writ
 `data_key` payloads while the Swift-side reader is still being built, running bulk test data
 scripts) would land in the exact same `app_data` table your real Web users' rows live in. The DEV
 project gives iOS development a completely isolated place to break things safely.
+
+---
+
+## Checklist: what "done" looks like
+
+When you come back to this after creating the project, you're fully set up once all of these
+are true:
+
+- [ ] DEV project created in the Supabase dashboard
+- [ ] Its Project URL and anon key are pasted into the "DEV" section at the top of this file
+- [ ] The `app_data` table + its 4 RLS policies exist in DEV (step 3)
+- [ ] Auth → Email provider is enabled in DEV (step 4)
+- [ ] (Optional) A test account exists in DEV (step 5)
+- [ ] (Optional) That test account has some seeded data (step 6)
+
+At that point, come back and share this session the DEV Project URL + anon key, and the actual
+iOS/Capacitor work can begin against a fully working, isolated environment — with
+`docs/DATA_CONTRACTS.md` already telling that work exactly what shape to read and write.

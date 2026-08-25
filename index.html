@@ -1241,10 +1241,9 @@
   .page.active{ display:block; }
   .page-inner{ max-width:1000px; margin:0 auto; width:100%; position:relative; }
   /* ===== YEAR VIEW ===== */
-  .year-view{ display:none; }
+  .year-view{ display:none; position:relative; }
   .year-view.active{ display:block; padding: 22px 16px calc(60px + var(--nav-height) + var(--safe-bottom)); }
   .year-view-inner{ max-width:1000px; margin:0 auto; position:relative; z-index:2; }
-  .year-view{ position:relative; }
   .year-scene{ position:absolute; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
   .year-hero{ text-align:center; margin-bottom:6px; }
   .year-num{ font-family:var(--font-xl); font-weight:400; font-size:clamp(64px, 16vw, 140px); line-height:0.9; color:var(--ink); text-shadow: 0 1px 4px rgba(0,0,0,0.35), 0 2px 16px rgba(0,0,0,0.22); }
@@ -2561,7 +2560,7 @@ const STRINGS = {
     // auth / login
     authTagline:'Your space. Your rules. Your story.', email:'Email', password:'Password',
     signUp:'Sign up', logIn:'Log in', continueOffline:'Continue without an account (this device only)',
-    authErrEmailPass:'enter an email and a password (6+ chars)', authCreating:'creating your account…',
+    authErrEmailPass:'enter an email and a password (8+ chars)', authCreating:'creating your account…',
     authCheckEmail:'check your email to confirm, then log in', authErrEmailPass2:'enter your email and password',
     authLoggingIn:'logging in…', authOfflineNotice:"Supabase isn't connected yet — you can still use the board on this device.",
     // year view
@@ -2627,7 +2626,7 @@ const STRINGS = {
     back:'← Back', save:'Save', cancel:'Cancel', offlineNote:'Sign in with an account to sync settings across devices — currently saved on this device only.',
     widgetLibraryLink:'🧩 Daily Page Widgets', customizeArrow:'Customize →',
     enterNewEmail:'enter a new email first', updating:'updating…', checkNewEmail:'check your new email to confirm the change',
-    passwordTooShort:'password needs 6+ characters', passwordUpdated:'password updated',
+    passwordTooShort:'password needs 8+ characters', passwordUpdated:'password updated',
     deleteAllConfirm:'Delete ALL your SVOJ data? This cannot be undone.',
     deleteAllConfirm2:'Really sure? Every day, month, expense and setting will be permanently erased.',
     cloudDeleteError:'could not delete cloud data: {msg}',
@@ -2645,7 +2644,7 @@ const STRINGS = {
     stickerSheetTitle:'Stick it!', stickerSheetClose:'close', uploadStickers:'+ Upload stickers',
     stickersAddedCount:'{n} / {max} added', noStickersYet:'no stickers yet — upload some above',
     deleteSticker:'delete sticker', pickerDone:'done', resizeSticker:'resize', rotateSticker:'rotate',
-    stickerPackCustom:'My stickers', stickerPackDigitalChrome:'Digital Chrome', stickerPackY2kVixen:'Y2K Vixen',
+    stickerPackCustom:'My stickers', stickerPackDigitalChrome:'Digital Chrome', stickerPackY2kVixen:'Pink Pop',
     stickerPackDarkRomance:'Dark Romance', stickerPackPetalBotanical:'Botanical',
     // onboarding
     onbNext:'next →', onbBack:'← back', onbSkip:'skip', onbSkipTour:'Skip tour', onbEnterSpace:'Enter SVOJ',
@@ -2895,7 +2894,7 @@ if(sb){
   document.getElementById('authSignupBtn').addEventListener('click', async ()=>{
     const email = document.getElementById('authEmail').value.trim();
     const password = document.getElementById('authPassword').value;
-    if(!email || password.length < 6){ showAuthMsg(t('authErrEmailPass'), 'error'); return; }
+    if(!email || password.length < 8){ showAuthMsg(t('authErrEmailPass'), 'error'); return; }
     showAuthMsg(t('authCreating'), '');
     const { error } = await sb.auth.signUp({ email, password });
     if(error) showAuthMsg(error.message, 'error');
@@ -3050,6 +3049,9 @@ const stkInput = document.getElementById('stkInput');
 const stkUploadBtn = document.getElementById('stkUploadBtn');
 stkUploadBtn.addEventListener('click', ()=> stkInput.click());
 function resizeImagePNG(file, maxSize){
+  // Resolves null (never rejects) on a corrupt/non-image file, matching resizeImageJPEG's
+  // existing error handling — previously a bad file left this promise unresolved forever,
+  // silently hanging the sticker-upload loop for the rest of that session.
   return new Promise((resolve)=>{
     const reader = new FileReader();
     reader.onload = (e)=>{
@@ -3062,8 +3064,10 @@ function resizeImagePNG(file, maxSize){
         c.getContext('2d').drawImage(img, 0, 0, width, height);
         resolve(c.toDataURL('image/png'));
       };
+      img.onerror = ()=> resolve(null);
       img.src = e.target.result;
     };
+    reader.onerror = ()=> resolve(null);
     reader.readAsDataURL(file);
   });
 }
@@ -3094,7 +3098,7 @@ stkInput.addEventListener('change', async (e)=>{
   const room = MAX_STICKERS - customStickers.length;
   for(const file of files.slice(0, Math.max(0,room))){
     const dataURL = await resizeImagePNG(file, 240);
-    customStickers.push({ id: Date.now()+Math.random(), src: dataURL });
+    if(dataURL) customStickers.push({ id: Date.now()+Math.random(), src: dataURL });
   }
   save('wp-customstickers-v5', customStickers);
   renderStickerSheetGrid();
@@ -3521,7 +3525,7 @@ function fmtWaterMl(ml){ return Math.max(0,Math.round(ml)).toLocaleString('en-US
 function vibePillsHtml(ids){
   return ids.map(id=>{
     const v = vibeDefById(id); if(!v) return '';
-    return `<span class="vibe-pill" style="--pbg1:${v.c1}; --pbg2:${v.c2}; --pfg:${v.fg}">${v.emoji} ${vibeLabel(v)}<span class="x" data-vibe="${id}">✕</span></span>`;
+    return `<span class="vibe-pill" style="--pbg1:${v.c1}; --pbg2:${v.c2}; --pfg:${v.fg}">${v.emoji} ${vibeLabel(v).replace(/</g,'&lt;')}<span class="x" data-vibe="${id}">✕</span></span>`;
   }).join('');
 }
 function vibeChipHtml(key, v, selected){
@@ -4754,7 +4758,7 @@ function buildMonthView(monthIdx, year){
     <div class="note month-section">
       <div class="pin"></div>
       <h3 class="month-section-title">${t('notes')}</h3>
-      <textarea class="month-notes-area" id="monthNotesArea" placeholder="${t('notesPlaceholder')}">${monthNotes}</textarea>
+      <textarea class="month-notes-area" id="monthNotesArea" placeholder="${t('notesPlaceholder')}">${monthNotes.replace(/</g,'&lt;')}</textarea>
     </div>
   `;
   document.getElementById('monthPrevBtn').addEventListener('click', ()=> shiftMonthView(-1));
@@ -4894,7 +4898,7 @@ function renderMonthRecap(){
     <div class="pin"></div>
     <h3 class="month-section-title">${t('monthlyRecapTitle')}</h3>
     <div class="month-recap-grid">
-      ${cards.map(c=> `<div class="month-recap-card"><span class="month-recap-icon">${c.icon}</span><div class="month-recap-text"><span class="month-recap-value">${(c.value+'').replace(/</g,'&lt;')}</span><span class="month-recap-label">${c.label}</span></div></div>`).join('')}
+      ${cards.map(c=> `<div class="month-recap-card"><span class="month-recap-icon">${c.icon}</span><div class="month-recap-text"><span class="month-recap-value">${(c.value+'').replace(/</g,'&lt;')}</span><span class="month-recap-label">${(c.label+'').replace(/</g,'&lt;')}</span></div></div>`).join('')}
     </div>
   `;
 }
@@ -5030,7 +5034,7 @@ function specialWidgetHtml(widgetId, key, dd){
   if(widgetId === 'notes'){
     return `<div class="wide-block">
         <div class="habit-label">${t('notesLabel')}</div>
-        <textarea class="day-notes" placeholder="${t('whatHappenedPlaceholder')}" data-key="${key}">${dd.notes}</textarea>
+        <textarea class="day-notes" placeholder="${t('whatHappenedPlaceholder')}" data-key="${key}">${dd.notes.replace(/</g,'&lt;')}</textarea>
       </div>`;
   }
   return '';
@@ -5415,7 +5419,7 @@ function buildProfileView(){
     });
     document.getElementById('changePasswordBtn').addEventListener('click', async ()=>{
       const newPassword = document.getElementById('newPasswordInput').value;
-      if(!newPassword || newPassword.length < 6){ secMsg.textContent = t('passwordTooShort'); secMsg.className = 'settings-msg error'; return; }
+      if(!newPassword || newPassword.length < 8){ secMsg.textContent = t('passwordTooShort'); secMsg.className = 'settings-msg error'; return; }
       secMsg.textContent = t('updating'); secMsg.className = 'settings-msg';
       const { error } = await sb.auth.updateUser({ password: newPassword });
       if(error){ secMsg.textContent = error.message; secMsg.className = 'settings-msg error'; }
@@ -5528,7 +5532,7 @@ function genericWidgetHtml(def, key){
   const dayVal = ensureWidgetDay(key)[def.id];
   const labelRow = `<div class="habit-label">${def.icon} ${(def.label||'').replace(/</g,'&lt;')}</div>${def.description?`<div class="widget-desc">${def.description.replace(/</g,'&lt;')}</div>`:''}`;
   if(def.kind === 'text'){
-    return `<div class="wide-block">${labelRow}<textarea class="day-notes widget-text" data-widget="${def.id}" data-key="${key}" placeholder="…">${dayVal||''}</textarea></div>`;
+    return `<div class="wide-block">${labelRow}<textarea class="day-notes widget-text" data-widget="${def.id}" data-key="${key}" placeholder="…">${(dayVal||'').replace(/</g,'&lt;')}</textarea></div>`;
   }
   if(def.kind === 'number'){
     const n = typeof dayVal === 'number' ? dayVal : '';
@@ -6394,7 +6398,7 @@ function buildWidgetsView(){
         <div class="widget-order-row">
           <button type="button" class="widget-arrow-btn" data-move="${id}" data-delta="-1" ${i===0?'disabled':''}>▲</button>
           <button type="button" class="widget-arrow-btn" data-move="${id}" data-delta="1" ${i===enabledDefs.length-1?'disabled':''}>▼</button>
-          <span class="widget-order-label">${def.icon} ${def.label}${def.isCustom?` <span class="widget-order-sub">(${t('customWidgets')})</span>`:''}</span>
+          <span class="widget-order-label">${def.icon} ${(def.label+'').replace(/</g,'&lt;')}${def.isCustom?` <span class="widget-order-sub">(${t('customWidgets')})</span>`:''}</span>
           <button type="button" class="widget-remove-btn" data-remove="${id}">${t('remove')}</button>
         </div>`).join('') : `<div class="month-goal-empty">${t('noWidgetsEnabled')}</div>`}
     </div>
