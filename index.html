@@ -2260,7 +2260,6 @@
   .journal-icon-btn:hover{ border-color:var(--accent); color:var(--accent); }
   .journal-explore-btn{ font-family:var(--font-mono); font-weight:700; font-size:10.5px; text-transform:uppercase; letter-spacing:0.4px; padding:0 13px; }
   .journal-explore-btn.active{ background:var(--accent); border-color:var(--accent); color:#fff; }
-  .journal-hidden-date-input{ position:absolute; width:1px; height:1px; opacity:0; pointer-events:none; }
 
   .journal-prompt-card{ text-align:center; padding:26px 16px; }
   .journal-prompt-text{ font-family:var(--font-hand); font-size:17px; color:var(--ink); margin-bottom:16px; }
@@ -2273,6 +2272,8 @@
   .journal-moment-type{ font-family:var(--font-mono); font-weight:700; font-size:10px; text-transform:uppercase; letter-spacing:0.5px; color:var(--ink-dim); }
   .journal-moment-title{ font-family:var(--font-ui); font-weight:700; font-size:14.5px; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:1px; }
   .journal-moment-badge{ flex-shrink:0; font-size:13px; opacity:0.65; }
+  .journal-moment-unavailable{ opacity:0.55; }
+  .journal-moment-unavailable .journal-moment-title{ font-style:italic; }
   .journal-keep-another{ display:block; width:100%; text-align:center; margin-top:16px; padding:13px; }
 
   /* ---- Keep-a-Moment / detail sheet content (lives inside the existing
@@ -2487,7 +2488,6 @@
     <div id="journalSheetBody"></div>
   </div>
 </div>
-<input type="date" id="journalDateInput" class="journal-hidden-date-input" tabindex="-1" aria-hidden="true">
 <div class="photo-viewer" id="journalPhotoViewer">
   <div class="photo-viewer-inner">
     <img id="journalPhotoViewerImg" src="" alt="">
@@ -2847,6 +2847,8 @@ const STRINGS = {
     journalExploreEmpty:'No public discoveries yet — be the first to share one.',
     journalExploreUnavailable:"Explore needs an account — sign in to discover what others are sharing.",
     journalExploreLoadError:"Explore couldn't load right now — try again later.",
+    journalSourceUnavailableShort:'No longer available', journalSourceUnavailableTitle:'This discovery is no longer available',
+    journalSourceUnavailableDetail:'Its author made it private. This saved copy will be removed automatically in a couple of days.',
     journalByAuthor:'by {name}',
     // Phase 2 — Settings additions
     myProfile:'My Profile', profileName:'Name', profileNamePlaceholder:'Your name', profileAvatar:'Avatar',
@@ -3902,11 +3904,13 @@ function buildYearView(){
   sw.innerHTML = THEMES.map(t=> `<button type="button" class="theme-swatch ${currentTheme===t.key?'active':''}" data-theme="${t.key}">${t.label}</button>`).join('');
   sw.querySelectorAll('.theme-swatch').forEach(btn=> btn.addEventListener('click', ()=> setTheme(btn.dataset.theme)));
 }
-function showMonthView(monthIdx, year){
+function showMonthView(monthIdx, year, pickCallback){
   hideAllViews();
+  monthViewPickCallback = pickCallback || null;
   document.getElementById('monthView').classList.add('active');
   buildMonthView(monthIdx, year==null ? APP_YEAR : year);
-  setActiveNavTab('settings', 'space');
+  if(monthViewPickCallback) setActiveNavTab('journal');
+  else setActiveNavTab('settings', 'space');
 }
 function monthKeyOf(monthIdx, year){ return year + '-' + String(monthIdx+1).padStart(2,'0'); }
 function shiftMonthView(delta){
@@ -3917,6 +3921,13 @@ function shiftMonthView(delta){
 
 let monthGoals = [], monthFavorites = [];
 let currentMonthKey = null;
+// Set only by Journal's calendar button (see journalOpenDatePicker) — turns this same Month
+// view into a plain date picker (header + weekday grid only, no Goals/Expenses/Favorites/
+// Notes) that hands the tapped date back to Journal instead of opening the Day view. Always
+// passed explicitly through showMonthView() rather than left to go stale, so every OTHER way
+// of reaching Month view (the My Space "calendar" widget, Settings → My Space → a month tile)
+// is completely unaffected and keeps behaving exactly as before.
+let monthViewPickCallback = null;
 
 /* ============ EXPENSES — unified data model (one record, shown from both Month and Day) ============ */
 const EXPENSE_CATEGORIES = ['Food','Transport','Shopping','Bills','Entertainment','Health','Travel','Home','Subscriptions','Other'];
@@ -4838,12 +4849,63 @@ function saveJournalMoments(){ save('wp-journal-moments-v1', journalMoments); }
     if(!m.location || typeof m.location !== 'object'){ m.location = null; }
     if(m.visibility !== 'public'){ m.visibility = 'private'; }
     if(!m.savedFrom || typeof m.savedFrom !== 'object'){ m.savedFrom = null; }
+    if(typeof m.sourceUnavailable !== 'boolean'){ m.sourceUnavailable = false; }
+    if(typeof m.unavailableSince !== 'number'){ m.unavailableSince = null; }
     if(typeof m.createdAt !== 'number'){ m.createdAt = Date.now(); changed = true; }
     if(typeof m.updatedAt !== 'number'){ m.updatedAt = m.createdAt; changed = true; }
     if(typeof m.publishedAt !== 'number'){ m.publishedAt = null; }
   });
   if(changed) saveJournalMoments();
+  if(journalPruneExpiredUnavailable()) saveJournalMoments();
 })();
+
+/* ---- Explore provenance check: if I saved someone else's public moment and its author has
+   since made it private again, my local copy must stop carrying their content — this is the
+   privacy guarantee "Make Private" promises them, and it applies retroactively to anyone who
+   already saved a copy, not just to future Explore visitors. Rather than deleting the entry
+   from MY journal without warning (confusing — it's still mine, I did nothing wrong) or
+   leaving it as a full independent copy forever (defeats the author's Make Private), the
+   content itself is scrubbed and replaced with a plain "no longer available" placeholder,
+   keeping only that something was once saved from Explore — and even that placeholder is
+   temporary: 48 hours after being scrubbed, the whole entry is removed for good
+   (journalPruneExpiredUnavailable), so a dead "no longer available" card never lingers
+   indefinitely. Re-checked every time such a moment is actually rendered (Journal is opened,
+   or the moment's own detail is opened) — journalCheckedSourceIds only guards against firing
+   a second, redundant in-flight request for the same id at the same instant; a "still public"
+   result is deliberately NOT cached past that, since the whole point is to keep noticing if
+   the author revokes it later. Never runs on a timer/schedule, and never for moments that
+   aren't saved-from-Explore copies. */
+const JOURNAL_UNAVAILABLE_TTL_MS = 48 * 60 * 60 * 1000;
+const journalCheckedSourceIds = new Set();
+function journalPruneExpiredUnavailable(){
+  const before = journalMoments.length;
+  journalMoments = journalMoments.filter(m=> !(m.sourceUnavailable && m.unavailableSince && (Date.now() - m.unavailableSince) > JOURNAL_UNAVAILABLE_TTL_MS));
+  return journalMoments.length !== before;
+}
+async function journalCheckSavedSource(m){
+  if(!m.savedFrom || m.sourceUnavailable || !sb) return;
+  if(journalCheckedSourceIds.has(m.id)) return; // a check for this id is already in flight
+  journalCheckedSourceIds.add(m.id);
+  try{
+    const { data, error } = await sb.from(JOURNAL_PUBLIC_TABLE).select('id').eq('id', m.savedFrom.momentId).maybeSingle();
+    if(error) throw error;
+    if(!data){
+      m.title = ''; m.description = ''; m.image = ''; m.thumb = ''; m.externalUrl = '';
+      m.location = null; m.artist = ''; m.sourceUnavailable = true; m.unavailableSince = Date.now(); m.updatedAt = Date.now();
+      saveJournalMoments();
+      // Rare compound case: I had re-shared MY saved copy publicly too — push the now-scrubbed
+      // (empty) content up so Explore never shows content I no longer have locally.
+      if(m.visibility === 'public') journalSyncPublic(m);
+      // only refresh the screen if Journal is still showing the date this moment lives on —
+      // otherwise leave it, the next real render already reads the updated data from disk
+      if(journalMode === 'day' && journalViewedDate === m.date) buildJournalDayView();
+    }
+  } catch(err){
+    console.warn('journal saved-source check failed', err);
+  } finally {
+    journalCheckedSourceIds.delete(m.id); // always released — a "still public" result must be re-checked again next time, not cached forever
+  }
+}
 
 function journalMomentsForDate(dateKey){ return journalMoments.filter(m=> m.date===dateKey).sort((a,b)=> a.createdAt-b.createdAt); }
 function journalFindMoment(id){ return journalMoments.find(m=> m.id===id); }
@@ -4919,15 +4981,43 @@ function journalDateHeading(dateKey){
     ? { weekday:'long', month:'long', day:'numeric' }
     : { weekday:'long', month:'long', day:'numeric', year:'numeric' });
 }
+// Opens the app's own Month calendar (the same page reached from My Space's "calendar"
+// widget — see buildMonthView's pickMode) instead of the browser's native <input type=date>
+// popup, so travelling to a previous Journal day looks and feels like the rest of SVOJ rather
+// than a generic OS control. Tapping a day hands it straight back to Journal; the Month view's
+// own prev/next-month arrows work exactly as they always do.
 function journalOpenDatePicker(){
-  const input = document.getElementById('journalDateInput');
-  input.value = journalViewedDate;
-  input.max = dateKeyOf(todayReal);
-  input.onchange = ()=>{ if(input.value){ journalViewedDate = input.value; journalMode = 'day'; buildJournalView(); } };
-  if(input.showPicker){ try{ input.showPicker(); return; }catch(e){} }
-  input.click();
+  const d = parseDateKey(journalViewedDate);
+  showMonthView(d.getMonth(), d.getFullYear(), (dateKey)=>{
+    journalViewedDate = dateKey;
+    journalMode = 'day';
+    monthViewPickCallback = null;
+    hideAllViews();
+    document.getElementById('journalView').classList.add('active');
+    buildJournalView();
+    setActiveNavTab('journal');
+  });
+}
+// "← Journal" from inside the picker, without choosing a date — returns to whatever date/mode
+// Journal was already showing (picking a date is the only thing that changes journalViewedDate).
+function journalCancelDatePicker(){
+  monthViewPickCallback = null;
+  hideAllViews();
+  document.getElementById('journalView').classList.add('active');
+  buildJournalView();
+  setActiveNavTab('journal');
 }
 function journalMomentCardHtml(m){
+  if(m.sourceUnavailable){
+    return `
+      <button type="button" class="journal-moment-card journal-moment-unavailable" data-journal-moment="${m.id}">
+        <div class="journal-moment-icon">🚫</div>
+        <div class="journal-moment-body">
+          <div class="journal-moment-type">${t('journalSourceUnavailableShort')}</div>
+          <div class="journal-moment-title">${journalEsc(t('journalSourceUnavailableTitle'))}</div>
+        </div>
+      </button>`;
+  }
   const label = t(MOMENT_TYPE_LABEL_KEY[m.type]);
   const thumb = m.thumb || (m.type==='photo' ? m.image : '');
   return `
@@ -4941,6 +5031,7 @@ function journalMomentCardHtml(m){
     </button>`;
 }
 function buildJournalDayView(){
+  if(journalPruneExpiredUnavailable()) saveJournalMoments();
   const el = document.getElementById('journalView');
   const dateKey = journalViewedDate;
   const isToday = dateKey === dateKeyOf(todayReal);
@@ -4975,6 +5066,7 @@ function buildJournalDayView(){
   el.querySelectorAll('[data-journal-moment]').forEach(card=>{
     card.addEventListener('click', ()=> journalOpenMomentDetail(card.dataset.journalMoment));
   });
+  moments.forEach(m=> journalCheckSavedSource(m));
 }
 
 /* ---- Keep a Moment: type picker → per-type form → save ---- */
@@ -5119,6 +5211,19 @@ function journalBindMomentForm(type, m){
 function journalOpenMomentDetail(id){
   const m = journalFindMoment(id);
   if(!m) return;
+  if(m.sourceUnavailable){
+    document.getElementById('journalSheetTitle').textContent = t('journalSourceUnavailableShort');
+    document.getElementById('journalSheetClose').textContent = t('stickerSheetClose');
+    document.getElementById('journalSheetBody').innerHTML = `
+      <div class="journal-moment-detail-desc">${t('journalSourceUnavailableDetail')}</div>
+      <div class="moment-form-actions">
+        <button type="button" class="add-btn-outline" id="momentDeleteBtn">${t('journalDelete')}</button>
+      </div>`;
+    document.getElementById('momentDeleteBtn').addEventListener('click', ()=> journalDeleteMoment(m.id));
+    document.getElementById('journalSheet').classList.add('open');
+    return;
+  }
+  journalCheckSavedSource(m);
   const label = t(MOMENT_TYPE_LABEL_KEY[m.type]);
   document.getElementById('journalSheetTitle').textContent = label;
   document.getElementById('journalSheetClose').textContent = t('stickerSheetClose');
@@ -5255,6 +5360,7 @@ function favPresets(){
 
 function buildMonthView(monthIdx, year){
   const monthEl = document.getElementById('monthView');
+  const pickMode = !!monthViewPickCallback;
   currentMonthKey = monthKeyOf(monthIdx, year);
   const first = new Date(year, monthIdx, 1);
   const daysInMonth = new Date(year, monthIdx+1, 0).getDate();
@@ -5271,11 +5377,14 @@ function buildMonthView(monthIdx, year){
     </button>`;
   }
 
-  monthGoals = load('wp-month-goals-v1-'+currentMonthKey, []);
-  monthFavorites = load('wp-month-favorites-v1-'+currentMonthKey, []);
-  const monthNotes = load('wp-month-notes-v1-'+currentMonthKey, '');
+  if(!pickMode){
+    monthGoals = load('wp-month-goals-v1-'+currentMonthKey, []);
+    monthFavorites = load('wp-month-favorites-v1-'+currentMonthKey, []);
+  }
+  const monthNotes = pickMode ? '' : load('wp-month-notes-v1-'+currentMonthKey, '');
 
   monthEl.innerHTML = `
+    ${pickMode ? `<button type="button" class="back-link" id="monthPickBackBtn">${t('journalBackToJournal')}</button>` : ''}
     <div class="date-nav-row">
       <button type="button" class="back-link" id="monthPrevBtn" aria-label="${t('previousMonth')}">‹</button>
       <h2 class="month-view-title" style="margin:0;">${monthFullName(monthIdx, year)} <span class="month-view-year">${year}</span></h2>
@@ -5284,6 +5393,7 @@ function buildMonthView(monthIdx, year){
     <div class="cal-weekdays">${[0,1,2,3,4,5,6].map(i=> `<span>${weekdayShortName(new Date(REFERENCE_MONDAY.getFullYear(), REFERENCE_MONDAY.getMonth(), REFERENCE_MONDAY.getDate()+i))}</span>`).join('')}</div>
     <div class="cal-grid">${cells}</div>
 
+    ${pickMode ? '' : `
     <div class="note month-section month-recap-section" id="monthRecapSection"></div>
 
     <div class="note month-section">
@@ -5339,9 +5449,15 @@ function buildMonthView(monthIdx, year){
       <h3 class="month-section-title">${t('notes')}</h3>
       <textarea class="month-notes-area" id="monthNotesArea" placeholder="${t('notesPlaceholder')}">${monthNotes.replace(/</g,'&lt;')}</textarea>
     </div>
+    `}
   `;
   document.getElementById('monthPrevBtn').addEventListener('click', ()=> shiftMonthView(-1));
   document.getElementById('monthNextBtn').addEventListener('click', ()=> shiftMonthView(1));
+  if(pickMode){
+    document.getElementById('monthPickBackBtn').addEventListener('click', journalCancelDatePicker);
+    monthEl.querySelectorAll('.cal-cell[data-date]').forEach(btn=> btn.addEventListener('click', ()=> monthViewPickCallback(btn.dataset.date)));
+    return; // none of the Goals/Expenses/Favorites/Notes sections exist in pick mode
+  }
   monthEl.querySelectorAll('.cal-cell[data-date]').forEach(btn=> btn.addEventListener('click', ()=> showDateView(parseDateKey(btn.dataset.date))));
 
   renderMonthRecap();

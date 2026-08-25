@@ -200,6 +200,8 @@ another device.
   | `artist`      | string            | `song` only, optional, default `""` |
   | `visibility`  | string            | `'private' \| 'public'` — **always starts `'private'`**; flipped only by the explicit Make Public/Make Private action |
   | `savedFrom`   | object \| `null`  | set only when this moment was copied in via Explore's "Save to My Journal": `{ momentId: string (the public row's id), author: string }` — provenance only, this copy is fully independent afterward |
+  | `sourceUnavailable` | boolean     | `savedFrom`-only. `false` until `journalCheckSavedSource()` confirms the original public row is gone (the author made it private/deleted it), at which point `true` and every content field above (`title`/`description`/`image`/`thumb`/`externalUrl`/`location`/`artist`) is wiped to `''`/`null` — see "Revoking a saved copy" below |
+  | `unavailableSince` | number \| `null` | `Date.now()` at the moment `sourceUnavailable` flipped to `true`; `null` otherwise. Drives the 48-hour auto-removal below |
   | `createdAt`   | number            | `Date.now()` at save time; also the ordering key for moments on the same `date` |
   | `updatedAt`   | number            | bumped on every edit or visibility change |
   | `publishedAt` | number \| `null`  | `Date.now()` when last made public, `null` while private — this is what Explore sorts by |
@@ -221,6 +223,30 @@ another device.
   SQL to create it, and why this session cannot run that SQL for you. Until that table exists in
   your Supabase project, Make Public/Explore/Save-to-My-Journal are inert no-ops (fail silently,
   logged to the console) — every private Journal feature above works today regardless.
+- **Revoking a saved copy:** Make Private must actually revoke access, including from anyone who
+  already ran "Save to My Journal" on it — not just remove it from *future* Explore visitors.
+  `journalCheckSavedSource(m)` re-checks (by id, against `public_journal_moments`) every time a
+  `savedFrom` moment is actually rendered — opening Journal, or opening that moment's own detail
+  — whether its source still exists. A "still public" result is deliberately **not** cached past
+  that single check (only concurrent duplicate in-flight requests for the same id are
+  suppressed), so a later revocation is always eventually noticed the next time the moment is
+  viewed. Once confirmed gone, the local copy's content is wiped (see `sourceUnavailable` above)
+  and the card/detail show a plain "no longer available" placeholder instead of silently
+  deleting the entry (which would look like a bug to whoever saved it) or leaving a full
+  independent copy forever (which would defeat the author's Make Private). `journalMomentCardHtml()`/
+  `journalOpenMomentDetail()` special-case `sourceUnavailable` to render that placeholder; the
+  only action left on it is Delete. 48 hours after `unavailableSince`,
+  `journalPruneExpiredUnavailable()` (run on every sanitize pass and every `buildJournalDayView()`)
+  removes the entry outright, so a dead placeholder never lingers indefinitely either.
+- **Calendar navigation:** the 📅 button next to the date opens the app's own Month view
+  (`showMonthView(monthIdx, year, pickCallback)`) in a trimmed "pick mode" — a module-level
+  `monthViewPickCallback` set only for this call — showing just the header/weekday row/day grid
+  (no Goals/Expenses/Favorites/Notes sections) with a "← Journal" link back out, instead of a
+  browser-native `<input type="date">` popup. Tapping a day calls the callback straight back into
+  Journal on that date; every other way of reaching Month view (the My Space "calendar" widget,
+  a Year-view month tile) passes no callback and behaves exactly as it always did — pick mode is
+  never left dangling across unrelated navigation since `showMonthView()` always resets
+  `monthViewPickCallback` explicitly on entry, never leaves it from a previous call.
 
 ### `wp-widget-config-v1`
 - **Purpose:** which optional widgets appear on the **My Day** detail page, in what order, plus

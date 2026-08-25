@@ -247,6 +247,40 @@ theme is active, exactly like Budget/Media already do.
 - [ ] Everything outside Journal (Budget, Today, Media, Settings, onboarding, avatar system,
       theme switching) still works exactly as before this change
 
+## Journal follow-up — in-app calendar picker, and revoking a saved Explore copy
+
+Two fixes made after the initial Journal redesign shipped, based on real usage: (1) the 📅
+button opened a browser-native `<input type="date">` popup, which looked foreign next to the
+rest of SVOJ; (2) "Make Private" removed a moment from Explore but did nothing about a copy
+someone had already saved via "Save to My Journal" — that copy stayed a full, permanent,
+independent copy forever, which doesn't actually respect the author's choice to revoke it.
+
+- [ ] Tapping the 📅 button opens the app's own Month calendar (correct theme, weekday grid,
+      day cells) — never a native OS date-picker popup
+- [ ] The picker has no Goals/Expenses/Favorites/Notes sections (just the header, weekday row,
+      day grid, and a "← Journal" link) and the Journal tab stays highlighted in the bottom nav
+      while it's open
+- [ ] Tapping a day in the picker returns to Journal showing that date's moments (or the empty
+      state), and creating a moment there saves it under that date
+- [ ] Tapping "← Journal" without picking a day returns to whatever date Journal was already on
+- [ ] Leaving and reopening Journal via the bottom nav always resets to today, exactly as before
+- [ ] The **original** calendar entry point (My Space's "Calendar" widget → "Open →") is
+      completely unaffected: it still shows the full Month view with Goals/Expenses/Favorites/
+      Notes, and tapping a day still opens the Day view (My Day), not Journal — proving pick
+      mode never leaks into unrelated navigation
+- [ ] Save a public moment to your Journal via Explore, then have its author make it private
+      (or delete it) — the saved copy is NOT silently deleted and does NOT stay a full
+      independent copy: its content (title/description/image/link/location) is wiped and its
+      card/detail instead show a "no longer available" placeholder, with only Delete as an
+      action
+- [ ] This still works even if the moment was already viewed once *before* the author revoked
+      it (a "still public" result must never be cached permanently — it has to be re-checked
+      the next time the moment is rendered, not just the first time)
+- [ ] 48 hours after a moment is scrubbed this way, it's removed from Journal entirely on the
+      next visit — the placeholder itself doesn't linger forever
+- [ ] If I had *also* re-shared my saved copy publicly, and its source then goes away, my own
+      public copy gets the same scrub pushed to Explore too (no stale content left showing there)
+
 ## Things that can't be tested from this sandboxed environment
 
 - **Real Supabase sign-up/sign-in against PROD** — deliberately not attempted, to avoid touching
