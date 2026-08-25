@@ -176,38 +176,51 @@ another device.
   edit, delete, or reorder.
 - **Merge-on-first-sign-in:** yes, per-date-key union.
 
-### `wp-journal-v1`
-- **Purpose:** the Journal tab's timeline — freeform personal entries, each its own
-  self-contained record (a day can have zero, one, or several). Added for the 4-tab
-  restructuring (Today / Budget / Journal / You); not present in earlier versions of the app.
+### `wp-journal-moments-v1`
+- **Purpose:** the Journal tab's private moments — "things you found today worth keeping",
+  each its own self-contained record (a day can have zero, one, or several). This **replaces**
+  the earlier `wp-journal-v1` ("the Journal tab's timeline", a freeform mood/text diary) —
+  that key is retired: the app no longer reads or writes it, and its shape doesn't map onto
+  this one (diary entries vs. typed moments), so there is deliberately no migration between
+  them. An account with old `wp-journal-v1` data simply has it become an inert, orphaned
+  localStorage/`app_data` key — harmless, same as any other retired key elsewhere in this app.
 - **Shape:** a flat array of:
 
-  | field       | type       | notes |
-  |-------------|------------|-------|
-  | `id`        | string     | `crypto.randomUUID()`, or a timestamp+random fallback string |
-  | `date`      | string     | `dateKey` (`YYYY-MM-DD`) the entry is *about* — independent of `createdAt` |
-  | `text`      | string     | freeform entry text, default `""` |
-  | `mood`      | number \| `null` | 0–4, same scale/faces as `wp-days-v5.mood` (`moodFace()`) |
-  | `photos`    | array      | own attachments, **not** shared with `wp-photos-v1`: `{ id: string, src: string (data: URL, same resizeImageJPEG pipeline as Day photos) }[]`, capped at `MAX_PHOTOS_PER_DAY` (20) per entry |
-  | `expenseId` | string     | optional — id of a row in `wp-expenses-v1` for the same `date`, or `""` for no link |
-  | `createdAt` | number     | `Date.now()` at save time; also the tiebreaker for ordering multiple entries on the same `date` |
-  | `updatedAt` | number     | set equal to `createdAt` at save time (entries are delete-only today, never edited in place, so this never actually diverges from `createdAt` yet) |
+  | field         | type              | notes |
+  |---------------|-------------------|-------|
+  | `id`          | string            | `crypto.randomUUID()`, or a timestamp+random fallback string |
+  | `date`        | string            | `dateKey` (`YYYY-MM-DD`) the moment belongs to — the Journal date it was kept under, independent of `createdAt` |
+  | `type`        | string            | one of `'photo' \| 'place' \| 'song' \| 'movie' \| 'recipe' \| 'link' \| 'note'` |
+  | `title`       | string            | default `""` — optional for every type except place/song/movie/recipe, where it's that type's one required field |
+  | `description` | string            | freeform, always optional, default `""` |
+  | `image`       | string            | data URL, ~1000px/0.8 quality (`resizeImageJPEG`) — only ever set for `photo`, and optionally for `movie`/`recipe`; `""` otherwise. Only loaded into the DOM when the moment is actually opened, never in the list/card view |
+  | `thumb`       | string            | data URL, ~220px/0.72 quality, generated from the same source file as `image` in one pass (`journalProcessPhoto()`) — this is what every list/card/Explore grid actually renders, so opening Journal never has to decode a full-size photo |
+  | `externalUrl` | string            | data URL is never stored here — just the URL string itself, for `song`/`movie`/`recipe`/`link` (required for `link`, optional otherwise); `""` if none. Only ever rendered as a clickable `href` through `journalSafeUrl()`, which strips anything that isn't a plain `http(s)` link |
+  | `location`    | object \| `null`  | `place` only: `{ name: string, url: string }` (`url` optional — a pasted external map link, never map content itself) |
+  | `artist`      | string            | `song` only, optional, default `""` |
+  | `visibility`  | string            | `'private' \| 'public'` — **always starts `'private'`**; flipped only by the explicit Make Public/Make Private action |
+  | `savedFrom`   | object \| `null`  | set only when this moment was copied in via Explore's "Save to My Journal": `{ momentId: string (the public row's id), author: string }` — provenance only, this copy is fully independent afterward |
+  | `createdAt`   | number            | `Date.now()` at save time; also the ordering key for moments on the same `date` |
+  | `updatedAt`   | number            | bumped on every edit or visibility change |
+  | `publishedAt` | number \| `null`  | `Date.now()` when last made public, `null` while private — this is what Explore sorts by |
 
 - **Default:** `[]`.
-- **Deliberately NOT shared storage:** an entry's photos are its own array, not
-  `wp-photos-v1[date]` — a day can have several journal entries, so there's no single "the
-  day's photos" slot to write into. `expenseId` is a reference by id into `wp-expenses-v1`,
-  not a copy of that transaction's fields, so editing/deleting the linked transaction in
-  Budget is not reflected back onto the journal entry (a dangling `expenseId` is simply
-  treated as "no linked transaction" — `journalEntryHtml()` looks it up by id at render time
-  and shows nothing if it's gone).
-- **Write:** the whole array is re-saved on every entry add or delete.
+- **Write:** the whole array is re-saved on every add, edit, delete, or visibility change —
+  same pattern as `wp-photos-v1`/`wp-expenses-v1`, no partial-row updates.
 - **Merge-on-first-sign-in:** **no** — not one of the four keys with special merge behavior
-  (see above). A first sign-in on a browser with local-only journal entries and an account
-  that already has cloud journal entries will have the cloud copy win, same as every other
-  key not in that special list. If Journal turns out to need the same offline-safety
-  guarantee as Days/Photos/Widget-daily/Expenses, add it to that merge list explicitly rather
-  than assuming it already behaves that way.
+  (see above); same caveat as `wp-journal-v1` had.
+- **Image pipeline:** `journalProcessPhoto(file)` resizes the source file twice in one pass
+  (`resizeImageJPEG(file, 1000, 0.8)` for `image`, `resizeImageJPEG(file, 220, 0.72)` for
+  `thumb`) — the existing pipeline every other photo feature in this app already uses, just
+  called twice so lists never have to load the bigger copy.
+- **Public/Explore counterpart:** when a moment's `visibility` is `'public'`, a matching row is
+  additionally upserted into a **separate** Supabase table, `public_journal_moments` — `app_data`
+  cannot be used for this because its row-level security is strictly "owner reads/writes their
+  own row only" (see docs/SUPABASE_ENVIRONMENTS.md), so no row there can ever be visible to
+  another signed-in user. See **docs/JOURNAL_PUBLIC_TABLE.md** for the table's exact shape, the
+  SQL to create it, and why this session cannot run that SQL for you. Until that table exists in
+  your Supabase project, Make Public/Explore/Save-to-My-Journal are inert no-ops (fail silently,
+  logged to the console) — every private Journal feature above works today regardless.
 
 ### `wp-widget-config-v1`
 - **Purpose:** which optional widgets appear on the **My Day** detail page, in what order, plus

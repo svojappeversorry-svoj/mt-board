@@ -2243,20 +2243,77 @@
   @media (min-width:900px){ .budget-view.active{ max-width:920px; padding-left:28px; padding-right:28px; } }
   @media (min-width:1200px){ .budget-view.active{ max-width:1040px; } }
 
-  /* ---- JOURNAL (identical container rules to Budget above — same visual language, reuses
-     .note/.month-section/.photo-thumb verbatim, no new styling invented) ---- */
+  /* ---- JOURNAL (a Today-first "keep what you found" board, not a diary timeline — see the
+     big comment above the JS implementation for the full concept. Reuses .note/.month-section/
+     .add-btn-outline/.photo-thumb and every theme token verbatim; every class below is built
+     purely from existing CSS variables so all 4 themes render it correctly with zero new
+     per-theme rules, exactly like the Budget spending ring. ---- */
   .journal-view{ display:none; }
   .journal-view.active{ display:block; padding: 20px 16px calc(60px + var(--nav-height) + var(--safe-bottom)); max-width:820px; margin:0 auto; }
   @media (min-width:900px){ .journal-view.active{ max-width:920px; padding-left:28px; padding-right:28px; } }
   @media (min-width:1200px){ .journal-view.active{ max-width:1040px; } }
-  .journal-entry-date{ font-family:var(--font-mono); font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:0.4px; color:var(--ink-dim); margin:22px 0 8px; }
-  .journal-entry-date:first-child{ margin-top:0; }
-  .journal-entry-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px; }
-  .journal-entry-mood{ font-size:20px; line-height:1; }
-  .journal-entry-text{ white-space:pre-wrap; word-break:break-word; }
-  .journal-entry-linked{ display:inline-flex; align-items:center; gap:5px; font-family:var(--font-mono); font-size:11px; color:var(--ink-dim); margin-top:8px; }
-  .journal-draft-photo-wrap{ position:relative; }
-  .journal-draft-photo-remove{ position:absolute; top:-6px; right:-6px; width:20px; height:20px; border-radius:50%; background:var(--rose); color:#fff; border:2px solid var(--paper); font-family:var(--font-mono); font-size:10px; line-height:1; cursor:pointer; padding:0; }
+
+  .journal-header-row{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin:2px 0 18px; }
+  .journal-date-big{ font-family:var(--font-l); font-weight:400; font-size:19px; color:var(--ink); line-height:1.25; }
+  .journal-date-actions{ display:flex; align-items:center; gap:8px; flex-shrink:0; margin-top:2px; }
+  .journal-icon-btn{ display:inline-flex; align-items:center; justify-content:center; gap:6px; height:36px; min-width:36px; border-radius:100px; border:2px solid var(--line); background:var(--paper); color:var(--ink); font-size:15px; cursor:pointer; padding:0 8px; }
+  .journal-icon-btn:hover{ border-color:var(--accent); color:var(--accent); }
+  .journal-explore-btn{ font-family:var(--font-mono); font-weight:700; font-size:10.5px; text-transform:uppercase; letter-spacing:0.4px; padding:0 13px; }
+  .journal-explore-btn.active{ background:var(--accent); border-color:var(--accent); color:#fff; }
+  .journal-hidden-date-input{ position:absolute; width:1px; height:1px; opacity:0; pointer-events:none; }
+
+  .journal-prompt-card{ text-align:center; padding:26px 16px; }
+  .journal-prompt-text{ font-family:var(--font-hand); font-size:17px; color:var(--ink); margin-bottom:16px; }
+
+  .journal-moments-list{ margin-top:16px; display:flex; flex-direction:column; gap:10px; }
+  .journal-moment-card{ display:flex; align-items:center; gap:12px; background:var(--paper); border-radius:16px; padding:11px 14px; cursor:pointer; box-shadow:0 3px 10px rgba(28,18,22,0.07); border:none; width:100%; text-align:left; font:inherit; color:inherit; }
+  .journal-moment-thumb{ width:44px; height:44px; border-radius:10px; object-fit:cover; flex-shrink:0; background:var(--paper2); }
+  .journal-moment-icon{ width:44px; height:44px; border-radius:10px; background:var(--paper2); display:flex; align-items:center; justify-content:center; font-size:19px; flex-shrink:0; }
+  .journal-moment-body{ flex:1; min-width:0; }
+  .journal-moment-type{ font-family:var(--font-mono); font-weight:700; font-size:10px; text-transform:uppercase; letter-spacing:0.5px; color:var(--ink-dim); }
+  .journal-moment-title{ font-family:var(--font-ui); font-weight:700; font-size:14.5px; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:1px; }
+  .journal-moment-badge{ flex-shrink:0; font-size:13px; opacity:0.65; }
+  .journal-keep-another{ display:block; width:100%; text-align:center; margin-top:16px; padding:13px; }
+
+  /* ---- Keep-a-Moment / detail sheet content (lives inside the existing
+     .myspace-lib-sheet/.myspace-lib-inner/.myspace-lib-head bottom sheet — same component the
+     Widget Library and Add Transaction already use, no new sheet chrome invented) ---- */
+  .moment-type-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; }
+  @media (max-width:360px){ .moment-type-grid{ grid-template-columns:repeat(2, 1fr); } }
+  .moment-type-btn{ display:flex; flex-direction:column; align-items:center; gap:6px; padding:16px 8px; border-radius:16px; border:2px solid var(--line); background:var(--paper); color:var(--ink); font-family:var(--font-ui); font-weight:700; font-size:12px; cursor:pointer; }
+  .moment-type-btn .ic{ font-size:22px; }
+  .moment-type-btn:hover{ border-color:var(--accent); color:var(--accent); }
+
+  .moment-form{ display:flex; flex-direction:column; gap:10px; }
+  .moment-form input[type=text], .moment-form input[type=url], .moment-form textarea{
+    font-family:var(--font-ui); font-weight:600; font-size:13.5px; padding:10px 12px; border:2px solid var(--line); border-radius:12px; background:var(--paper); color:var(--ink); width:100%; box-sizing:border-box;
+  }
+  .moment-form textarea{ resize:vertical; min-height:64px; font-weight:500; }
+  .moment-form-back{ margin-bottom:2px; }
+  .moment-form-photo-row{ display:flex; align-items:center; gap:12px; }
+  .moment-form-photo-preview{ position:relative; width:84px; height:84px; flex-shrink:0; }
+  .moment-form-photo-preview img{ width:100%; height:100%; object-fit:cover; border-radius:12px; display:block; }
+  .moment-form-photo-remove{ position:absolute; top:-6px; right:-6px; width:20px; height:20px; border-radius:50%; background:var(--rose); color:#fff; border:2px solid var(--paper); font-family:var(--font-mono); font-size:10px; line-height:1; cursor:pointer; padding:0; }
+  .moment-visibility-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding-top:12px; border-top:1px dashed var(--line); margin-top:2px; }
+  .moment-visibility-label{ font-family:var(--font-mono); font-weight:700; font-size:10.5px; text-transform:uppercase; letter-spacing:0.4px; color:var(--ink-dim); }
+  .moment-form-actions{ display:flex; gap:8px; margin-top:4px; }
+  .moment-form-actions .add-btn-outline{ flex:1; text-align:center; }
+
+  .journal-moment-detail-type{ font-family:var(--font-mono); font-weight:700; font-size:10.5px; text-transform:uppercase; letter-spacing:0.5px; color:var(--ink-dim); margin-bottom:6px; }
+  .journal-moment-detail-img{ width:100%; border-radius:14px; margin:2px 0 10px; display:block; }
+  .journal-moment-detail-desc{ font-family:var(--font-ui); font-size:14px; color:var(--ink); white-space:pre-wrap; word-break:break-word; margin:4px 0; }
+  .journal-moment-detail-link{ display:inline-block; font-family:var(--font-ui); font-weight:700; font-size:13px; color:var(--accent); word-break:break-all; margin-top:6px; }
+  .journal-moment-provenance{ font-family:var(--font-mono); font-size:10.5px; color:var(--ink-dim); margin-top:10px; }
+
+  .journal-explore-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  @media (min-width:640px){ .journal-explore-grid{ grid-template-columns:repeat(3, 1fr); } }
+  .journal-explore-card{ background:var(--paper); border-radius:16px; overflow:hidden; cursor:pointer; box-shadow:0 3px 10px rgba(28,18,22,0.08); display:flex; flex-direction:column; border:none; text-align:left; font:inherit; color:inherit; padding:0; }
+  .journal-explore-card-thumb{ width:100%; aspect-ratio:1; object-fit:cover; background:var(--paper2); display:block; }
+  .journal-explore-card-icon{ width:100%; aspect-ratio:1; display:flex; align-items:center; justify-content:center; font-size:30px; background:var(--paper2); }
+  .journal-explore-card-body{ padding:9px 10px 11px; }
+  .journal-explore-card-type{ font-family:var(--font-mono); font-weight:700; font-size:9px; text-transform:uppercase; letter-spacing:0.5px; color:var(--ink-dim); }
+  .journal-explore-card-title{ font-family:var(--font-ui); font-weight:700; font-size:12.5px; color:var(--ink); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .journal-explore-card-author{ font-family:var(--font-ui); font-size:10.5px; color:var(--ink-dim); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .budget-hero{ display:flex; gap:10px; margin-bottom:4px; }
   .budget-hero-stat{ flex:1; background:var(--paper); border-radius:var(--radius-md,14px); padding:14px; box-shadow:0 3px 10px rgba(28,18,22,0.08); text-align:center; }
   .budget-hero-stat .lbl{ font-family:var(--font-mono); font-weight:700; font-size:10px; text-transform:uppercase; letter-spacing:0.4px; color:var(--ink-dim); margin-bottom:4px; }
@@ -2418,6 +2475,25 @@
       <button class="sticker-sheet-close" id="mySpaceLibClose" type="button">close</button>
     </div>
     <div id="mySpaceLibGrid"></div>
+  </div>
+</div>
+
+<div class="myspace-lib-sheet" id="journalSheet">
+  <div class="myspace-lib-inner">
+    <div class="myspace-lib-head">
+      <span class="myspace-lib-title" id="journalSheetTitle">Keep a Moment</span>
+      <button class="sticker-sheet-close" id="journalSheetClose" type="button">close</button>
+    </div>
+    <div id="journalSheetBody"></div>
+  </div>
+</div>
+<input type="date" id="journalDateInput" class="journal-hidden-date-input" tabindex="-1" aria-hidden="true">
+<div class="photo-viewer" id="journalPhotoViewer">
+  <div class="photo-viewer-inner">
+    <img id="journalPhotoViewerImg" src="" alt="">
+    <div class="photo-viewer-actions">
+      <button type="button" class="settings-btn-outline" id="journalPhotoViewerClose">×</button>
+    </div>
   </div>
 </div>
 
@@ -2723,7 +2799,7 @@ const STRINGS = {
     appearanceLight:'Light', appearanceDark:'Dark', appearanceSystem:'System',
     onbAvatarTitle:'Now choose yourself.', onbAvatarSub:'Pick a little face to greet you here — just for fun.',
     onbTourBudgetText:'Track your spending and income here.',
-    onbTourJournalText:'Capture moments, thoughts and photos here — your own timeline.',
+    onbTourJournalText:'Keep the things you find worth remembering — a photo, a song, a place — in seconds.',
     onbTourTodayText:'Your day, all in one place — tasks, mood, water, sleep and more.',
     onbTourMediaText:'Your favorite photos and moments live here.',
     onbTourSettingsText:'Everything else can be customized for you here.',
@@ -2745,11 +2821,33 @@ const STRINGS = {
     monthlyBudgetTargetPrefix:'Monthly budget for', noBudgetTargetYet:'No monthly budget set yet.',
     setTarget:'Set target', removeTarget:'Remove', budgetOverBy:'Over budget by {amount}',
     budgetTargetSpentLabel:'Spent', budgetTargetRemainingLabel:'Remaining',
-    // Phase 3 — Journal
-    journalTitle:'Journal', journalNewEntry:'New entry', journalDateLabel:'Date',
-    journalTextPlaceholder:'What happened today?', journalLinkTransaction:'Link a transaction',
-    journalNoTransaction:'None', journalSaveEntry:'Save entry',
-    journalEmpty:'No entries yet — write your first one above.', journalDeleteConfirm:'Delete this journal entry?',
+    // Journal — a place to keep things you found, not a diary timeline
+    journalTitle:'Journal', journalPrompt:"Did you find something worth keeping today?",
+    journalKeepMoment:'+ Keep a Moment', journalKeepAnother:'+ Keep another moment',
+    journalEmptyOtherDay:'Nothing saved on this day.', journalToday:'Today',
+    journalCalendar:'Calendar', journalPickDate:'Choose a date',
+    journalExplore:'Explore', journalBackToJournal:'← Journal',
+    journalChooseType:'What did you find?',
+    journalTypePhoto:'Photo', journalTypePlace:'Place', journalTypeSong:'Song', journalTypeMovie:'Movie',
+    journalTypeRecipe:'Recipe', journalTypeLink:'Link', journalTypeNote:'Note',
+    journalBack:'← Back', journalTitlePlaceholder:'Title',
+    journalDescPlaceholder:'Add a short description (optional)',
+    journalPlaceNamePlaceholder:'Place name', journalPlaceUrlPlaceholder:'Map link (optional)',
+    journalSongNamePlaceholder:'Song name', journalArtistPlaceholder:'Artist (optional)',
+    journalUrlPlaceholder:'Paste a link', journalUrlPlaceholderOptional:'Paste a link (optional)',
+    journalMovieTitlePlaceholder:'Movie title', journalRecipeNamePlaceholder:'Recipe name',
+    journalLinkTitlePlaceholder:'Title', journalNotePlaceholder:'Write a short note…',
+    journalAddPhoto:'Add photo', journalSave:'Save', journalCancel:'Cancel',
+    journalMakePublic:'Make Public', journalMakePrivate:'Make Private',
+    journalPublicBadge:'Public · visible in Explore', journalPrivateBadge:'Private',
+    journalDelete:'Delete', journalEdit:'Edit', journalDeleteConfirm:'Delete this moment?',
+    journalOpenLink:'Open link ↗', journalOpenMap:'Open map ↗',
+    journalSavedFrom:'Saved from SVOJ Explore', journalBy:'by',
+    journalSaveToMyJournal:'Save to My Journal', journalSavedToJournal:'Saved to your Journal',
+    journalExploreEmpty:'No public discoveries yet — be the first to share one.',
+    journalExploreUnavailable:"Explore needs an account — sign in to discover what others are sharing.",
+    journalExploreLoadError:"Explore couldn't load right now — try again later.",
+    journalByAuthor:'by {name}',
     // Phase 2 — Settings additions
     myProfile:'My Profile', profileName:'Name', profileNamePlaceholder:'Your name', profileAvatar:'Avatar',
     appearance:'Appearance', appearanceMode:'Light / Dark', mySpaceSettingsSection:'My Space',
@@ -4474,6 +4572,10 @@ function openTxnSheet(){
 }
 document.getElementById('txnSheetClose').addEventListener('click', ()=> document.getElementById('txnSheet').classList.remove('open'));
 document.getElementById('txnSheet').addEventListener('click', (e)=>{ if(e.target.id==='txnSheet') e.target.classList.remove('open'); });
+document.getElementById('journalSheetClose').addEventListener('click', ()=> document.getElementById('journalSheet').classList.remove('open'));
+document.getElementById('journalSheet').addEventListener('click', (e)=>{ if(e.target.id==='journalSheet') e.target.classList.remove('open'); });
+document.getElementById('journalPhotoViewerClose').addEventListener('click', ()=> document.getElementById('journalPhotoViewer').classList.remove('open'));
+document.getElementById('journalPhotoViewer').addEventListener('click', (e)=>{ if(e.target.id==='journalPhotoViewer') e.target.classList.remove('open'); });
 function setBudgetAddType(type){
   budgetAddType = type;
   document.querySelectorAll('#budgetTypeToggle .budget-type-btn').forEach(b=>{
@@ -4683,182 +4785,467 @@ document.getElementById('photoViewerDelete').addEventListener('click', ()=>{
 });
 
 /* ============ JOURNAL ============
-   The 3rd bottom-nav tab: a personal timeline, not a social feed or CMS. Each entry is its
-   own self-contained record (a day can have zero, one, or several) that can optionally carry
-   a mood (same 0-4 scale/faces as My Day), its own photos (same resizeImageJPEG pipeline as
-   My Day/Media), and a link to one of that date's transactions — connecting Journal to the
-   rest of SVOJ without folding its storage into daysData/expenses. */
-let journalEntries = load('wp-journal-v1', []);
-function saveJournalEntries(){ save('wp-journal-v1', journalEntries); }
-(function sanitizeJournalEntries(){
-  if(!Array.isArray(journalEntries)){ journalEntries = []; saveJournalEntries(); return; }
+   NOT a diary timeline — a place to keep things you found during the day that you want to
+   remember, revisit or share ("did you find something worth keeping today?"). Opens on TODAY
+   every time; a small calendar lets you travel back to a previous Journal day, but there is no
+   month/timeline archive view. Saving is a few-second flow: pick one of 7 types (Photo/Place/
+   Song/Movie/Recipe/Link/Note), fill in the one field that actually defines that type (every
+   other field is optional), save. Every moment is PRIVATE by default; "Make Public" is a
+   separate, secondary action that lists it in Explore (public discoveries from other users,
+   reached from inside Journal — no 5th bottom-nav tab) where anyone can "Save to My Journal"
+   a private copy of it.
+
+   Storage: private moments reuse the exact same save()/load() → app_data mechanism as every
+   other per-user record in this app (wp-journal-moments-v1, one row, works today with zero
+   backend changes). Public Explore is different on purpose: app_data's row-level security is
+   "the owner can read/write their own row only" (see docs/SUPABASE_ENVIRONMENTS.md) — no row
+   in it can ever be readable by another signed-in user, by design. A genuinely public feed
+   needs its own table with public SELECT, which this session cannot create in your Supabase
+   project (same limitation already documented for the DEV project). journalSyncPublic()/
+   journalFetchExplore() below call that table and fail silently if it doesn't exist yet —
+   every private Journal feature keeps working normally either way. See docs/DATA_CONTRACTS.md
+   for the exact SQL to run once, and docs/JOURNAL_PUBLIC_TABLE.md for the full explanation. */
+const JOURNAL_PUBLIC_TABLE = 'public_journal_moments';
+const MOMENT_TYPES = ['photo','place','song','movie','recipe','link','note'];
+const MOMENT_TYPE_ICON = { photo:'🖼️', place:'📍', song:'🎵', movie:'🎬', recipe:'🍳', link:'🔗', note:'📝' };
+const MOMENT_TYPE_LABEL_KEY = { photo:'journalTypePhoto', place:'journalTypePlace', song:'journalTypeSong', movie:'journalTypeMovie', recipe:'journalTypeRecipe', link:'journalTypeLink', note:'journalTypeNote' };
+
+function journalEsc(s){ return String(s==null?'':s).replace(/[&<>"]/g, c=> ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]); }
+// Only ever used to build a clickable href (own moments AND Explore rows from other users) —
+// rejects anything that isn't a plain http(s) link (e.g. a `javascript:` URI) so a malicious
+// "link"/"place map" value can never execute on click. Plain data (no href) is never at risk,
+// so free text fields are just journalEsc()'d for display instead.
+function journalSafeUrl(url){
+  if(!url) return '';
+  try{ const u = new URL(String(url), location.href); return (u.protocol==='http:'||u.protocol==='https:') ? u.href : ''; }
+  catch(e){ return ''; }
+}
+
+let journalMoments = load('wp-journal-moments-v1', []);
+function saveJournalMoments(){ save('wp-journal-moments-v1', journalMoments); }
+(function sanitizeJournalMoments(){
+  if(!Array.isArray(journalMoments)){ journalMoments = []; saveJournalMoments(); return; }
   let changed = false;
-  journalEntries = journalEntries.filter(e=> e && typeof e === 'object' && typeof e.id === 'string');
-  journalEntries.forEach(e=>{
-    if(typeof e.date !== 'string'){ e.date = dateKeyOf(todayReal); changed = true; }
-    if(typeof e.text !== 'string'){ e.text = ''; changed = true; }
-    if(typeof e.mood !== 'number'){ e.mood = null; changed = true; }
-    if(!Array.isArray(e.photos)){ e.photos = []; changed = true; }
-    if(typeof e.expenseId !== 'string'){ e.expenseId = ''; changed = true; }
-    if(typeof e.createdAt !== 'number'){ e.createdAt = Date.now(); changed = true; }
+  journalMoments = journalMoments.filter(m=> m && typeof m === 'object' && typeof m.id === 'string' && MOMENT_TYPES.includes(m.type));
+  journalMoments.forEach(m=>{
+    if(typeof m.date !== 'string'){ m.date = dateKeyOf(todayReal); changed = true; }
+    if(typeof m.title !== 'string'){ m.title = ''; changed = true; }
+    if(typeof m.description !== 'string'){ m.description = ''; changed = true; }
+    if(typeof m.image !== 'string'){ m.image = ''; changed = true; }
+    if(typeof m.thumb !== 'string'){ m.thumb = m.image || ''; changed = true; }
+    if(typeof m.externalUrl !== 'string'){ m.externalUrl = ''; changed = true; }
+    if(typeof m.artist !== 'string'){ m.artist = ''; changed = true; }
+    if(!m.location || typeof m.location !== 'object'){ m.location = null; }
+    if(m.visibility !== 'public'){ m.visibility = 'private'; }
+    if(!m.savedFrom || typeof m.savedFrom !== 'object'){ m.savedFrom = null; }
+    if(typeof m.createdAt !== 'number'){ m.createdAt = Date.now(); changed = true; }
+    if(typeof m.updatedAt !== 'number'){ m.updatedAt = m.createdAt; changed = true; }
+    if(typeof m.publishedAt !== 'number'){ m.publishedAt = null; }
   });
-  if(changed) saveJournalEntries();
+  if(changed) saveJournalMoments();
 })();
 
-let journalDraft = { mood:2, photos:[] };
-function resetJournalDraft(){ journalDraft = { mood:2, photos:[] }; }
-
-function journalEntriesSorted(){
-  return journalEntries.slice().sort((a,b)=> (b.date+'T'+String(b.createdAt||0).padStart(20,'0')).localeCompare(a.date+'T'+String(a.createdAt||0).padStart(20,'0')));
-}
-function journalTransactionsForDate(dateStr){ return expenses.filter(e=> e.date === dateStr); }
-function journalTransactionLabel(e){
-  const sign = e.type === 'income' ? '+' : '−';
-  return `${sign}${fmtMoney(e.amount, e.currency)} · ${(e.note || e.category || t(e.type==='income'?'typeIncome':'typeExpense')).slice(0,30)}`;
+function journalMomentsForDate(dateKey){ return journalMoments.filter(m=> m.date===dateKey).sort((a,b)=> a.createdAt-b.createdAt); }
+function journalFindMoment(id){ return journalMoments.find(m=> m.id===id); }
+function journalAuthorName(){
+  const name = (load('wp-user-name-v1','')||'').trim();
+  if(name) return name;
+  if(currentUserEmail) return currentUserEmail.split('@')[0];
+  return 'SVOJ member';
 }
 
-function journalDraftPhotosHtml(){
-  if(!journalDraft.photos.length) return '';
-  return `<div class="photo-thumb-row">` + journalDraft.photos.map(p=> `
-    <div class="photo-thumb-wrap journal-draft-photo-wrap">
-      <img class="photo-thumb" src="${p.src}" alt="" style="cursor:default;">
-      <button type="button" class="journal-draft-photo-remove" data-journal-draft-photo-remove="${p.id}" aria-label="${t('remove')}">✕</button>
-    </div>`).join('') + `</div>`;
+/* One resize pass produces a ~1000px preview (only loaded when a moment is opened) and a
+   ~220px thumbnail (used everywhere in lists/cards/Explore) from the same file — reuses the
+   exact resizeImageJPEG pipeline every other photo feature already uses. */
+async function journalProcessPhoto(file){
+  const [image, thumb] = await Promise.all([ resizeImageJPEG(file, 1000, 0.8), resizeImageJPEG(file, 220, 0.72) ]);
+  return { image, thumb };
 }
-function journalComposerHtml(){
-  const todayKey = dateKeyOf(todayReal);
-  return `
-    <div class="note month-section" id="journalComposerCard">
-      <div class="pin"></div>
-      <h3 class="month-section-title">${t('journalNewEntry')}</h3>
-      <div class="settings-row"><span class="settings-row-label">${t('journalDateLabel')}</span>
-        <input type="date" id="journalDate" class="settings-input" value="${todayKey}" max="${todayKey}"></div>
-      <textarea class="day-notes" id="journalText" placeholder="${t('journalTextPlaceholder')}"></textarea>
-      <div class="day-widget-cell" style="margin-top:10px;">
-        <div class="habit-label">${t('moodLabel')}</div>
-        <div class="mood-row"><span class="mood-face" id="journalMoodFace">${moodFace(journalDraft.mood)}</span>
-          <input type="range" min="0" max="4" step="1" value="${journalDraft.mood}" id="journalMoodSlider" style="--val:${journalDraft.mood*25}%"></div>
-      </div>
-      <div class="habit-label" style="margin-top:10px;">${t('photosLabel')}</div>
-      <div id="journalDraftPhotos">${journalDraftPhotosHtml()}</div>
-      <input type="file" id="journalPhotoInput" accept="image/*" multiple style="display:none">
-      <button type="button" class="add-btn-outline" id="journalAddPhotoBtn">${t('addPhotos')}</button>
-      <div class="settings-row" style="margin-top:10px;"><span class="settings-row-label">${t('journalLinkTransaction')}</span>
-        <select class="settings-select" id="journalExpenseSelect"><option value="">${t('journalNoTransaction')}</option></select></div>
-      <button type="button" class="add-btn-outline" id="journalSaveBtn" style="margin-top:12px;">${t('journalSaveEntry')}</button>
-    </div>
-  `;
+
+async function journalSyncPublic(m){
+  if(!sb || !currentUserId) return;
+  try{
+    if(m.visibility === 'public'){
+      const { error } = await sb.from(JOURNAL_PUBLIC_TABLE).upsert({
+        id: m.id, user_id: currentUserId, author: journalAuthorName(),
+        type: m.type, title: m.title, description: m.description,
+        image: m.image || null, thumb: m.thumb || null, external_url: m.externalUrl || null,
+        location: m.location || null, artist: m.artist || null,
+        created_at: new Date(m.createdAt).toISOString(), updated_at: new Date(m.updatedAt).toISOString(),
+        published_at: new Date(m.publishedAt || m.updatedAt).toISOString(),
+      }, { onConflict:'id' });
+      if(error) throw error;
+    } else {
+      const { error } = await sb.from(JOURNAL_PUBLIC_TABLE).delete().eq('id', m.id).eq('user_id', currentUserId);
+      if(error) throw error;
+    }
+  } catch(err){ console.warn('journal public sync unavailable — has public_journal_moments been created? see docs/JOURNAL_PUBLIC_TABLE.md', err); }
 }
-function journalPopulateTransactionSelect(){
-  const sel = document.getElementById('journalExpenseSelect');
-  const dateInput = document.getElementById('journalDate');
-  if(!sel || !dateInput) return;
-  const items = journalTransactionsForDate(dateInput.value);
-  sel.innerHTML = `<option value="">${t('journalNoTransaction')}</option>` +
-    items.map(e=> `<option value="${e.id}">${journalTransactionLabel(e).replace(/</g,'&lt;')}</option>`).join('');
-}
-function bindJournalComposer(){
-  const moodSlider = document.getElementById('journalMoodSlider');
-  moodSlider.addEventListener('input', e=>{
-    journalDraft.mood = +e.target.value;
-    e.target.style.setProperty('--val', (journalDraft.mood*25)+'%');
-    document.getElementById('journalMoodFace').textContent = moodFace(journalDraft.mood);
-  });
-  function rerenderDraftPhotos(){
-    document.getElementById('journalDraftPhotos').innerHTML = journalDraftPhotosHtml();
-    document.getElementById('journalDraftPhotos').querySelectorAll('[data-journal-draft-photo-remove]').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        journalDraft.photos = journalDraft.photos.filter(p=> p.id !== btn.dataset.journalDraftPhotoRemove);
-        rerenderDraftPhotos();
-      });
-    });
+async function journalFetchExplore(){
+  if(!sb || !currentUserId) return { items:[], unavailable:true };
+  try{
+    const { data, error } = await sb.from(JOURNAL_PUBLIC_TABLE).select('*').neq('user_id', currentUserId)
+      .order('published_at', { ascending:false }).limit(60);
+    if(error) throw error;
+    return { items: data || [], unavailable:false };
+  } catch(err){
+    console.warn('journal explore fetch failed — has public_journal_moments been created? see docs/JOURNAL_PUBLIC_TABLE.md', err);
+    return { items:[], unavailable:false, error:true };
   }
-  rerenderDraftPhotos();
+}
 
-  const photoInput = document.getElementById('journalPhotoInput');
-  document.getElementById('journalAddPhotoBtn').addEventListener('click', ()=> photoInput.click());
-  photoInput.addEventListener('change', async (e)=>{
-    const files = Array.from(e.target.files || []);
-    const room = MAX_PHOTOS_PER_DAY - journalDraft.photos.length;
-    for(const file of files.slice(0, Math.max(0, room))){
-      try{
-        const src = await resizeImageJPEG(file, 1280, 0.78);
-        journalDraft.photos.push({ id:newId(), src });
-      } catch(err){ console.error('journal photo resize failed', err); }
-    }
-    rerenderDraftPhotos();
-    photoInput.value = '';
-  });
+// Which date/mode Journal shows — reset every time the tab is opened via bottom-nav
+// (showJournalView), never persisted: "when Journal is opened again normally, return to TODAY."
+let journalViewedDate = null;
+let journalMode = 'day'; // 'day' | 'explore'
+let journalExploreCache = null; // rows from the last Explore fetch, so tapping a card doesn't refetch
 
-  document.getElementById('journalDate').addEventListener('change', journalPopulateTransactionSelect);
-  journalPopulateTransactionSelect();
-
-  document.getElementById('journalSaveBtn').addEventListener('click', ()=>{
-    const date = document.getElementById('journalDate').value || dateKeyOf(todayReal);
-    const text = document.getElementById('journalText').value.trim();
-    const expenseId = document.getElementById('journalExpenseSelect').value;
-    if(!text && !journalDraft.photos.length) return; // nothing to save yet
-    journalEntries.push({
-      id:newId(), date, text, mood:journalDraft.mood,
-      photos:journalDraft.photos.slice(), expenseId, createdAt:Date.now(), updatedAt:Date.now(),
-    });
-    saveJournalEntries();
-    resetJournalDraft();
-    buildJournalView();
-  });
-}
-function journalEntryHtml(e){
-  const d = parseDateKey(e.date);
-  const linkedExpense = e.expenseId ? expenses.find(x=> x.id === e.expenseId) : null;
-  return `<div class="note month-section" data-journal-entry="${e.id}">
-      <div class="pin"></div>
-      <div class="journal-entry-head">
-        ${typeof e.mood === 'number' ? `<span class="journal-entry-mood">${moodFace(e.mood)}</span>` : '<span></span>'}
-        <button type="button" class="journal-entry-delete-btn settings-btn-outline" data-journal-delete="${e.id}">${t('delete')}</button>
-      </div>
-      ${e.text ? `<div class="journal-entry-text">${e.text.replace(/</g,'&lt;')}</div>` : ''}
-      ${e.photos.length ? `<div class="photo-thumb-row">${e.photos.map(p=> `<div class="photo-thumb-wrap"><img class="photo-thumb" style="cursor:default;" src="${p.src}" alt=""></div>`).join('')}</div>` : ''}
-      ${linkedExpense ? `<div class="journal-entry-linked">💶 ${journalTransactionLabel(linkedExpense).replace(/</g,'&lt;')}</div>` : ''}
-    </div>`;
-}
-function journalTimelineHtml(){
-  const sorted = journalEntriesSorted();
-  if(!sorted.length) return `<div class="month-goal-empty">${t('journalEmpty')}</div>`;
-  let html = '', lastDate = null;
-  sorted.forEach(e=>{
-    if(e.date !== lastDate){
-      lastDate = e.date;
-      html += `<div class="journal-entry-date">${weekdayFullName(parseDateKey(e.date))} · ${fmtFull(parseDateKey(e.date))}</div>`;
-    }
-    html += journalEntryHtml(e);
-  });
-  return html;
-}
-function bindJournalTimeline(){
-  document.querySelectorAll('[data-journal-delete]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      if(!confirm(t('journalDeleteConfirm'))) return;
-      journalEntries = journalEntries.filter(e=> e.id !== btn.dataset.journalDelete);
-      saveJournalEntries();
-      buildJournalView();
-    });
-  });
-}
 function showJournalView(){
   hideAllViews();
   document.getElementById('journalView').classList.add('active');
+  journalViewedDate = dateKeyOf(todayReal);
+  journalMode = 'day';
   buildJournalView();
   setActiveNavTab('journal');
 }
 function buildJournalView(){
+  if(journalMode === 'explore') buildJournalExploreView();
+  else buildJournalDayView();
+}
+function journalDateHeading(dateKey){
+  const d = parseDateKey(dateKey);
+  const sameYear = d.getFullYear() === todayReal.getFullYear();
+  return d.toLocaleDateString(localeCode(), sameYear
+    ? { weekday:'long', month:'long', day:'numeric' }
+    : { weekday:'long', month:'long', day:'numeric', year:'numeric' });
+}
+function journalOpenDatePicker(){
+  const input = document.getElementById('journalDateInput');
+  input.value = journalViewedDate;
+  input.max = dateKeyOf(todayReal);
+  input.onchange = ()=>{ if(input.value){ journalViewedDate = input.value; journalMode = 'day'; buildJournalView(); } };
+  if(input.showPicker){ try{ input.showPicker(); return; }catch(e){} }
+  input.click();
+}
+function journalMomentCardHtml(m){
+  const label = t(MOMENT_TYPE_LABEL_KEY[m.type]);
+  const thumb = m.thumb || (m.type==='photo' ? m.image : '');
+  return `
+    <button type="button" class="journal-moment-card" data-journal-moment="${m.id}">
+      ${thumb ? `<img class="journal-moment-thumb" src="${thumb}" alt="" loading="lazy">` : `<div class="journal-moment-icon">${MOMENT_TYPE_ICON[m.type]}</div>`}
+      <div class="journal-moment-body">
+        <div class="journal-moment-type">${label}</div>
+        <div class="journal-moment-title">${journalEsc(m.title || label)}</div>
+      </div>
+      <span class="journal-moment-badge" title="${m.visibility==='public' ? t('journalPublicBadge') : t('journalPrivateBadge')}">${m.visibility==='public' ? '🌍' : '🔒'}</span>
+    </button>`;
+}
+function buildJournalDayView(){
+  const el = document.getElementById('journalView');
+  const dateKey = journalViewedDate;
+  const isToday = dateKey === dateKeyOf(todayReal);
+  const moments = journalMomentsForDate(dateKey);
+  let promptText = '';
+  if(isToday) promptText = t('journalPrompt');
+  else if(!moments.length) promptText = t('journalEmptyOtherDay');
+  el.innerHTML = `
+    <h2 class="month-view-title">${t('journalTitle')}</h2>
+    <div class="journal-header-row">
+      <div class="journal-date-big">${journalDateHeading(dateKey)}</div>
+      <div class="journal-date-actions">
+        <button type="button" class="journal-icon-btn" id="journalCalendarBtn" title="${t('journalCalendar')}">📅</button>
+        <button type="button" class="journal-icon-btn journal-explore-btn" id="journalExploreToggleBtn">${t('journalExplore')}</button>
+      </div>
+    </div>
+    <div class="note month-section journal-prompt-card">
+      <div class="pin"></div>
+      ${promptText ? `<div class="journal-prompt-text">${promptText}</div>` : ''}
+      <button type="button" class="add-btn-outline journal-keep-btn" id="journalKeepBtn">${t('journalKeepMoment')}</button>
+    </div>
+    ${moments.length ? `
+      <div class="journal-moments-list" id="journalMomentsList">${moments.map(journalMomentCardHtml).join('')}</div>
+      <button type="button" class="add-btn-outline journal-keep-another" id="journalKeepAnotherBtn">${t('journalKeepAnother')}</button>
+    ` : ''}
+  `;
+  document.getElementById('journalCalendarBtn').addEventListener('click', journalOpenDatePicker);
+  document.getElementById('journalExploreToggleBtn').addEventListener('click', ()=>{ journalMode = 'explore'; buildJournalView(); });
+  document.getElementById('journalKeepBtn').addEventListener('click', journalOpenTypePicker);
+  const keepAnotherBtn = document.getElementById('journalKeepAnotherBtn');
+  if(keepAnotherBtn) keepAnotherBtn.addEventListener('click', journalOpenTypePicker);
+  el.querySelectorAll('[data-journal-moment]').forEach(card=>{
+    card.addEventListener('click', ()=> journalOpenMomentDetail(card.dataset.journalMoment));
+  });
+}
+
+/* ---- Keep a Moment: type picker → per-type form → save ---- */
+function journalOpenTypePicker(){
+  document.getElementById('journalSheetTitle').textContent = t('journalChooseType');
+  document.getElementById('journalSheetClose').textContent = t('stickerSheetClose');
+  document.getElementById('journalSheetBody').innerHTML = `
+    <div class="moment-type-grid">
+      ${MOMENT_TYPES.map(type=> `
+        <button type="button" class="moment-type-btn" data-journal-type="${type}">
+          <span class="ic">${MOMENT_TYPE_ICON[type]}</span><span>${t(MOMENT_TYPE_LABEL_KEY[type])}</span>
+        </button>`).join('')}
+    </div>`;
+  document.getElementById('journalSheetBody').querySelectorAll('[data-journal-type]').forEach(btn=>{
+    btn.addEventListener('click', ()=> journalOpenMomentForm(btn.dataset.journalType, null));
+  });
+  document.getElementById('journalSheet').classList.add('open');
+}
+function journalPhotoFieldHtml(m){
+  return `
+    <div class="moment-form-photo-row">
+      <div class="moment-form-photo-preview" id="momentPhotoPreviewWrap" style="${m && m.image ? '' : 'display:none;'}">
+        <img id="momentPhotoPreviewImg" src="${m && m.image ? m.image : ''}" alt="">
+        <button type="button" class="moment-form-photo-remove" id="momentPhotoRemoveBtn">✕</button>
+      </div>
+      <button type="button" class="add-btn-outline" id="momentPhotoPickBtn">${t('journalAddPhoto')}</button>
+      <input type="file" id="momentPhotoInput" accept="image/*" style="display:none">
+    </div>`;
+}
+// Every type below has exactly ONE field that actually defines it (validated in
+// journalBindMomentForm) — everything else, per spec, stays optional so saving never feels
+// like filling out a form.
+function journalMomentFormHtml(type, m){
+  const title = m ? journalEsc(m.title) : '';
+  const desc = m ? journalEsc(m.description) : '';
+  const url = m ? journalEsc(m.externalUrl) : '';
+  const artist = m ? journalEsc(m.artist) : '';
+  const placeUrl = m && m.location ? journalEsc(m.location.url) : '';
+  let fields = '';
+  if(type === 'photo') fields = `
+      ${journalPhotoFieldHtml(m)}
+      <input type="text" id="momentTitle" placeholder="${t('journalTitlePlaceholder')}" value="${title}">
+      <textarea id="momentDesc" placeholder="${t('journalDescPlaceholder')}">${desc}</textarea>`;
+  else if(type === 'place') fields = `
+      <input type="text" id="momentTitle" placeholder="${t('journalPlaceNamePlaceholder')}" value="${title}">
+      <input type="url" id="momentPlaceUrl" placeholder="${t('journalPlaceUrlPlaceholder')}" value="${placeUrl}">
+      <textarea id="momentDesc" placeholder="${t('journalDescPlaceholder')}">${desc}</textarea>`;
+  else if(type === 'song') fields = `
+      <input type="text" id="momentTitle" placeholder="${t('journalSongNamePlaceholder')}" value="${title}">
+      <input type="text" id="momentArtist" placeholder="${t('journalArtistPlaceholder')}" value="${artist}">
+      <input type="url" id="momentUrl" placeholder="${t('journalUrlPlaceholderOptional')}" value="${url}">
+      <textarea id="momentDesc" placeholder="${t('journalDescPlaceholder')}">${desc}</textarea>`;
+  else if(type === 'movie') fields = `
+      <input type="text" id="momentTitle" placeholder="${t('journalMovieTitlePlaceholder')}" value="${title}">
+      <input type="url" id="momentUrl" placeholder="${t('journalUrlPlaceholderOptional')}" value="${url}">
+      ${journalPhotoFieldHtml(m)}
+      <textarea id="momentDesc" placeholder="${t('journalDescPlaceholder')}">${desc}</textarea>`;
+  else if(type === 'recipe') fields = `
+      <input type="text" id="momentTitle" placeholder="${t('journalRecipeNamePlaceholder')}" value="${title}">
+      <input type="url" id="momentUrl" placeholder="${t('journalUrlPlaceholderOptional')}" value="${url}">
+      ${journalPhotoFieldHtml(m)}
+      <textarea id="momentDesc" placeholder="${t('journalDescPlaceholder')}">${desc}</textarea>`;
+  else if(type === 'link') fields = `
+      <input type="url" id="momentUrl" placeholder="${t('journalUrlPlaceholder')}" value="${url}">
+      <input type="text" id="momentTitle" placeholder="${t('journalLinkTitlePlaceholder')}" value="${title}">
+      <textarea id="momentDesc" placeholder="${t('journalDescPlaceholder')}">${desc}</textarea>`;
+  else if(type === 'note') fields = `
+      <input type="text" id="momentTitle" placeholder="${t('journalTitlePlaceholder')}" value="${title}">
+      <textarea id="momentDesc" placeholder="${t('journalNotePlaceholder')}">${desc}</textarea>`;
+  return `<div class="moment-form" data-type="${type}">${fields}
+      <div class="moment-form-actions"><button type="button" class="add-btn-outline" id="momentSaveBtn">${t('journalSave')}</button></div>
+    </div>`;
+}
+function journalOpenMomentForm(type, editId){
+  const m = editId ? journalFindMoment(editId) : null;
+  document.getElementById('journalSheetTitle').textContent = t(MOMENT_TYPE_LABEL_KEY[type]);
+  document.getElementById('journalSheetClose').textContent = t('stickerSheetClose');
+  document.getElementById('journalSheetBody').innerHTML = journalMomentFormHtml(type, m);
+  journalBindMomentForm(type, m);
+  document.getElementById('journalSheet').classList.add('open');
+}
+function journalBindMomentForm(type, m){
+  let pendingPhoto = { image: m && m.image || '', thumb: m && m.thumb || '' };
+  const photoInput = document.getElementById('momentPhotoInput');
+  if(photoInput){
+    document.getElementById('momentPhotoPickBtn').addEventListener('click', ()=> photoInput.click());
+    photoInput.addEventListener('change', async (e)=>{
+      const file = e.target.files && e.target.files[0];
+      if(!file) return;
+      try{
+        pendingPhoto = await journalProcessPhoto(file);
+        document.getElementById('momentPhotoPreviewImg').src = pendingPhoto.image;
+        document.getElementById('momentPhotoPreviewWrap').style.display = '';
+      } catch(err){ console.error('journal photo resize failed', err); }
+      photoInput.value = '';
+    });
+    const removeBtn = document.getElementById('momentPhotoRemoveBtn');
+    if(removeBtn) removeBtn.addEventListener('click', ()=>{
+      pendingPhoto = { image:'', thumb:'' };
+      document.getElementById('momentPhotoPreviewWrap').style.display = 'none';
+    });
+  }
+  document.getElementById('momentSaveBtn').addEventListener('click', ()=>{
+    const title = document.getElementById('momentTitle')?.value.trim() || '';
+    const description = document.getElementById('momentDesc')?.value.trim() || '';
+    const url = document.getElementById('momentUrl')?.value.trim() || '';
+    const artist = document.getElementById('momentArtist')?.value.trim() || '';
+    const placeUrl = document.getElementById('momentPlaceUrl')?.value.trim() || '';
+    if(type === 'photo' && !pendingPhoto.image) return;
+    if((type === 'place' || type === 'song' || type === 'movie' || type === 'recipe') && !title) return;
+    if(type === 'link' && !url) return;
+    if(type === 'note' && !description) return;
+
+    const hasOwnPhoto = type === 'photo' || type === 'movie' || type === 'recipe';
+    const hasUrl = type === 'song' || type === 'movie' || type === 'recipe' || type === 'link';
+    const location = type === 'place' ? { name:title, url:placeUrl } : null;
+
+    if(m){
+      m.title = title; m.description = description;
+      if(hasOwnPhoto){ m.image = pendingPhoto.image; m.thumb = pendingPhoto.thumb; }
+      if(hasUrl) m.externalUrl = url;
+      if(type === 'place') m.location = location;
+      if(type === 'song') m.artist = artist;
+      m.updatedAt = Date.now();
+      saveJournalMoments();
+      if(m.visibility === 'public') journalSyncPublic(m);
+    } else {
+      journalMoments.push({
+        id:newId(), date:journalViewedDate, type, title, description,
+        image: hasOwnPhoto ? pendingPhoto.image : '', thumb: hasOwnPhoto ? pendingPhoto.thumb : '',
+        externalUrl: hasUrl ? url : '', location, artist: type === 'song' ? artist : '',
+        visibility:'private', savedFrom:null, createdAt:Date.now(), updatedAt:Date.now(), publishedAt:null,
+      });
+      saveJournalMoments();
+    }
+    document.getElementById('journalSheet').classList.remove('open');
+    buildJournalView();
+  });
+}
+
+/* ---- Moment detail: view + Make Public/Private + Edit + Delete ---- */
+function journalOpenMomentDetail(id){
+  const m = journalFindMoment(id);
+  if(!m) return;
+  const label = t(MOMENT_TYPE_LABEL_KEY[m.type]);
+  document.getElementById('journalSheetTitle').textContent = label;
+  document.getElementById('journalSheetClose').textContent = t('stickerSheetClose');
+  const linkUrl = journalSafeUrl(m.type === 'place' ? (m.location && m.location.url) : m.externalUrl);
+  document.getElementById('journalSheetBody').innerHTML = `
+    <div class="journal-moment-detail-type">${label}${m.artist ? ' · '+journalEsc(m.artist) : ''}</div>
+    ${m.image ? `<img class="journal-moment-detail-img" id="journalDetailImg" src="${m.image}" alt="" style="cursor:zoom-in;">` : ''}
+    <h3 class="month-section-title" style="margin-bottom:2px;">${journalEsc(m.title || label)}</h3>
+    ${m.description ? `<div class="journal-moment-detail-desc">${journalEsc(m.description)}</div>` : ''}
+    ${linkUrl ? `<a class="journal-moment-detail-link" href="${journalEsc(linkUrl)}" target="_blank" rel="noopener noreferrer">${m.type === 'place' ? t('journalOpenMap') : t('journalOpenLink')}</a>` : ''}
+    ${m.savedFrom ? `<div class="journal-moment-provenance">${t('journalSavedFrom')}${m.savedFrom.author ? ' · '+t('journalByAuthor',{name:journalEsc(m.savedFrom.author)}) : ''}</div>` : ''}
+    <div class="moment-visibility-row">
+      <span class="moment-visibility-label">${m.visibility === 'public' ? t('journalPublicBadge') : t('journalPrivateBadge')}</span>
+      <button type="button" class="add-btn-outline" id="momentToggleVisibilityBtn">${m.visibility === 'public' ? t('journalMakePrivate') : t('journalMakePublic')}</button>
+    </div>
+    <div class="moment-form-actions">
+      <button type="button" class="add-btn-outline" id="momentEditBtn">${t('journalEdit')}</button>
+      <button type="button" class="add-btn-outline" id="momentDeleteBtn">${t('journalDelete')}</button>
+    </div>`;
+  if(m.image){
+    document.getElementById('journalDetailImg').addEventListener('click', ()=>{
+      document.getElementById('journalPhotoViewerImg').src = m.image;
+      document.getElementById('journalPhotoViewer').classList.add('open');
+    });
+  }
+  document.getElementById('momentToggleVisibilityBtn').addEventListener('click', ()=> journalToggleVisibility(m.id));
+  document.getElementById('momentEditBtn').addEventListener('click', ()=> journalOpenMomentForm(m.type, m.id));
+  document.getElementById('momentDeleteBtn').addEventListener('click', ()=> journalDeleteMoment(m.id));
+  document.getElementById('journalSheet').classList.add('open');
+}
+function journalToggleVisibility(id){
+  const m = journalFindMoment(id);
+  if(!m) return;
+  m.visibility = m.visibility === 'public' ? 'private' : 'public';
+  m.updatedAt = Date.now();
+  m.publishedAt = m.visibility === 'public' ? Date.now() : null;
+  saveJournalMoments();
+  journalSyncPublic(m);
+  journalOpenMomentDetail(id);
+  buildJournalView();
+}
+function journalDeleteMoment(id){
+  if(!confirm(t('journalDeleteConfirm'))) return;
+  const m = journalFindMoment(id);
+  journalMoments = journalMoments.filter(x=> x.id !== id);
+  saveJournalMoments();
+  if(m && m.visibility === 'public' && sb && currentUserId){
+    sb.from(JOURNAL_PUBLIC_TABLE).delete().eq('id', id).eq('user_id', currentUserId).then(()=>{}, ()=>{});
+  }
+  document.getElementById('journalSheet').classList.remove('open');
+  buildJournalView();
+}
+
+/* ---- Explore: public discoveries from other users, reached from inside Journal ---- */
+async function buildJournalExploreView(){
   const el = document.getElementById('journalView');
   el.innerHTML = `
     <h2 class="month-view-title">${t('journalTitle')}</h2>
-    ${journalComposerHtml()}
-    <div id="journalTimeline">${journalTimelineHtml()}</div>
-  `;
-  bindJournalComposer();
-  bindJournalTimeline();
+    <div class="journal-header-row">
+      <button type="button" class="journal-icon-btn" id="journalBackBtn">${t('journalBackToJournal')}</button>
+      <button type="button" class="journal-icon-btn journal-explore-btn active" id="journalExploreToggleBtn">${t('journalExplore')}</button>
+    </div>
+    <div id="journalExploreBody"><div class="month-goal-empty">…</div></div>`;
+  document.getElementById('journalBackBtn').addEventListener('click', ()=>{ journalMode = 'day'; buildJournalView(); });
+  document.getElementById('journalExploreToggleBtn').addEventListener('click', ()=>{ journalMode = 'day'; buildJournalView(); });
+  const { items, unavailable, error } = await journalFetchExplore();
+  const body = document.getElementById('journalExploreBody');
+  if(!body) return; // user navigated away while this was loading
+  journalExploreCache = items;
+  if(unavailable) body.innerHTML = `<div class="month-goal-empty">${t('journalExploreUnavailable')}</div>`;
+  else if(error) body.innerHTML = `<div class="month-goal-empty">${t('journalExploreLoadError')}</div>`;
+  else if(!items.length) body.innerHTML = `<div class="month-goal-empty">${t('journalExploreEmpty')}</div>`;
+  else {
+    body.innerHTML = `<div class="journal-explore-grid">${items.map(journalExploreCardHtml).join('')}</div>`;
+    body.querySelectorAll('[data-explore-item]').forEach(card=>{
+      card.addEventListener('click', ()=> journalOpenExploreDetail(card.dataset.exploreItem));
+    });
+  }
+}
+function journalExploreCardHtml(row){
+  const label = t(MOMENT_TYPE_LABEL_KEY[row.type] || 'journalTypeNote');
+  const thumb = row.thumb || row.image;
+  return `
+    <button type="button" class="journal-explore-card" data-explore-item="${row.id}">
+      ${thumb ? `<img class="journal-explore-card-thumb" src="${thumb}" alt="" loading="lazy">` : `<div class="journal-explore-card-icon">${MOMENT_TYPE_ICON[row.type] || '✨'}</div>`}
+      <div class="journal-explore-card-body">
+        <div class="journal-explore-card-type">${label}</div>
+        <div class="journal-explore-card-title">${journalEsc(row.title || label)}</div>
+        <div class="journal-explore-card-author">${t('journalByAuthor',{name:journalEsc(row.author||'—')})}</div>
+      </div>
+    </button>`;
+}
+function journalOpenExploreDetail(id){
+  const row = (journalExploreCache || []).find(r=> String(r.id) === String(id));
+  if(!row) return;
+  const label = t(MOMENT_TYPE_LABEL_KEY[row.type] || 'journalTypeNote');
+  const linkUrl = journalSafeUrl(row.type === 'place' ? (row.location && row.location.url) : row.external_url);
+  document.getElementById('journalSheetTitle').textContent = label;
+  document.getElementById('journalSheetClose').textContent = t('stickerSheetClose');
+  document.getElementById('journalSheetBody').innerHTML = `
+    <div class="journal-moment-detail-type">${label}${row.artist ? ' · '+journalEsc(row.artist) : ''}</div>
+    ${row.image ? `<img class="journal-moment-detail-img" src="${row.image}" alt="">` : ''}
+    <h3 class="month-section-title" style="margin-bottom:2px;">${journalEsc(row.title || label)}</h3>
+    ${row.description ? `<div class="journal-moment-detail-desc">${journalEsc(row.description)}</div>` : ''}
+    ${linkUrl ? `<a class="journal-moment-detail-link" href="${journalEsc(linkUrl)}" target="_blank" rel="noopener noreferrer">${row.type === 'place' ? t('journalOpenMap') : t('journalOpenLink')}</a>` : ''}
+    <div class="journal-moment-provenance">${t('journalByAuthor',{name:journalEsc(row.author||'—')})}</div>
+    <div class="moment-form-actions"><button type="button" class="add-btn-outline" id="exploreSaveBtn">${t('journalSaveToMyJournal')}</button></div>`;
+  document.getElementById('exploreSaveBtn').addEventListener('click', ()=> journalSaveExploreItemToMyJournal(row));
+  document.getElementById('journalSheet').classList.add('open');
+}
+function journalSaveExploreItemToMyJournal(row){
+  const todayKey = dateKeyOf(todayReal);
+  // Always private on arrival, per spec — saving someone else's public moment must never
+  // auto-publish it again. Reuses the already-compressed image/thumb strings as-is rather
+  // than re-processing them (no redundant recompression of the same bytes).
+  journalMoments.push({
+    id:newId(), date:todayKey, type:row.type, title:row.title||'', description:row.description||'',
+    image:row.image||'', thumb:row.thumb||'', externalUrl:row.external_url||'',
+    location:row.location||null, artist:row.artist||'',
+    visibility:'private', savedFrom:{ momentId:row.id, author:row.author||'' },
+    createdAt:Date.now(), updatedAt:Date.now(), publishedAt:null,
+  });
+  saveJournalMoments();
+  document.getElementById('journalSheet').classList.remove('open');
+  journalMode = 'day';
+  journalViewedDate = todayKey;
+  buildJournalView();
 }
 
 function favPresets(){

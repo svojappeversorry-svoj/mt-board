@@ -180,6 +180,14 @@ Storage buckets is a real future improvement (smaller `app_data` rows, a CDN for
 a deliberate architecture change, not a prerequisite for iOS parity — do it later, as its own
 task, against DEV first, once it's actually being planned.
 
+## A second table: `public_journal_moments` (Journal → Explore)
+
+Unlike everything above, this one **is** a required manual step for a real, in-progress feature
+(Journal's Explore/"Make Public"), not iOS prep — `app_data`'s per-owner RLS can never serve a
+public feed, so Explore needs its own table with public-read RLS. Full explanation, the exact
+SQL, and why this session can't run it for you: **`docs/JOURNAL_PUBLIC_TABLE.md`**. Run that SQL
+against PROD for Explore to actually work today, and against DEV whenever DEV is created.
+
 ## Why this separation matters
 
 Without a separate project, any iOS-side experiment (signing up test users, writing malformed

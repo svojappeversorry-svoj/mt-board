@@ -184,6 +184,69 @@ in that existing layout, not something the 4-tab change introduced. Left as-is; 
 follow-up fix (likely the `.mood-row`/mood-slider width at very narrow viewports) outside the
 scope of this pass.
 
+## Journal redesign — "keep what you found today" (replaces the composer+timeline Journal)
+
+Journal changed from a freeform mood/text diary timeline to a Today-first board of typed
+"moments" (Photo/Place/Song/Movie/Recipe/Link/Note), private by default with an optional public
+Explore feed. See `docs/DATA_CONTRACTS.md` → `wp-journal-moments-v1` and
+`docs/JOURNAL_PUBLIC_TABLE.md` for the data model and the required Supabase table. No visual
+theme/palette/typography/nav-architecture changes were made — the new screens inherit whichever
+theme is active, exactly like Budget/Media already do.
+
+- [ ] Opening Journal from the bottom nav always lands on **today**, with today's real weekday
+      and date shown (e.g. "Tuesday, August 25"), regardless of what date was viewed last time
+- [ ] Empty state on a fresh account: "Did you find something worth keeping today?" +
+      "+ Keep a Moment", no console errors
+- [ ] **Keep a Moment** opens a sheet with exactly 7 options: Photo, Place, Song, Movie, Recipe,
+      Link, Note
+- [ ] **Photo**: pick an image → preview appears in the form; title/description optional; saves
+      without a title; the moment's card shows a real thumbnail (not the generic icon)
+- [ ] **Place**: name required (Save does nothing without it), map URL + description optional;
+      an entered map URL renders as a working "Open map" link in the moment's detail view
+- [ ] **Song**: name required, artist/link/description optional; an entered link opens in a new
+      tab from the detail view
+- [ ] **Movie**: title required, link/photo/description optional
+- [ ] **Recipe**: name required, link/photo/description optional; the link stays clickable
+- [ ] **Link**: URL required (Save does nothing without it), title optional; the URL opens in a
+      new tab
+- [ ] **Note**: note text required, title optional
+- [ ] After saving any type, the sheet closes and the new moment appears in today's list with
+      the right type icon/label
+- [ ] Tapping a saved moment opens its detail (title/description/image/link as applicable),
+      with **Edit** and **Delete** actions
+- [ ] Editing a moment prefills every existing field correctly and updates the card in place
+- [ ] Deleting a moment asks for confirmation, then removes it from the list
+- [ ] A Photo moment's full image is not requested until you actually open that moment (Network
+      tab / DOM: the list only ever renders `thumb`, the detail view is what sets `image`)
+- [ ] Tapping the calendar icon lets you pick a previous date; that date's moments load (or
+      "Nothing saved on this day." + "+ Keep a Moment" if none)
+- [ ] Creating a moment while viewing a previous date saves it under that date, not today
+- [ ] Leaving Journal (any other tab) and coming back always resets to today, even if a previous
+      date or Explore was open when you left
+- [ ] A new moment is **private** by default (🔒 badge, no explicit action needed to keep it that
+      way)
+- [ ] **Make Public** on a moment's detail flips the badge to 🌍 and the button to
+      **Make Private**; toggling back removes it from Explore immediately (requires the
+      `public_journal_moments` table from `docs/JOURNAL_PUBLIC_TABLE.md` to actually reach
+      Explore — without it, the toggle still flips locally and just logs a console warning)
+- [ ] **Explore** (button next to the calendar icon, inside Journal — confirm it did **not** add
+      a 6th bottom-nav tab; nav stays Budget/Journal/Today/Media/Settings) shows public moments
+      from other accounts, or a clear empty/unavailable message when signed out or offline
+- [ ] Opening a public moment from Explore shows its content and a **Save to My Journal** button
+- [ ] Saving an Explore moment adds it to today's Journal, privately, with "Saved from SVOJ
+      Explore · by {author}" shown in its detail — and does **not** alter or unpublish the
+      original public moment
+- [ ] A user can only ever edit/delete their **own** private moments (no UI path to another
+      account's private data — this was never exposed anywhere, same as every other per-user key)
+- [ ] All of the above persists correctly after a full page reload
+- [ ] Mobile viewport (390×844 and narrower) — no horizontal overflow anywhere in Journal,
+      Keep-a-Moment sheet, or Explore grid
+- [ ] All 4 themes (Digital Chrome, Pink Pop, Dark Romance, Botanical), both light and dark: the
+      Journal screens read as that theme (correct paper/ink/accent colors, no leftover styling
+      from another theme), with zero new theme-specific CSS added to make this true
+- [ ] Everything outside Journal (Budget, Today, Media, Settings, onboarding, avatar system,
+      theme switching) still works exactly as before this change
+
 ## Things that can't be tested from this sandboxed environment
 
 - **Real Supabase sign-up/sign-in against PROD** — deliberately not attempted, to avoid touching
@@ -194,6 +257,17 @@ scope of this pass.
   identically here), so the app correctly falls back to offline mode in this environment either
   way. Recommended: after this deploys, open the live Netlify site once in an ordinary browser
   and confirm sign-in still works, just to close the loop on a real network.
+- **Journal Explore against a real second account** — this sandbox can't reach the real
+  Supabase project (see above) or run the `public_journal_moments` SQL migration itself (see
+  `docs/JOURNAL_PUBLIC_TABLE.md`), so the actual cross-account path ("make public → a *different*
+  signed-in account sees it in Explore → that account saves it to their own Journal") could only
+  be exercised here by stubbing `journalFetchExplore()`'s return value and rendering the Explore
+  grid/detail/"Save to My Journal" from that fixture — real end-to-end network calls to
+  `public_journal_moments` were never made. What *was* verified for real: Make Public/Make
+  Private call Supabase and fail silently with a console warning (expected, since the table
+  doesn't exist yet in this sandbox's project), and every private-Journal path is fully
+  unaffected either way. Recommended: once that table is created, repeat this with two real
+  accounts on the deployed site before considering Explore done.
 
 ## Regression checks worth re-running specifically after future CSS/theme changes
 
