@@ -2261,7 +2261,14 @@
   .budget-type-btn.active.income-active{ background:#2e9e6d; border-color:#2e9e6d; }
   .month-expense-row.is-income .month-expense-right > span:first-child{ color:#2e9e6d; }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Pinned to an exact release (was the floating "@2" range, which silently serves whatever
+     the newest 2.x release is on every page load) so a new Supabase SDK release can never
+     change app behavior without a deliberate, reviewed version bump here. Confirmed against
+     the npm registry on 2026-08-25: "2" resolved to 2.112.4, published 2026-08-24, and that
+     package's own jsdelivr/unpkg metadata field names dist/umd/supabase.js as its browser
+     entry file — the same file this URL was already resolving to. To upgrade deliberately
+     later, bump BOTH the version and re-check that file path still matches the new release. -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4/dist/umd/supabase.js"></script>
 </head>
 <body class="bg-ctx-auth">
 
