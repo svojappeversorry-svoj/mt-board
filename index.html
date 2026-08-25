@@ -3469,11 +3469,14 @@ function applyBottomNavLanguage(){
   set('navBtnSettings', 'navSettings');
 }
 const BG_CONTEXTS = ['auth','space','day','budget','media','settings'];
-// Today and Journal reuse existing per-theme photo-background contexts instead of inventing
-// new ones — Today looks like the old My Day background, Journal reuses Media's (both are
-// about photos/memories) — zero new CSS needed for any theme. Budget/Media/Settings already
-// match a BG_CONTEXTS name directly, so they need no entry here.
-const NAV_TAB_BG_CTX = { today:'day', journal:'media' };
+// Each theme ships exactly 5 distinct photo backgrounds: auth+space share one (neither is a
+// bottom-nav tab), then day/budget/media/settings are each their own. Today and Journal reuse
+// those existing contexts instead of inventing new ones — Today looks like the old My Day
+// background, and Journal takes the "space" photo (otherwise only ever seen on the login
+// screen and the non-nav My Space page) so all 5 bottom-nav tabs end up on a different photo
+// with none of the 5 duplicated. Budget/Media/Settings already match a BG_CONTEXTS name
+// directly, so they need no entry here.
+const NAV_TAB_BG_CTX = { today:'day', journal:'space' };
 function setActiveNavTab(tab, bgCtxOverride){
   document.querySelectorAll('.bottom-nav-btn').forEach(b=> b.classList.toggle('active', b.dataset.nav===tab));
   // Digital Chrome's per-screen photo backgrounds (see the bg-ctx-* CSS rules) key off this
