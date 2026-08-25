@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Affise Support Toolkit</title>
+<meta name="theme-color" content="#141821">
+<style>
+  :root{
+    --bg:#0f1218;
+    --panel:#171b24;
+    --panel-2:#1e232f;
+    --border:#2a3040;
+    --text:#e7ebf3;
+    --text-dim:#9aa4b8;
+    --accent:#5b8cff;
+    --accent-2:#3ecf8e;
+    --warn:#f2a93b;
+    --danger:#f2586b;
+    --radius:10px;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  [data-theme="light"]{
+    --bg:#f4f5f8;
+    --panel:#ffffff;
+    --panel-2:#eef0f5;
+    --border:#dbe0ea;
+    --text:#181c24;
+    --text-dim:#5a6377;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--accent);}
+  button{font-family:inherit;}
+  .app{
+    display:flex;
+    flex-direction:column;
+    min-height:100vh;
+  }
+  header.top{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:12px 18px;
+    background:var(--panel);
+    border-bottom:1px solid var(--border);
+    position:sticky;
+    top:0;
+    z-index:20;
+    flex-wrap:wrap;
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight:700;
+    font-size:16px;
+    white-space:nowrap;
+  }
+  .brand .logo{
+    width:30px;height:30px;border-radius:8px;
+    background:linear-gradient(135deg,var(--accent),var(--accent-2));
+    display:flex;align-items:center;justify-content:center;
+    color:#0b0d12;font-weight:800;font-size:14px;
+  }
+  nav.tabs{
+    display:flex;
+    gap:4px;
+    background:var(--panel-2);
+    padding:4px;
+    border-radius:10px;
+    flex-wrap:wrap;
+  }
+  nav.tabs button{
+    border:none;
+    background:transparent;
+    color:var(--text-dim);
+    padding:8px 14px;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:13.5px;
+    font-weight:600;
+    transition:.15s;
+  }
+  nav.tabs button:hover{color:var(--text);}
+  nav.tabs button.active{
+    background:var(--panel);
+    color:var(--text);
+    box-shadow:0 1px 0 rgba(0,0,0,.2);
+  }
+  .top-right{
+    margin-left:auto;
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+  .icon-btn{
+    width:34px;height:34px;
+    border-radius:8px;
+    border:1px solid var(--border);
+    background:var(--panel-2);
+    color:var(--text-dim);
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    font-size:15px;
+  }
+  .icon-btn:hover{color:var(--text);border-color:var(--accent);}
+  main{
+    flex:1;
+    padding:20px;
+    max-width:1180px;
+    width:100%;
+    margin:0 auto;
+  }
+  .view{display:none;}
+  .view.active{display:block;}
+  h1.page-title{
+    font-size:19px;
+    margin:0 0 4px;
+  }
+  p.page-sub{
+    color:var(--text-dim);
+    margin:0 0 18px;
+    font-size:13.5px;
+  }
+  .grid{
+    display:grid;
+    gap:16px;
+  }
+  .card{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:16px;
+  }
+  .card h3{margin:0 0 10px;font-size:14.5px;}
+  .row{display:flex;gap:10px;flex-wrap:wrap;}
+  .field{display:flex;flex-direction:column;gap:5px;flex:1;min-width:160px;}
+  .field label{font-size:12px;color:var(--text-dim);font-weight:600;}
+  input[type=text], input[type=search], textarea, select{
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    color:var(--text);
+    border-radius:8px;
+    padding:8px 10px;
+    font-size:13.5px;
+    font-family:inherit;
+    width:100%;
+  }
+  textarea{font-family:var(--mono);resize:vertical;line-height:1.5;}
+  input:focus, textarea:focus, select:focus{outline:2px solid var(--accent);outline-offset:0;}
+  .btn{
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    padding:8px 14px;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:600;
+    font-size:13px;
+    white-space:nowrap;
+  }
+  .btn:hover{filter:brightness(1.08);}
+  .btn.secondary{
+    background:var(--panel-2);
+    color:var(--text);
+    border:1px solid var(--border);
+  }
+  .btn.ghost{
+    background:transparent;
+    color:var(--accent);
+    border:1px solid transparent;
+    padding:6px 8px;
+  }
+  .btn.danger{background:var(--danger);}
+  .btn.small{padding:5px 9px;font-size:12px;}
+  .chip{
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    color:var(--text-dim);
+    padding:3px 9px;
+    border-radius:999px;
+    font-size:11.5px;
+    cursor:pointer;
+  }
+  .chip:hover{color:var(--text);border-color:var(--accent);}
+  .macro-token{
+    font-family:var(--mono);
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    padding:1px 6px;
+    border-radius:5px;
+    font-size:12px;
+    cursor:pointer;
+  }
+  .macro-token:hover{border-color:var(--accent);color:var(--accent);}
+  code{font-family:var(--mono);}
+
+  /* KB */
+  .kb-layout{display:grid;grid-template-columns:220px 1fr;gap:16px;}
+  @media(max-width:780px){.kb-layout{grid-template-columns:1fr;}}
+  .kb-cats{display:flex;flex-direction:column;gap:4px;}
+  .kb-cat-btn{
+    text-align:left;
+    background:transparent;
+    border:none;
+    color:var(--text-dim);
+    padding:8px 10px;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:13px;
+    display:flex;justify-content:space-between;
+  }
+  .kb-cat-btn:hover{background:var(--panel-2);color:var(--text);}
+  .kb-cat-btn.active{background:var(--panel-2);color:var(--text);font-weight:700;}
+  .kb-cat-btn .count{color:var(--text-dim);font-weight:400;font-size:11.5px;}
+  .kb-list{display:flex;flex-direction:column;gap:10px;}
+  .kb-item{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    overflow:hidden;
+  }
+  .kb-item summary{
+    cursor:pointer;
+    list-style:none;
+    padding:12px 14px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    justify-content:space-between;
+  }
+  .kb-item summary::-webkit-details-marker{display:none;}
+  .kb-item summary .ttl{font-weight:600;font-size:13.5px;}
+  .kb-item summary .tags{display:flex;gap:5px;flex-wrap:wrap;}
+  .kb-item summary .tag{font-size:10.5px;color:var(--text-dim);background:var(--panel-2);padding:2px 7px;border-radius:999px;}
+  .kb-body{padding:0 14px 14px;border-top:1px solid var(--border);}
+  .kb-body .quickvars{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 8px;}
+  .kb-body textarea{min-height:130px;}
+  .kb-actions{display:flex;gap:8px;margin-top:8px;justify-content:space-between;align-items:center;}
+  .badge-builtin{font-size:10.5px;color:var(--text-dim);}
+
+  /* diagnostics */
+  .diag-item summary{
+    cursor:pointer;
+    list-style:none;
+    padding:14px 16px;
+    font-weight:700;
+    font-size:14px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .diag-item summary::-webkit-details-marker{display:none;}
+  .diag-item{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden;}
+  .diag-body{padding:0 16px 16px;border-top:1px solid var(--border);}
+  .diag-progress{font-size:12px;color:var(--text-dim);font-weight:500;}
+  .step{
+    display:flex;
+    gap:10px;
+    align-items:flex-start;
+    padding:9px 0;
+    border-bottom:1px dashed var(--border);
+  }
+  .step:last-child{border-bottom:none;}
+  .step input[type=checkbox]{margin-top:3px;width:16px;height:16px;flex:none;}
+  .step .stxt{font-size:13.5px;line-height:1.45;}
+  .step .stxt small{display:block;color:var(--text-dim);margin-top:2px;font-size:12px;}
+  .step.checked .stxt{color:var(--text-dim);text-decoration:line-through;}
+  .diag-foot{display:flex;justify-content:flex-end;margin-top:10px;}
+
+  .toast{
+    position:fixed;
+    bottom:20px;
+    left:50%;
+    transform:translateX(-50%) translateY(20px);
+    background:var(--panel-2);
+    border:1px solid var(--accent-2);
+    color:var(--text);
+    padding:10px 18px;
+    border-radius:999px;
+    font-size:13px;
+    font-weight:600;
+    opacity:0;
+    transition:.2s;
+    pointer-events:none;
+    z-index:100;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  .macro-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  .macro-table th, .macro-table td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);}
+  .macro-table th{color:var(--text-dim);font-weight:600;}
+  .macro-table td:last-child{color:var(--text-dim);}
+  .subtabs{display:flex;gap:6px;margin-bottom:14px;}
+  .subtabs button{
+    border:1px solid var(--border);
+    background:var(--panel);
+    color:var(--text-dim);
+    padding:7px 12px;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:13px;
+    font-weight:600;
+  }
+  .subtabs button.active{border-color:var(--accent);color:var(--text);background:var(--panel-2);}
+  .out-url{
+    font-family:var(--mono);
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:10px 12px;
+    font-size:12.5px;
+    word-break:break-all;
+    min-height:20px;
+  }
+  .two-col{display:grid;grid-template-columns:1.1fr .9fr;gap:16px;}
+  @media(max-width:900px){.two-col{grid-template-columns:1fr;}}
+  .footer-note{color:var(--text-dim);font-size:11.5px;margin-top:24px;text-align:center;padding-bottom:20px;}
+  .hidden{display:none !important;}
+  .form-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;}
+  .sub-row{display:flex;gap:8px;align-items:center;}
+  .sub-row .field{flex:1;}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand"><span class="logo">A</span> Affise Support Toolkit</div>
+    <nav class="tabs" id="mainTabs">
+      <button data-view="kb" class="active">База знаний</button>
+      <button data-view="links">Ссылки и постбеки</button>
+      <button data-view="diag">Диагностика</button>
+    </nav>
+    <div class="top-right">
+      <button class="icon-btn" id="themeBtn" title="Сменить тему">◐</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- ============ KB VIEW ============ -->
+    <section class="view active" id="view-kb">
+      <h1 class="page-title">База знаний и шаблоны ответов</h1>
+      <p class="page-sub">Готовые заготовки ответов по типовым темам Affise. Отредактируйте текст под тикет и скопируйте.</p>
+
+      <div class="row" style="margin-bottom:14px;">
+        <div class="field" style="max-width:340px;">
+          <input type="search" id="kbSearch" placeholder="Поиск по вопросам, ответам, тегам…">
+        </div>
+        <button class="btn secondary" id="kbAddBtn">+ Свой шаблон</button>
+      </div>
+
+      <div class="kb-layout">
+        <div class="kb-cats" id="kbCats"></div>
+        <div class="kb-list" id="kbList"></div>
+      </div>
+    </section>
+
+    <!-- ============ LINKS VIEW ============ -->
+    <section class="view" id="view-links">
+      <h1 class="page-title">Конструктор ссылок и постбеков</h1>
+      <p class="page-sub">Соберите tracking-ссылку или postback URL с нужными макросами Affise, скопируйте результат.</p>
+
+      <div class="subtabs" id="linkSubtabs">
+        <button data-sub="track" class="active">Tracking-ссылка</button>
+        <button data-sub="postback">Postback URL</button>
+        <button data-sub="macros">Справочник макросов</button>
+      </div>
+
+      <!-- TRACK LINK -->
+      <div id="sub-track" class="two-col">
+        <div class="card">
+          <h3>Параметры ссылки</h3>
+          <div class="grid" style="gap:10px;">
+            <div class="field">
+              <label>Tracking-домен</label>
+              <input type="text" id="trkDomain" placeholder="https://track.yourdomain.com">
+            </div>
+            <div class="row">
+              <div class="field"><label>offer_id</label><input type="text" id="trkOffer" placeholder="12345"></div>
+              <div class="field"><label>aff_id (partner_id)</label><input type="text" id="trkAff" placeholder="6789"></div>
+            </div>
+            <div class="form-grid" id="trkSubs"></div>
+            <div id="trkCustomList"></div>
+            <button class="btn secondary small" id="trkAddParam" style="align-self:flex-start;">+ Доп. параметр</button>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Результат</h3>
+          <div class="out-url" id="trkOut">—</div>
+          <div class="row" style="margin-top:10px;">
+            <button class="btn" id="trkCopy">Скопировать ссылку</button>
+            <button class="btn secondary" id="trkReset">Сбросить</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- POSTBACK -->
+      <div id="sub-postback" class="two-col hidden">
+        <div class="card">
+          <h3>Базовый URL постбека рекламодателя/сети</h3>
+          <div class="field" style="margin-bottom:12px;">
+            <input type="text" id="pbBase" placeholder="https://partner-domain.com/postback">
+          </div>
+          <h3>Макросы для добавления</h3>
+          <div id="pbMacroList" class="grid" style="gap:6px;"></div>
+          <label style="display:flex;gap:8px;align-items:center;margin-top:10px;font-size:12.5px;color:var(--text-dim);">
+            <input type="checkbox" id="pbEncode"> URL-кодировать фигурные скобки макросов (%7B%7D)
+          </label>
+        </div>
+        <div class="card">
+          <h3>Результат</h3>
+          <div class="out-url" id="pbOut">—</div>
+          <div class="row" style="margin-top:10px;">
+            <button class="btn" id="pbCopy">Скопировать URL</button>
+            <button class="btn secondary" id="pbReset">Сбросить</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- MACROS REF -->
+      <div id="sub-macros" class="card hidden">
+        <h3>Справочник макросов Affise</h3>
+        <p class="page-sub" style="margin-bottom:10px;">Клик по токену копирует его в буфер. Точный набор макросов зависит от версии/настроек трекера конкретного клиента.</p>
+        <div style="overflow:auto;">
+          <table class="macro-table" id="macroTable"></table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ DIAGNOSTICS VIEW ============ -->
+    <section class="view" id="view-diag">
+      <h1 class="page-title">Чек-листы диагностики</h1>
+      <p class="page-sub">Пошаговые сценарии проверки для типовых обращений. Прогресс сохраняется локально в браузере.</p>
+      <div id="diagList"></div>
+    </section>
+  </main>
+
+  <div class="footer-note">Все данные хранятся только в вашем браузере (localStorage). Ничего не отправляется на сервер.</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- utils ---------------- */
+  function $(sel,ctx){return (ctx||document).querySelector(sel);}
+  function $all(sel,ctx){return Array.from((ctx||document).querySelectorAll(sel));}
+  function escapeHtml(s){
+    return String(s==null?"":s).replace(/[&<>"']/g,function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+  function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8);}
+  function loadJSON(key, fallback){
+    try{ var v = localStorage.getItem(key); return v?JSON.parse(v):fallback; }catch(e){ return fallback; }
+  }
+  function saveJSON(key, val){ try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){} }
+
+  var toastEl = $("#toast");
+  var toastTimer=null;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove("show"); }, 1600);
+  }
+  function copyText(text){
+    if(navigator.clipboard && window.isSecureContext){
+      navigator.clipboard.writeText(text).then(function(){ toast("Скопировано"); }, function(){ fallbackCopy(text); });
+    } else {
+      fallbackCopy(text);
+    }
+  }
+  function fallbackCopy(text){
+    var ta=document.createElement("textarea");
+    ta.value=text; ta.style.position="fixed"; ta.style.opacity="0";
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    try{ document.execCommand("copy"); toast("Скопировано"); }catch(e){ toast("Не удалось скопировать"); }
+    document.body.removeChild(ta);
+  }
+
+  /* ---------------- theme ---------------- */
+  var THEME_KEY="affise_theme";
+  function applyTheme(t){
+    if(t==="light") document.documentElement.setAttribute("data-theme","light");
+    else document.documentElement.removeAttribute("data-theme");
+  }
+  var savedTheme = localStorage.getItem(THEME_KEY) || "dark";
+  applyTheme(savedTheme);
+  $("#themeBtn").addEventListener("click", function(){
+    savedTheme = savedTheme==="light" ? "dark" : "light";
+    applyTheme(savedTheme);
+    localStorage.setItem(THEME_KEY, savedTheme);
+  });
+
+  /* ---------------- top-level tabs ---------------- */
+  $all("#mainTabs button").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      $all("#mainTabs button").forEach(function(b){b.classList.remove("active");});
+      btn.classList.add("active");
+      $all(".view").forEach(function(v){v.classList.remove("active");});
+      $("#view-"+btn.dataset.view).classList.add("active");
+    });
+  });
+
+  /* ================= KNOWLEDGE BASE ================= */
+  var KB_BUILTIN = [
+    {cat:"Трекинг", title:"Партнёр пишет: лид/конверсия не засчиталась", tags:["трекинг","конверсия","лид"],
+      body:"Здравствуйте, {партнёр}!\n\nПроверили клик/конверсию по офферу {оффер}. Чтобы разобраться точнее, пришлите, пожалуйста:\n1) click_id или sub-параметр, который передавали в ссылке;\n2) точное время клика и оформления заявки (с указанием часового пояса);\n3) саму tracking-ссылку, по которой шёл трафик.\n\nПосле получения данных проверим лог кликов и статус конверсии в системе и вернёмся с ответом."},
+    {cat:"Трекинг", title:"Расхождение статистики трекера и рекламодателя", tags:["трекинг","статистика","расхождение"],
+      body:"Здравствуйте, {партнёр}!\n\nРасхождения между статистикой трекера и рекламодателя обычно связаны с:\n- разной атрибуцией (last click / first click / окно атрибуции);\n- задержкой в передаче постбеков со стороны рекламодателя;\n- отклонёнными после проверки конверсиями (фрод, дубли, невалидные лиды).\n\nПришлите, пожалуйста, период и офферы, по которым видите расхождение, — сверим логи конверсий и постбеков с нашей стороны."},
+    {cat:"Трекинг", title:"Как получить корректную tracking-ссылку по офферу", tags:["трекинг","ссылка","оффер"],
+      body:"Здравствуйте, {партнёр}!\n\nВаша персональная tracking-ссылка формируется в карточке оффера {оффер} в личном кабинете: раздел «Офферы» → нужный оффер → кнопка «Получить ссылку». Она уже содержит ваш aff_id, при необходимости можно добавить свои sub-параметры (sub1–sub5) для отслеживания источников трафика."},
+    {cat:"Трекинг", title:"Клик не редиректит на страницу оффера", tags:["трекинг","редирект","клик"],
+      body:"Здравствуйте, {партнёр}!\n\nЧтобы разобраться с редиректом, уточните, пожалуйста:\n1) саму ссылку, по которой кликали;\n2) устройство/браузер и была ли включена блокировка рекламы/трекеров;\n3) какой результат видите — ошибку, пустую страницу, редирект не туда.\n\nПроверим статус оффера (активен/приостановлен/лимит исчерпан) и корректность целевого URL в настройках оффера."},
+    {cat:"Трекинг", title:"Deep link / трекинг в приложении не работает", tags:["deep link","приложение","мобайл"],
+      body:"Здравствуйте, {партнёр}!\n\nДля deep link трекинга в приложении важно, чтобы:\n- SDK/трекер приложения был корректно интегрирован и передавал click_id;\n- deep link ссылка была получена именно из карточки оффера (не обычная web-ссылка);\n- атрибуция была настроена в рекламодателе на приём постбеков от нашей системы.\n\nПришлите лог клика/установки и используемую ссылку — проверим прохождение по цепочке."},
+
+    {cat:"Постбеки", title:"Как настроить постбек в личном кабинете", tags:["постбек","s2s","настройка"],
+      body:"Здравствуйте, {партнёр}!\n\nПостбек настраивается в разделе «Постбеки» личного кабинета: укажите URL вашей системы с нужными макросами (click_id, status, payout, goal и т.д.), выберите офферы/цели, на которые он должен срабатывать, и сохраните. После сохранения рекомендуем отправить тестовый постбек, чтобы убедиться, что он доходит и корректно обрабатывается."},
+    {cat:"Постбеки", title:"Постбек не приходит на сторону партнёра", tags:["постбек","не приходит","ошибка"],
+      body:"Здравствуйте, {партнёр}!\n\nЧтобы найти причину, уточните:\n1) URL постбека, который указан в настройках;\n2) отвечает ли этот URL 2xx на тестовый запрос (мы можем прислать тестовый вызов);\n3) не блокируется ли запрос со стороны вашего сервера (файрвол, whitelist по IP).\n\nСо своей стороны проверим лог отправки постбеков — статус ответа, код ошибки и количество попыток отправки (retry)."},
+    {cat:"Постбеки", title:"Какие макросы доступны для постбека", tags:["постбек","макросы"],
+      body:"Здравствуйте, {партнёр}!\n\nВ postback URL можно использовать макросы: {click_id}, {offer_id}, {offer_name}, {goal}, {status}, {payout}, {currency}, {sub1}…{sub5}, {country}, {transaction_id} и другие. Полный список актуальных макросов для вашего аккаунта смотрите в разделе «Постбеки» → «Доступные макросы» — набор может отличаться в зависимости от настроек трекера."},
+    {cat:"Постбеки", title:"В чём разница между Server Postback и Pixel", tags:["постбек","pixel","s2s"],
+      body:"Здравствуйте, {партнёр}!\n\nServer-to-server (S2S) постбек — это прямой запрос с сервера трекера на ваш URL, наиболее надёжный способ передачи конверсий, не зависит от браузера пользователя. Pixel — это отслеживающий тег/картинка, который срабатывает на странице благодарности в браузере пользователя, и может не сработать при блокировке рекламы/скриптов или закрытии страницы раньше времени. Рекомендуем использовать S2S постбек там, где это возможно."},
+    {cat:"Постбеки", title:"Как работает повторная отправка постбека (retry)", tags:["постбек","retry","повтор"],
+      body:"Здравствуйте, {партнёр}!\n\nЕсли ваш сервер не отвечает кодом 2xx, система выполняет повторные попытки отправки постбека через заданные интервалы (конкретные тайминги и число попыток см. в настройках аккаунта/раздела постбеков). Также можно вручную инициировать повторную отправку конкретного постбека из карточки конверсии в статистике."},
+
+    {cat:"Статусы", title:"Что означают статусы конверсий", tags:["статус","конверсия","approved","hold"],
+      body:"Здравствуйте, {партнёр}!\n\nТиповые статусы конверсий: «pending» (ожидает подтверждения), «hold» (на удержании до проверки), «approved/confirmed» (подтверждена, засчитывается к оплате), «declined» (отклонена — например, дубль, фрод, невалидные данные). Точные названия и правила смены статусов могут быть настроены индивидуально в вашем аккаунте."},
+    {cat:"Статусы", title:"Конверсия долго висит в статусе hold", tags:["статус","hold","задержка"],
+      body:"Здравствуйте, {партнёр}!\n\nСтатус «hold» означает, что конверсия ожидает подтверждения со стороны рекламодателя (проверка качества лида, антифрод и т.д.). Срок удержания зависит от условий конкретного оффера. Уточним у менеджера оффера {оффер} причину задержки и вернёмся с ответом по срокам."},
+    {cat:"Статусы", title:"Можно ли вручную изменить статус конверсии", tags:["статус","ручное изменение"],
+      body:"Здравствуйте!\n\nИзменение статуса конверсии вручную доступно менеджеру/администратору в карточке конверсии (статистика → выбранная конверсия → изменить статус). При массовом изменении статусов рекомендуем использовать пакетное обновление, чтобы событие корректно ушло в постбек партнёру."},
+
+    {cat:"Выплаты", title:"Когда начисляется выплата за конверсию", tags:["выплата","payout","финансы"],
+      body:"Здравствуйте, {партнёр}!\n\nВыплата по конверсии становится доступна к запросу после того, как она переходит в статус «approved/confirmed» и проходит холд-период, установленный по офферу {оффер}. Актуальный баланс и доступную к выводу сумму можно увидеть в разделе «Финансы» личного кабинета."},
+    {cat:"Выплаты", title:"Payout в статистике не совпадает с условиями оффера", tags:["выплата","payout","расхождение"],
+      body:"Здравствуйте, {партнёр}!\n\nПришлите, пожалуйста, ID конверсий, по которым видите расхождение в payout. Возможные причины: изменение ставки по офферу в определённый период, индивидуальная ставка для гео/источника, либо частичная выплата за декремент (например, при уменьшении суммы заказа). Проверим и вернёмся с детализацией по каждой конверсии."},
+    {cat:"Выплаты", title:"Как запросить выплату и какой минимальный порог", tags:["выплата","вывод средств","порог"],
+      body:"Здравствуйте, {партнёр}!\n\nЗапрос на выплату оформляется в разделе «Финансы» → «Запросить выплату». Минимальный порог для вывода и доступные способы оплаты указаны там же и могут отличаться в зависимости от вашего договора и региона."},
+
+    {cat:"Интеграции и API", title:"Как получить API-ключ", tags:["api","ключ","интеграция"],
+      body:"Здравствуйте, {партнёр}!\n\nAPI-ключ (токен) генерируется в разделе «Профиль» → «API» личного кабинета. Используйте его в заголовке запроса согласно документации API. Рекомендуем не передавать ключ третьим лицам и при подозрении на компрометацию — перевыпустить его."},
+    {cat:"Интеграции и API", title:"Ошибка авторизации API (401/403)", tags:["api","ошибка","401","403"],
+      body:"Здравствуйте!\n\nОшибка 401/403 обычно означает, что токен неверный, просрочен, отсутствует в заголовке запроса или у ключа недостаточно прав на запрашиваемый метод. Проверьте:\n1) правильно ли передан заголовок авторизации;\n2) не был ли перевыпущен ключ;\n3) есть ли у роли/ключа доступ к нужному эндпоинту.\n\nПришлите пример запроса (без самого значения ключа) — поможем найти причину."},
+    {cat:"Интеграции и API", title:"Есть ли лимиты на количество запросов к API (rate limit)", tags:["api","лимиты","rate limit"],
+      body:"Здравствуйте, {партнёр}!\n\nДа, для API действуют ограничения по количеству запросов в единицу времени во избежание перегрузки системы. При достижении лимита сервер возвращает код 429 — в этом случае нужно повторить запрос с задержкой (экспоненциальный backoff). Точные значения лимитов для вашего аккаунта уточним дополнительно."},
+    {cat:"Интеграции и API", title:"Как импортировать офферы через API/фид", tags:["api","фид","импорт офферов"],
+      body:"Здравствуйте, {партнёр}!\n\nСписок офферов можно получать через соответствующий метод API (offers list) либо через XML/CSV фид, ссылка на который доступна в разделе интеграций. Рекомендуем настроить регулярное обновление фида (не чаще рекомендованного интервала), чтобы не превышать лимиты запросов."},
+
+    {cat:"Аккаунт", title:"Восстановление доступа к аккаунту", tags:["аккаунт","доступ","пароль","2fa"],
+      body:"Здравствуйте!\n\nДля восстановления доступа воспользуйтесь формой «Забыли пароль» на странице входа — на привязанную почту придёт ссылка для сброса. Если включена двухфакторная аутентификация и нет доступа к устройству с кодами, потребуется дополнительная верификация личности — уточним детали в следующем сообщении."},
+    {cat:"Аккаунт", title:"Ролевая модель / права доступа саб-пользователей", tags:["роли","доступ","саб-аккаунт"],
+      body:"Здравствуйте!\n\nВ разделе «Команда»/«Пользователи» можно добавить саб-пользователя и назначить ему роль с определённым набором прав (просмотр статистики, управление офферами, финансы и т.д.). Рекомендуем выдавать минимально необходимый набор прав под задачу сотрудника."},
+    {cat:"Аккаунт", title:"Как добавить менеджера или саб-аккаунт", tags:["саб-аккаунт","менеджер","команда"],
+      body:"Здравствуйте!\n\nДобавить нового пользователя можно в разделе «Команда» → «Пригласить пользователя», указав e-mail и роль. Приглашённый получит письмо со ссылкой для установки пароля и доступа к аккаунту в рамках назначенной роли."}
+  ];
+  var KB_KEY="affise_kb_custom";
+  var kbState = { search:"", cat:"Все" };
+
+  function getCustomKb(){ return loadJSON(KB_KEY, []); }
+  function saveCustomKb(list){ saveJSON(KB_KEY, list); }
+
+  function allKbItems(){
+    var custom = getCustomKb().map(function(it){ return Object.assign({custom:true}, it); });
+    var builtin = KB_BUILTIN.map(function(it,i){ return Object.assign({id:"b"+i, custom:false}, it); });
+    return builtin.concat(custom);
+  }
+
+  function kbCategories(items){
+    var cats = {};
+    items.forEach(function(it){ cats[it.cat]=(cats[it.cat]||0)+1; });
+    return cats;
+  }
+
+  function renderKbCats(){
+    var items = allKbItems();
+    var cats = kbCategories(items);
+    var html = '<button class="kb-cat-btn '+(kbState.cat==="Все"?"active":"")+'" data-cat="Все">Все <span class="count">'+items.length+'</span></button>';
+    Object.keys(cats).sort().forEach(function(c){
+      html += '<button class="kb-cat-btn '+(kbState.cat===c?"active":"")+'" data-cat="'+escapeHtml(c)+'">'+escapeHtml(c)+' <span class="count">'+cats[c]+'</span></button>';
+    });
+    $("#kbCats").innerHTML = html;
+    $all(".kb-cat-btn", $("#kbCats")).forEach(function(b){
+      b.addEventListener("click", function(){ kbState.cat=b.dataset.cat; renderAll(); });
+    });
+  }
+
+  function matchesSearch(it, q){
+    if(!q) return true;
+    q = q.toLowerCase();
+    return (it.title+" "+it.body+" "+it.tags.join(" ")).toLowerCase().indexOf(q) !== -1;
+  }
+
+  function renderKbList(){
+    var items = allKbItems().filter(function(it){
+      return (kbState.cat==="Все" || it.cat===kbState.cat) && matchesSearch(it, kbState.search);
+    });
+    var wrap = $("#kbList");
+    if(!items.length){
+      wrap.innerHTML = '<p style="color:var(--text-dim);font-size:13px;">Ничего не найдено.</p>';
+      return;
+    }
+    wrap.innerHTML = items.map(function(it){
+      return '<details class="kb-item" data-id="'+it.id+'">' +
+        '<summary><span class="ttl">'+escapeHtml(it.title)+'</span>' +
+        '<span class="tags">'+it.tags.map(function(t){return '<span class="tag">'+escapeHtml(t)+'</span>';}).join("")+'</span>' +
+        '</summary>' +
+        '<div class="kb-body">' +
+          '<div class="quickvars">' +
+            ['{партнёр}','{оффер}','{click_id}','{дата}'].map(function(v){return '<span class="chip" data-insert="'+escapeHtml(v)+'">+ '+escapeHtml(v)+'</span>';}).join("") +
+          '</div>' +
+          '<textarea data-role="body">'+escapeHtml(it.body)+'</textarea>' +
+          '<div class="kb-actions">' +
+            '<span class="badge-builtin">'+(it.custom? 'свой шаблон' : 'встроенный · категория: '+escapeHtml(it.cat))+'</span>' +
+            '<span class="row">' +
+              (it.custom ? '<button class="btn secondary small" data-act="del">Удалить</button>' : '') +
+              '<button class="btn small" data-act="copy">Копировать</button>' +
+            '</span>' +
+          '</div>' +
+        '</div>' +
+      '</details>';
+    }).join("");
+
+    $all(".kb-item", wrap).forEach(function(node){
+      var ta = $("textarea", node);
+      $all(".chip", node).forEach(function(chip){
+        chip.addEventListener("click", function(){
+          var pos = ta.selectionStart || ta.value.length;
+          var val = ta.value;
+          ta.value = val.slice(0,pos) + chip.dataset.insert + val.slice(pos);
+          ta.focus();
+        });
+      });
+      var copyBtn = node.querySelector('[data-act="copy"]');
+      if(copyBtn) copyBtn.addEventListener("click", function(){ copyText(ta.value); });
+      var delBtn = node.querySelector('[data-act="del"]');
+      if(delBtn) delBtn.addEventListener("click", function(){
+        var list = getCustomKb().filter(function(it){ return it.id !== node.dataset.id; });
+        saveCustomKb(list);
+        renderAll();
+        toast("Шаблон удалён");
+      });
+    });
+  }
+
+  $("#kbSearch").addEventListener("input", function(e){ kbState.search = e.target.value; renderKbList(); });
+
+  $("#kbAddBtn").addEventListener("click", function(){
+    var title = prompt("Название шаблона:");
+    if(!title) return;
+    var cat = prompt("Категория:", "Свои шаблоны") || "Свои шаблоны";
+    var tags = prompt("Теги через запятую:", "") || "";
+    var body = prompt("Текст ответа:", "") || "";
+    var list = getCustomKb();
+    list.push({ id:"c"+uid(), title:title, cat:cat, tags: tags.split(",").map(function(t){return t.trim();}).filter(Boolean), body:body });
+    saveCustomKb(list);
+    renderAll();
+    toast("Шаблон добавлен");
+  });
+
+  /* ================= LINKS: tracking / postback / macros ================= */
+  var MACROS = [
+    ["click_id","Уникальный идентификатор клика"],
+    ["offer_id","ID оффера"],
+    ["offer_name","Название оффера"],
+    ["aff_id","ID партнёра (partner_id)"],
+    ["aff_sub / sub1…sub5","Пользовательские sub-параметры партнёра"],
+    ["goal","Идентификатор/название цели конверсии"],
+    ["status","Статус конверсии (pending/hold/approved/declined — зависит от настроек аккаунта)"],
+    ["payout","Сумма выплаты партнёру"],
+    ["sum / revenue","Сумма дохода/заказа"],
+    ["currency","Валюта конверсии"],
+    ["country","Страна клика/конверсии (ISO код)"],
+    ["ip","IP-адрес пользователя"],
+    ["transaction_id","ID транзакции/заказа рекламодателя"],
+    ["p1…p10","Дополнительные пользовательские параметры"],
+    ["offer_url","Целевой URL оффера, куда идёт редирект"]
+  ];
+  function renderMacroTable(){
+    var html = "<tr><th>Макрос</th><th>Описание</th></tr>";
+    MACROS.forEach(function(m){
+      html += '<tr><td><span class="macro-token" data-copy="{'+escapeHtml(m[0].split(" ")[0])+'}">{'+escapeHtml(m[0])+'}</span></td><td>'+escapeHtml(m[1])+'</td></tr>';
+    });
+    $("#macroTable").innerHTML = html;
+    $all(".macro-token", $("#macroTable")).forEach(function(el){
+      el.addEventListener("click", function(){ copyText(el.dataset.copy); });
+    });
+  }
+
+  $all("#linkSubtabs button").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      $all("#linkSubtabs button").forEach(function(b){b.classList.remove("active");});
+      btn.classList.add("active");
+      ["track","postback","macros"].forEach(function(name){
+        $("#sub-"+name).classList.toggle("hidden", name!==btn.dataset.sub);
+      });
+    });
+  });
+
+  // --- tracking link builder ---
+  var TRK_KEY="affise_trk_state";
+  function trkSubsHtml(){
+    var html="";
+    for(var i=1;i<=5;i++){
+      html += '<div class="field"><label>sub'+i+'</label><input type="text" id="trkSub'+i+'" placeholder="sub'+i+'"></div>';
+    }
+    return html;
+  }
+  $("#trkSubs").innerHTML = trkSubsHtml();
+
+  var trkCustomParams = [];
+  function renderTrkCustom(){
+    $("#trkCustomList").innerHTML = trkCustomParams.map(function(p,i){
+      return '<div class="sub-row" data-i="'+i+'">' +
+        '<div class="field"><input type="text" class="ck" placeholder="ключ" value="'+escapeHtml(p.k)+'"></div>' +
+        '<div class="field"><input type="text" class="cv" placeholder="значение" value="'+escapeHtml(p.v)+'"></div>' +
+        '<button class="btn secondary small" data-rm="'+i+'">✕</button>' +
+      '</div>';
+    }).join("");
+    $all("#trkCustomList .sub-row").forEach(function(row){
+      var i = +row.dataset.i;
+      row.querySelector(".ck").addEventListener("input", function(e){ trkCustomParams[i].k=e.target.value; buildTrackingLink(); });
+      row.querySelector(".cv").addEventListener("input", function(e){ trkCustomParams[i].v=e.target.value; buildTrackingLink(); });
+      row.querySelector("[data-rm]").addEventListener("click", function(){ trkCustomParams.splice(i,1); renderTrkCustom(); buildTrackingLink(); });
+    });
+  }
+  $("#trkAddParam").addEventListener("click", function(){ trkCustomParams.push({k:"",v:""}); renderTrkCustom(); });
+
+  function buildTrackingLink(){
+    var domain = $("#trkDomain").value.trim().replace(/\/+$/,"");
+    if(!domain){ $("#trkOut").textContent="—"; return ""; }
+    var params = [];
+    var offer = $("#trkOffer").value.trim();
+    var aff = $("#trkAff").value.trim();
+    if(offer) params.push("offer_id="+offer);
+    if(aff) params.push("aff_id="+aff);
+    for(var i=1;i<=5;i++){
+      var v = $("#trkSub"+i).value.trim();
+      if(v) params.push("sub"+i+"="+encodeURIComponent(v));
+    }
+    trkCustomParams.forEach(function(p){
+      if(p.k) params.push(encodeURIComponent(p.k)+"="+encodeURIComponent(p.v||""));
+    });
+    var url = domain + (domain.indexOf("/click")===-1 ? "/click" : "") + (params.length? "?"+params.join("&") : "");
+    $("#trkOut").textContent = url;
+    saveJSON(TRK_KEY, {domain:domain});
+    return url;
+  }
+  ["trkDomain","trkOffer","trkAff"].forEach(function(id){ $("#"+id).addEventListener("input", buildTrackingLink); });
+  for(var i=1;i<=5;i++){ $("#trkSub"+i).addEventListener("input", buildTrackingLink); }
+  $("#trkCopy").addEventListener("click", function(){
+    var url = buildTrackingLink();
+    if(url) copyText(url); else toast("Заполните домен");
+  });
+  $("#trkReset").addEventListener("click", function(){
+    ["trkDomain","trkOffer","trkAff"].forEach(function(id){ $("#"+id).value=""; });
+    for(var i=1;i<=5;i++){ $("#trkSub"+i).value=""; }
+    trkCustomParams=[]; renderTrkCustom();
+    buildTrackingLink();
+  });
+  (function initTrk(){
+    var saved = loadJSON(TRK_KEY, null);
+    if(saved && saved.domain) $("#trkDomain").value = saved.domain;
+    renderTrkCustom();
+    buildTrackingLink();
+  })();
+
+  // --- postback builder ---
+  var PB_MACROS = [
+    ["click_id","click_id",true],
+    ["status","status",true],
+    ["payout","payout",true],
+    ["goal","goal",false],
+    ["offer_id","offer_id",false],
+    ["sub1","sub1",false],
+    ["sub2","sub2",false],
+    ["currency","currency",false],
+    ["transaction_id","transaction_id",false],
+    ["country","country",false]
+  ];
+  function renderPbMacroList(){
+    $("#pbMacroList").innerHTML = PB_MACROS.map(function(m,idx){
+      return '<div class="row" data-i="'+idx+'" style="align-items:center;">' +
+        '<label style="display:flex;gap:6px;align-items:center;min-width:150px;font-size:13px;">' +
+          '<input type="checkbox" class="pbchk" '+(m[2]?"checked":"")+'> <span class="macro-token">{'+m[0]+'}</span>' +
+        '</label>' +
+        '<input type="text" class="pbname" value="'+m[1]+'" style="max-width:140px;" placeholder="имя параметра">' +
+      '</div>';
+    }).join("");
+    $all("#pbMacroList .row").forEach(function(row){
+      row.querySelector(".pbchk").addEventListener("change", buildPostback);
+      row.querySelector(".pbname").addEventListener("input", buildPostback);
+    });
+  }
+  function buildPostback(){
+    var base = $("#pbBase").value.trim();
+    if(!base){ $("#pbOut").textContent="—"; return ""; }
+    var encode = $("#pbEncode").checked;
+    var parts = [];
+    $all("#pbMacroList .row").forEach(function(row,idx){
+      var chk = row.querySelector(".pbchk");
+      var name = row.querySelector(".pbname").value.trim() || PB_MACROS[idx][1];
+      if(chk.checked){
+        var macro = "{"+PB_MACROS[idx][0]+"}";
+        if(encode) macro = "%7B"+PB_MACROS[idx][0]+"%7D";
+        parts.push(name+"="+macro);
+      }
+    });
+    var sep = base.indexOf("?")===-1 ? "?" : "&";
+    var url = base + (parts.length? sep+parts.join("&") : "");
+    $("#pbOut").textContent = url;
+    return url;
+  }
+  $("#pbBase").addEventListener("input", buildPostback);
+  $("#pbEncode").addEventListener("change", buildPostback);
+  $("#pbCopy").addEventListener("click", function(){
+    var url = buildPostback();
+    if(url) copyText(url); else toast("Заполните базовый URL");
+  });
+  $("#pbReset").addEventListener("click", function(){
+    $("#pbBase").value=""; $("#pbEncode").checked=false;
+    renderPbMacroList();
+    buildPostback();
+  });
+  renderPbMacroList();
+  buildPostback();
+  renderMacroTable();
+
+  /* ================= DIAGNOSTICS ================= */
+  var DIAG = [
+    {id:"lead", title:"Лид/конверсия не засчиталась", steps:[
+      ["Уточнить у партнёра click_id или sub-параметр и точное время клика/заявки", "Без click_id найти клик в логах почти невозможно"],
+      ["Проверить лог кликов по указанному click_id / временному диапазону", "Раздел «Клики» / «Логи» в системе"],
+      ["Проверить, дошёл ли клик до целевой страницы оффера (редирект)", "Если клика нет в логах — проблема на стороне источника трафика или блокировщиков"],
+      ["Проверить, есть ли конверсия по этому клику и её статус", "pending / hold / declined / отсутствует"],
+      ["Если конверсии нет — проверить, приходил ли постбек от рекламодателя", "Смотреть лог входящих постбеков по офферу"],
+      ["Если постбек не приходил — связаться с менеджером оффера/рекламодателем", "Уточнить, было ли событие на их стороне"],
+      ["Сообщить партнёру результат с указанием причины и дальнейших шагов", ""]
+    ]},
+    {id:"postback", title:"Постбек не приходит партнёру", steps:[
+      ["Проверить URL постбека в настройках партнёра на опечатки/протокол (http/https)", ""],
+      ["Отправить тестовый постбек и посмотреть код ответа сервера партнёра", "Ожидается 2xx; если таймаут/5xx/4xx — проблема на стороне партнёра"],
+      ["Проверить лог отправленных постбеков: статус, количество попыток, последняя ошибка", ""],
+      ["Уточнить у партнёра, не блокирует ли их сервер входящие запросы по IP/User-Agent", "Файрвол, whitelist"],
+      ["Проверить, что постбек привязан к нужным офферам/целям", "Возможно, событие просто не подпадает под условия срабатывания"],
+      ["При необходимости — инициировать ручную повторную отправку постбека по конкретной конверсии", ""]
+    ]},
+    {id:"redirect", title:"Клик не редиректит на оффер / ошибка на клике", steps:[
+      ["Проверить статус оффера — активен, на паузе, лимит исчерпан", ""],
+      ["Проверить корректность целевого URL (offer_url) в настройках оффера", "Опечатка, устаревший домен, редирект в никуда"],
+      ["Проверить саму tracking-ссылку партнёра на корректность параметров", "offer_id, aff_id соответствуют реальным"],
+      ["Воспроизвести клик самостоятельно (в новом приватном окне) и посмотреть результат", ""],
+      ["Проверить гео/устройство/таргетинг оффера — не блокируется ли клик правилами таргетинга", "Гео-фильтры, ограничение по устройствам, дедупликация"],
+      ["Сообщить результат партнёру / эскалировать на менеджера оффера при необходимости", ""]
+    ]},
+    {id:"stats", title:"Расхождение статистики (трекер vs рекламодатель)", steps:[
+      ["Уточнить точный период и офферы, по которым партнёр видит расхождение", ""],
+      ["Сравнить количество кликов/конверсий в трекере и в отчёте рекламодателя за тот же период", ""],
+      ["Проверить модель атрибуции (last click / first click, окно атрибуции)", "Разные модели дают разные цифры"],
+      ["Проверить, все ли конверсии рекламодателя доходят постбеком (нет потерянных постбеков)", ""],
+      ["Проверить долю отклонённых/дублирующихся конверсий — они могут не попадать в отчёт рекламодателя", ""],
+      ["Подготовить сводку расхождений с конкретными ID конверсий для дальнейшей сверки", ""]
+    ]},
+    {id:"status", title:"Статус конверсии некорректный / завис в hold", steps:[
+      ["Открыть карточку конверсии и посмотреть историю изменения статуса", ""],
+      ["Проверить условия холд-периода по офферу (сколько дней конверсия должна находиться в hold)", ""],
+      ["Если холд-период истёк — уточнить у менеджера оффера причину задержки подтверждения", ""],
+      ["Проверить, не помечена ли конверсия как подозрительная (антифрод/дубль)", ""],
+      ["При необходимости — вручную обновить статус (только при наличии подтверждения от рекламодателя)", ""],
+      ["Сообщить партнёру ожидаемые сроки и причину при наличии", ""]
+    ]},
+    {id:"api", title:"Ошибка API / проблема интеграции", steps:[
+      ["Запросить у пользователя точный запрос (метод, URL, заголовки без значения ключа, тело) и код ответа", ""],
+      ["Проверить код ошибки: 401/403 — авторизация, 404 — неверный эндпоинт, 429 — превышен rate limit, 5xx — ошибка сервера", ""],
+      ["Проверить актуальность и права API-ключа пользователя", ""],
+      ["Воспроизвести запрос самостоятельно / в Postman с тестовым ключом", ""],
+      ["Проверить статус самого API-сервиса (нет ли известного инцидента)", ""],
+      ["Дать пользователю рекомендацию по исправлению запроса или эскалировать в разработку", ""]
+    ]}
+  ];
+  var DIAG_KEY="affise_diag_state";
+  function getDiagState(){ return loadJSON(DIAG_KEY, {}); }
+  function setStepChecked(scenarioId, idx, checked){
+    var st = getDiagState();
+    st[scenarioId] = st[scenarioId] || {};
+    st[scenarioId][idx] = checked;
+    saveJSON(DIAG_KEY, st);
+  }
+  function renderDiag(){
+    var st = getDiagState();
+    $("#diagList").innerHTML = DIAG.map(function(sc){
+      var checkedCount = 0;
+      var stepsHtml = sc.steps.map(function(s, idx){
+        var isChecked = !!(st[sc.id] && st[sc.id][idx]);
+        if(isChecked) checkedCount++;
+        return '<div class="step '+(isChecked?"checked":"")+'" data-idx="'+idx+'">' +
+          '<input type="checkbox" '+(isChecked?"checked":"")+'>' +
+          '<div class="stxt">'+escapeHtml(s[0])+(s[1]?'<small>'+escapeHtml(s[1])+'</small>':'')+'</div>' +
+        '</div>';
+      }).join("");
+      return '<details class="diag-item" data-sc="'+sc.id+'">' +
+        '<summary><span>'+escapeHtml(sc.title)+'</span><span class="diag-progress">'+checkedCount+'/'+sc.steps.length+'</span></summary>' +
+        '<div class="diag-body">' + stepsHtml +
+          '<div class="diag-foot"><button class="btn secondary small" data-reset="'+sc.id+'">Сбросить прогресс</button></div>' +
+        '</div>' +
+      '</details>';
+    }).join("");
+
+    $all(".diag-item").forEach(function(node){
+      var scId = node.dataset.sc;
+      $all(".step", node).forEach(function(stepEl){
+        var idx = +stepEl.dataset.idx;
+        var cb = stepEl.querySelector("input");
+        cb.addEventListener("change", function(){
+          setStepChecked(scId, idx, cb.checked);
+          stepEl.classList.toggle("checked", cb.checked);
+          var count = $all(".step input:checked", node).length;
+          node.querySelector(".diag-progress").textContent = count+"/"+DIAG.find(function(s){return s.id===scId;}).steps.length;
+        });
+      });
+      node.querySelector("[data-reset]").addEventListener("click", function(e){
+        e.preventDefault();
+        var st2 = getDiagState();
+        st2[scId] = {};
+        saveJSON(DIAG_KEY, st2);
+        renderDiag();
+      });
+    });
+  }
+
+  /* ================= init ================= */
+  function renderAll(){
+    renderKbCats();
+    renderKbList();
+  }
+  renderAll();
+  renderDiag();
+
+})();
+</script>
+</body>
+</html>
