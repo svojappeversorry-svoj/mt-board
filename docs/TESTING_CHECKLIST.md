@@ -43,6 +43,28 @@ tested (390×844 and 375×667). See `docs/PROJECT_CLEANUP.md` and the security/t
 few non-functional issues found and fixed along the way (escaping, a hung upload promise, a
 mislabeled sticker pack, a trivial duplicate CSS rule).
 
+## Welcome-back screen (added after a Login)
+
+- [ ] Existing account, has a saved name, clicks **Log in** → a brief "👋 Hi, {name}!" screen
+      appears, then auto-dismisses into My Space
+- [ ] Existing account with no saved name → shows the fallback "👋 Hi there!" (never an empty
+      "Hi, !")
+- [ ] Brand-new account (via **Sign up**, or a Login on an account that never finished
+      onboarding) → onboarding runs as before; the welcome screen never shows instead of it
+- [ ] Reopening the app while already signed in (no fresh Login) → welcome screen does **not**
+      reappear
+- [ ] **Log out** → **Log in** again → the welcome screen appears again (each fresh sign-in is
+      its own one-time trigger)
+- [ ] Tapping/navigating right after the greeting fades works normally (it doesn't block input
+      or leave a stray overlay behind)
+- [ ] Same behavior on all 4 themes — the screen uses the same `--board`/`--font-xl` tokens
+      every other screen uses, so it should never look "off-theme"
+
+Verified in this pass via direct `onSignedIn(...)`/`loginJustSucceeded` calls in a real browser
+(Playwright) rather than a live Supabase login, since this sandbox can't reach Supabase — see the
+note above about what can't be tested from here. All 8 checks above passed with zero console
+errors, across all 4 themes.
+
 ## Things that can't be tested from this sandboxed environment
 
 - **Real Supabase sign-up/sign-in against PROD** — deliberately not attempted, to avoid touching

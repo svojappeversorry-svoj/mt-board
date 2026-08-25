@@ -1685,6 +1685,17 @@
   .auth-screen{ position:fixed; inset:0; z-index:200; background: var(--board); display:flex; align-items:center; justify-content:center; overflow:hidden;
     padding: calc(20px + var(--safe-top)) calc(20px + var(--safe-right)) calc(20px + var(--safe-bottom)) calc(20px + var(--safe-left)); }
   .auth-screen.hidden{ display:none; }
+  /* Brief, auto-dismissing overlay — same full-screen/centered structure as .auth-screen,
+     same theme tokens, no new visual language. Sits above everything (including onboarding)
+     purely so a z-index fight is impossible, even though it's only ever shown once neither
+     auth nor onboarding is on screen. */
+  .welcome-back-screen{
+    position:fixed; inset:0; z-index:300; display:flex; align-items:center; justify-content:center;
+    background: var(--board); opacity:0; pointer-events:none; transition: opacity 320ms ease;
+  }
+  .welcome-back-screen.show{ opacity:1; pointer-events:auto; }
+  .welcome-back-card{ text-align:center; padding: 24px; max-width:380px; }
+  .welcome-back-card h1{ margin:0; }
   .auth-scene{ position:absolute; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
   .auth-card{ width:100%; max-width:380px; position:relative; z-index:2; }
   .auth-card .portal-badge{ display:block; margin:8px auto 14px; }
@@ -2386,6 +2397,14 @@
   </div>
 </div>
 
+<!-- ============ WELCOME BACK (shown once, right after a successful Login for an
+     existing account — never for signup/onboarding or a plain app reopen) ============ -->
+<div class="welcome-back-screen" id="welcomeBackScreen">
+  <div class="welcome-back-card">
+    <h1 id="welcomeBackText"></h1>
+  </div>
+</div>
+
 <div class="month-view" id="monthView"></div>
 
 <div class="date-view" id="dateView"></div>
@@ -2584,6 +2603,7 @@ const STRINGS = {
     entryPlaceholder:'add…', notes:'📝 Notes', notesPlaceholder:'anything else about this month…',
     // date view
     greeting:'👋 Hi! Today is {date}', tasksLabel:'tasks', moodLabel:'mood', waterLabel:'water', sleepLabelHrs:'sleep, hrs', vibeLabel:"today's vibe",
+    welcomeBackWithName:'👋 Hi, {name}!', welcomeBackFallback:'👋 Hi there!',
     notesLabel:'notes', addVibe:'+ vibe', newTaskPlaceholder:'new task…',
     whatHappenedPlaceholder:'what happened today…', hrs:'hrs',
     noWidgetsYet:'no widgets on this page yet — add some from 🧩 Widgets in Settings',
@@ -2861,6 +2881,25 @@ function hideAuthScreen(){ authScreen.classList.add('hidden'); }
    real account signs in, so a genuine login always takes priority over it. */
 const OFFLINE_FLAG_KEY = 'wp-offline-mode-v1';
 let appBuilt = false;
+/* Set only by the Login button's click handler below, right before calling
+   signInWithPassword — never by signup, never by the page-load session-restore path
+   (sb.auth.getSession() at the bottom of this block). buildApp() reads this once, right where
+   it already decides onboarding vs. the main app, to show a one-time "Hi, {name}!" screen for
+   a genuine login on an existing account — then clears it, so it can never fire twice or leak
+   into a later rebuild. */
+let loginJustSucceeded = false;
+/* Takes the name rather than reading USER_NAME_KEY itself — that key only exists inside
+   buildApp()'s scope (same place onbState.name already reads it), so the one call site inside
+   buildApp() passes it in rather than this function inventing a second way to read it. */
+function showWelcomeBackScreen(name){
+  const screen = document.getElementById('welcomeBackScreen');
+  const textEl = document.getElementById('welcomeBackText');
+  if(!screen || !textEl) return;
+  const trimmed = (name || '').trim();
+  textEl.textContent = trimmed ? t('welcomeBackWithName', { name: trimmed }) : t('welcomeBackFallback');
+  screen.classList.add('show');
+  setTimeout(()=> screen.classList.remove('show'), 1800);
+}
 async function onSignedIn(user){
   if(appBuilt) return;
   appBuilt = true;
@@ -2905,8 +2944,11 @@ if(sb){
     const password = document.getElementById('authPassword').value;
     if(!email || !password){ showAuthMsg(t('authErrEmailPass2'), 'error'); return; }
     showAuthMsg(t('authLoggingIn'), '');
+    loginJustSucceeded = true; // set before the await: onSignedIn (triggered by this call,
+                                // possibly via onAuthStateChange before this promise even
+                                // resolves) must already see it as true
     const { error } = await sb.auth.signInWithPassword({ email, password });
-    if(error) showAuthMsg(error.message, 'error');
+    if(error){ loginJustSucceeded = false; showAuthMsg(error.message, 'error'); }
   });
   logoutBtn.addEventListener('click', async ()=>{ try{ localStorage.removeItem(OFFLINE_FLAG_KEY); }catch(e){} await sb.auth.signOut(); location.reload(); });
   sb.auth.onAuthStateChange((event, session)=>{
@@ -7041,7 +7083,13 @@ function startOnboarding(){
 
 /* ============ START ============ */
 applyAppearance(load(APPEARANCE_KEY, 'system'));
-if(needsOnboarding()) startOnboarding(); else showMySpaceView();
+if(needsOnboarding()){
+  startOnboarding();
+} else {
+  showMySpaceView();
+  if(loginJustSucceeded) showWelcomeBackScreen(load(USER_NAME_KEY, ''));
+}
+loginJustSucceeded = false; // one-shot: consumed here whether or not it was actually used
 } /* end buildApp() */
 </script>
 </body>
