@@ -108,8 +108,8 @@ another device.
 - **Write:** set to `true` exactly once, at the end of onboarding.
 
 ### `wp-days-v5`
-- **Purpose:** the core per-day record — mood, water, sleep, tasks, notes, vibes for that date.
-  This is the single largest and most-written key in the app.
+- **Purpose:** the core per-day record — mood, water, sleep, tasks, notes for that date. This is
+  the single largest and most-written key in the app.
 - **Shape:** an object keyed by `dateKey` (`"YYYY-MM-DD"`, local calendar date). Each value:
 
   | field      | type                                             | default   | notes |
@@ -119,18 +119,22 @@ another device.
   | `waterMl`  | number                                             | `0`       | current water tracker unit, millilitres |
   | `waterLog` | `number[]`                                        | `[]`      | each entry is one ml amount added, in order — powers "undo last" |
   | `sleep`    | number, 0–12, step 0.05                           | `7`       | hours |
-  | `todos`    | `{ text: string, done: boolean, vibe: string }[]` | `[]`      | **no `id` field** — a todo is addressed only by its array index within that day; moving/toggling/deleting all operate on `todos[i]` |
+  | `todos`    | `{ text: string, done: boolean, vibe: string }[]` | `[]`      | **no `id` field** — a todo is addressed only by its array index within that day; moving/toggling/deleting all operate on `todos[i]`. (This `vibe` field is the per-task mood sticker, unrelated to the removed "Today's Vibe" widget below — see `todo.vibe`/`currentTaskMoods()`.) |
   | `notes`    | string                                            | `""`      | free-text "what happened today" |
-  | `vibes`    | `string[]`                                        | `[]`      | ids into the built-in `VIBES` list or into `wp-vibes-custom-v1` |
 
+  A `vibes: string[]` field ("Today's Vibe" tags) used to live here too. The feature was removed
+  entirely — the widget, its picker UI, the `VIBES`/`customVibes` data model, and
+  `wp-vibes-custom-v1` are all gone. Any account with old day records still carrying a leftover
+  `vibes` array on disk has that field silently ignored now (nothing reads or writes it); it is
+  never stripped out on read, since deleting historical fields wasn't necessary to remove the
+  feature.
 - **Defaulting/migration on read:** `ensureDayData(key)` lazily creates a day record with the
-  defaults above the first time it's touched, and backfills `vibes`/`waterLog`/`waterMl` onto
-  *existing* day objects that predate those fields. **An iOS reader must apply the same
-  defaulting** — older stored days are not guaranteed to already have every field present.
+  defaults above the first time it's touched, and backfills `waterLog`/`waterMl` onto *existing*
+  day objects that predate those fields. **An iOS reader must apply the same defaulting** — older
+  stored days are not guaranteed to already have every field present.
 - **Read:** the entire object loaded once into memory at app start (`let daysData = load(...)`).
 - **Write:** the entire `daysData` object is re-saved on *every* mutation — adding/checking off/
-  deleting/moving a task, logging or undoing water, changing mood or sleep, editing notes, or
-  adding/removing a vibe.
+  deleting/moving a task, logging or undoing water, changing mood or sleep, or editing notes.
 - **Merge-on-first-sign-in:** yes, per-date-key union (see above).
 
 ### `wp-photos-v1`
@@ -171,7 +175,6 @@ another device.
   | `date`      | string     | `dateKey` (`YYYY-MM-DD`) the entry is *about* — independent of `createdAt` |
   | `text`      | string     | freeform entry text, default `""` |
   | `mood`      | number \| `null` | 0–4, same scale/faces as `wp-days-v5.mood` (`moodFace()`) |
-  | `vibes`     | `string[]` | up to 4 ids from the same `VIBES` table (and any `wp-vibes-custom-v1` custom vibes) used on My Day — **not** a separate tag vocabulary |
   | `photos`    | array      | own attachments, **not** shared with `wp-photos-v1`: `{ id: string, src: string (data: URL, same resizeImageJPEG pipeline as Day photos) }[]`, capped at `MAX_PHOTOS_PER_DAY` (20) per entry |
   | `expenseId` | string     | optional — id of a row in `wp-expenses-v1` for the same `date`, or `""` for no link |
   | `createdAt` | number     | `Date.now()` at save time; also the tiebreaker for ordering multiple entries on the same `date` |
@@ -199,8 +202,8 @@ another device.
 - **Shape:**
   ```
   {
-    enabled: string[],       // ordered widget ids, e.g. ['mood','water','sleep','vibes','tasks','notes']
-                              // ids are either built-in ("mood","water","sleep","steps","vibes",
+    enabled: string[],       // ordered widget ids, e.g. ['mood','water','sleep','tasks','notes']
+                              // ids are either built-in ("mood","water","sleep","steps",
                               // "tasks","notes","gratitude","dailyHighlight","freeText","photos",
                               // "music","movie","favoriteThing") or a custom widget's own id
                               // (format "custom:<timestamp><random>")
@@ -212,13 +215,19 @@ another device.
     }[]
   }
   ```
-- **Default:** `{ enabled:['mood','water','sleep','vibes','tasks','notes'], customWidgets:[] }`.
+- **Default:** `{ enabled:['mood','water','sleep','tasks','notes'], customWidgets:[] }`.
 - **Limits enforced client-side (not in the stored data):** at most 10 built-in widgets enabled
   at once, at most 3 custom widgets total.
-- **Known display-only exception:** the dedicated My Day page hides `"vibes"` and `"notes"` from
-  what it renders even when they're present in `enabled` — that filter happens at render time in
+- **Known display-only exception:** the dedicated My Day page hides `"notes"` from what it
+  renders even when it's present in `enabled` — that filter happens at render time in
   `buildDateView()` and does **not** modify this stored value. My Space (a different screen, see
-  `wp-myspace-layout-v1`) is unaffected and still shows them if it has them in its own layout.
+  `wp-myspace-layout-v1`) is unaffected and still shows it if it has it in its own layout.
+- **Removed built-in widget:** `"vibes"` ("Today's Vibe") used to be a selectable built-in widget
+  id here. The feature was removed entirely (widget, picker UI, `VIBES`/`customVibes` data model,
+  `wp-vibes-custom-v1`). `sanitizeWidgetConfig()`'s existing orphaned-id cleanup (originally
+  written for a deleted *custom* widget) also self-heals this: any account with `"vibes"` still
+  sitting in a saved `enabled` array has it silently dropped on next load, the same way a deleted
+  custom widget's id already was.
 - **Write:** whenever a widget is added/removed/reordered, or a custom widget created/edited/
   deleted, via the "Customize widgets" screen.
 
@@ -350,14 +359,6 @@ another device.
   switches only writes this object. The Settings copy says so explicitly ("not active yet — this
   just saves your preference for when reminders launch"). Don't build iOS notification logic
   that assumes these flags currently mean anything operational.
-
-### `wp-vibes-custom-v1`
-- **Purpose:** user-created "vibe" tags, in addition to the ~14 built-in ones (the built-ins live
-  in a hardcoded `VIBES` constant and are never stored/synced).
-- **Shape:** array of:
-  `{ id: string ("customvibe:<timestamp><random>"), emoji: string (≤4 chars), label: string (≤40 chars), c1: string (hex color), c2: string (hex color), fg: string (hex color) }`.
-  `c1`/`c2`/`fg` come from a small fixed palette rotation, not free color choice.
-- **Limit:** at most 10 (`MAX_CUSTOM_VIBES`).
 
 ### `wp-customstickers-v5`
 - **Purpose:** user-uploaded decorative stickers (separate from the 4 built-in sticker packs,

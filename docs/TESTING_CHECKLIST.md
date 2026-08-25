@@ -13,13 +13,72 @@ locally (`python3 -m http.server` + `file://`-equivalent `http://localhost`), co
 below. These scripts aren't checked into the repo (they're throwaway verification tools, not part
 of the product), but the checklist itself is — so the same manual/scripted pass can be repeated.
 
+## UX/technical fixes pass (avatar, transactions, theme-switch bug, contrast, onboarding)
+
+A follow-up pass fixing several concrete bugs and UX issues, without touching any theme's
+visual design/palette concept:
+
+- [ ] **Avatar**: the avatar shown at the top of My Profile is a clean circle in every theme —
+      no square corners, no white halo/gap at the edges. It uses the same
+      oversize-image-inside-a-clipping-circle technique as the avatar picker grid below it
+      (`.profile-avatar-hero-clip`), not a bare `<img>` with its own border-radius.
+- [ ] **Add Transaction**: Budget's main screen shows a single "+ Add transaction" button, not
+      an always-open form. Tapping it opens a bottom sheet (same component the Widget Library
+      already uses) with Expense/Income toggle → amount/currency/date/category-or-source/note →
+      Save. Saving closes the sheet and the transaction appears in the list — existing
+      add/edit/delete/currency-management functionality all still works, just relocated.
+- [ ] **Budget spending ring**: a donut ring sits above the Income/Spent/Net stats, its center
+      showing net (income − spent). The ring fills red instead of the theme accent when spending
+      exceeds income for the month. Built from existing theme tokens (`--accent`/`--danger`/
+      `--paper`/`--paper2`) via `conic-gradient` — check it renders correctly (no visual
+      leftovers, correct color) in all 4 themes.
+- [ ] **Today's Vibe is gone everywhere**: no vibe/tag picker on My Day, My Space, the Widget
+      Library catalog, onboarding's widget picker, or on a Journal entry. The `VIBES`/
+      `customVibes` system, `wp-vibes-custom-v1`, and every `vibe*` widget/UI/string were removed
+      (the *task*-mood sticker feature — `todo.vibe`, the small mood emoji on a task — is a
+      separate, unrelated feature and is unaffected).
+- [ ] **Theme switching leaves no stale colors**: sign out, change theme on one account/device,
+      then sign back in on a browser whose local `wp-theme-v5` still says the OLD theme — the
+      app must fully switch to the account's actual theme, including JS-driven per-theme colors
+      (a day's own accent color, mood face, task-mood icons), not just the CSS body class. This
+      was a real bug (`onSignedIn` reapplied the theme's CSS class from the cloud value but never
+      updated the `currentTheme` JS variable those lookups read), now fixed. Also re-verify plain
+      in-app theme switching (Settings dropdown, Year view swatches) still works normally in all
+      4 themes, switched back and forth several times in a row.
+- [ ] **Digital Chrome accent**: the primary accent/link/button color is a deeper navy-indigo
+      (light) / soft lavender-blue (dark) — not the old bright sky-blue. Nothing else in the
+      palette (backgrounds, decorative gradients, the weekday color rotation) changed.
+- [ ] **Dark Romance (light) contrast**: header wordmark, back-links, and the sync badge stay
+      readable over every part of the per-screen photo background (not just its darker areas).
+      Textarea/input placeholders (e.g. Journal's "What happened today?") are clearly visible,
+      not washed out — check this in all 4 themes, since the placeholder-contrast fix is global.
+- [ ] **Dark Romance font**: headings and diary-style text use Fraunces (same face Botanical and
+      Digital Chrome already use) instead of the old Cormorant Garamond, in both light and dark.
+- [ ] **Onboarding composition**: "Hi." / "Let's get to know each other." / the name field (and
+      the other short text-only onboarding pages — Why, Appearance, Avatar, Done) read as
+      vertically centered within the diary page, not pinned to the top with empty space below.
+      Longer pages (widget picker, first-day) are unaffected.
+- [ ] **Onboarding name field**: the placeholder reads "Your name", never the literal text "Eve".
+- [ ] **Onboarding page-turn speed**: turning a page is a bit slower and smoother than before
+      (~0.62s vs. the old ~0.46s) — noticeably calmer without feeling sluggish. The
+      prefers-reduced-motion fallback (instant opacity cross-fade) is untouched.
+
+**Result as of this pass:** verified via Playwright across all 4 themes — avatar circular clip,
+Today's Vibe absent from every screen checked (Today, Journal, Widget Library), the transaction
+button/sheet/save flow, the spending ring's color and computed `--accent` per theme, Dark
+Romance's forest-light `--ink-dim`/font/header-shadow computed values, and onboarding's
+placeholder/centering/transition-duration computed values — all correct, zero console errors.
+
 ## Full pass — run across all 4 themes (Digital Chrome, Pink Pop, Dark Romance, Botanical)
 
 - [ ] Onboarding completes without getting stuck, for a fresh "offline" account
 - [ ] Theme switches correctly from Settings and the body's theme class updates
 - [ ] **My Space**: loads, shows its cards, "Edit" mode toggles
-- [ ] **My Day**: opens; does **not** show "Today's Vibe" or a Notes textarea (removed from this
-      page on purpose — still fine if they show on My Space, which uses a separate layout)
+- [ ] **My Day**: opens; does **not** show a Notes textarea (removed from this page on purpose —
+      still fine if it shows on My Space, which uses a separate layout)
+- [ ] "Today's Vibe" does not appear anywhere in the app — not as a My Day/My Space widget, not
+      in the widget customize screen's catalog, not in onboarding's widget picker, and not as a
+      tag picker on a Journal entry (the feature was removed entirely, not just hidden)
 - [ ] Mood slider: moving it updates the mood face immediately
 - [ ] Water: tapping +200/+300/+500ml updates the displayed total and progress bar
 - [ ] Sleep slider: moving it updates the displayed hours
@@ -91,13 +150,11 @@ tab; it's reached from Settings ("Manage My Space").
 - [ ] **Media** tab opens the year/month photo browser directly; its own back button returns to
       Today (same as before this whole restructuring)
 - [ ] Tapping the header brand logo goes to Today (not My Space)
-- [ ] **Journal**: composer at the top (date, text, mood slider + face, vibe tag chips, photo
-      attach, optional "link a transaction" dropdown) and a chronological timeline below
+- [ ] **Journal**: composer at the top (date, text, mood slider + face, photo attach, optional
+      "link a transaction" dropdown) and a chronological timeline below — no tag/vibe picker
   - [ ] Saving an entry with text appears in the timeline immediately, grouped under a date header
   - [ ] Mood slider updates the face shown in the composer live, and the saved entry shows that
         same mood face
-  - [ ] Picking a vibe chip adds a pill (same colors/emoji as My Day's vibe pills); clicking the
-        pill's ✕ removes it before saving
   - [ ] Adding a photo shows a thumbnail with a remove (✕) button before saving; the saved entry
         shows the photo without the remove button
   - [ ] Adding a transaction in Budget for today's date, then opening Journal, shows that

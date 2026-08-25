@@ -100,9 +100,45 @@ with full visual regression screenshots, if it's ever revisited — not as an in
   that's a correct, deliberate choice (a negative balance should always read as recognizably "bad"
   regardless of theme), not an inconsistency.
 
+## Third issue found and fixed: `currentTheme` could desync from the applied CSS class
+
+`applyTheme(key)` only ever toggled the body's `theme-*` class — it never touched the module-level
+`currentTheme` variable that every per-theme *JS* lookup table reads (`THEME_DAY_COLORS`,
+`THEME_MOOD_FACES`, `THEME_TASK_MOODS`, `THEME_WIDGET_ICONS`, `THEME_TASK_MOOD_DEFAULT`, plus
+`moodFace()`/`widgetIcon()`/`currentTaskMoods()` which read it directly). `currentTheme` itself
+was set in exactly two places: the very first, pre-login line (`localLoad('wp-theme-v5','berry')`,
+a synchronous LOCAL-only guess) and `setTheme()` (called only from Settings/Year-view UI). The
+post-login reconciliation in `onSignedIn()` — `applyTheme(load('wp-theme-v5', currentTheme))` —
+re-resolved the theme from the *cloud* value and reapplied the CSS class, but passed the result
+straight to `applyTheme()` without also assigning it back to `currentTheme`. On a browser whose
+local pre-login guess differed from the account's actual (cloud) theme, this left the body class
+and `currentTheme` pointing at two different themes for the rest of the session: every
+CSS-token-driven color (background, cards, buttons) correctly showed the real theme, while every
+JS-lookup-driven color (a day's own weekday accent, mood face, task-mood icon set) silently kept
+computing from the stale local guess instead — the exact "leftover color from the previous theme"
+symptom, and why it needed a real cross-device mismatch to reproduce rather than showing up on
+simple in-app switching (which always goes through `setTheme()`, already correct). Fixed by
+reassigning `currentTheme = load('wp-theme-v5', currentTheme)` before calling `applyTheme()` in
+that one call site.
+
+## Two small palette adjustments (not a redesign)
+
+- **Digital Chrome's `--accent`/`--rose`** (previously the same bright sky-blue, `#4d7dff` light /
+  `#7fb2ff` dark, in both slots) were deepened to a calmer navy-indigo (light, `#3d4f95`) and soft
+  lavender-blue (dark, `#8b93d9`), per explicit design feedback that the original read as loud
+  "standard UI blue" rather than premium. Every other token in the theme (backgrounds, decorative
+  gradients, `--sky`/`--plum`/`--bubble`, the `DAY_COLORS_BERRY` weekday rotation) is untouched.
+- **Dark Romance's primary display font** was `'Cormorant Garamond'` (`--font-xl`/`-l`/`-accent`/
+  `-hand`) — at the large display sizes and bold weights this app uses those roles for, its
+  delicate old-style curves read as thin/dated rather than romantic. Switched to `'Fraunces'`,
+  the same contemporary display serif Botanical and Digital Chrome already use elsewhere in the
+  app (an existing typographic choice being reused, not a new font introduced), keeping Cormorant
+  Garamond only as a fallback — matching Botanical's own font-stack pattern.
+
 ## Summary
 
 The theme system itself is sound and genuinely extensible — this is one of the stronger parts of
-the codebase, not a liability for iOS. The two issues found are a (now-fixed) cosmetic label and
-a documented, deliberately-untouched internal naming mismatch that would need a real data
-migration to clean up safely. Neither blocks iOS work or needs attention before it.
+the codebase, not a liability for iOS. Of the issues found across passes: two were cosmetic labels
+(now fixed), one is a documented, deliberately-untouched internal naming mismatch that would need
+a real data migration to clean up safely, and one (`currentTheme` desync after a cross-device
+theme change) was a genuine functional bug, now fixed. Nothing here blocks iOS work.
