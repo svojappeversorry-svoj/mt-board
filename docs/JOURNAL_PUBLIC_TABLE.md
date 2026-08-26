@@ -40,10 +40,15 @@ create table if not exists public.public_journal_moments (
   external_url  text,                             -- a URL string only, never fetched/mirrored content
   location      jsonb,                             -- { name, url } for type = 'place'
   artist        text,
+  is_editorial  boolean not null default false,    -- true only for official @svoj seed content — see docs/EDITORIAL_SEED.md. Never rendered/exposed in any UI; purely an internal marker so editorial rows can be found/removed/excluded from future analytics as a group
   created_at    timestamptz not null default now(),
   updated_at    timestamptz not null default now(),
   published_at  timestamptz not null default now() -- what Explore sorts by
 );
+
+-- Safe to run even if the table already existed from before is_editorial was added — this is
+-- a no-op if the column is already there.
+alter table public.public_journal_moments add column if not exists is_editorial boolean not null default false;
 
 alter table public.public_journal_moments enable row level security;
 
@@ -96,6 +101,31 @@ Nothing beyond that single row is ever exposed: no other public moments, no priv
 Explore listing. "Copy link"/"Share" in Explore and in a moment's own detail view (when public)
 both just build this same URL client-side (`publicMomentUrl(id)`) — there is no server-issued
 token to keep in sync.
+
+## `is_editorial` — official SVOJ seed content
+
+A single official `@svoj` account can publish curated Explore starter content so a brand-new
+install doesn't feel empty. `is_editorial` marks those rows only — it is a plain boolean column,
+not a separate table or a special account type; `@svoj` is an ordinary Supabase Auth user like
+any other, subject to the exact same RLS policies above. See **docs/EDITORIAL_SEED.md** for the
+full setup (creating the account, claiming the username, running the content migration).
+
+- **Never rendered.** No UI anywhere reads or displays this column — `journalExploreCardHtml()`/
+  `journalOpenExploreDetail()` only ever destructure the named fields they use (`title`,
+  `description`, `type`, `author`, ...), so an extra column sitting unused in the row object is
+  automatically inert. There is no "Admin"/"System"/"Seed" label anywhere; `@svoj`'s public
+  moments display exactly like any other user's.
+- **RLS is row-level, not column-level** — `select('*')` (which Explore already does) returns
+  this column's value to the browser like any other public column. That's expected and harmless:
+  it's an internal categorization flag on public data, not a secret: never treat it as something
+  that needs hiding from network responses, only from the rendered UI (which it already is).
+- **Why it exists:** so editorial content can later be found, bulk-updated, replaced, or removed
+  with one predicate (`where is_editorial = true`), and excluded from any future analytics that
+  count real user activity — without needing a special account type or a parallel content table.
+- **`Save to My Journal` never copies it.** `journalSaveExploreItemToMyJournal()` builds the
+  saved local copy from a fixed list of named fields and always sets `visibility:'private'` — it
+  has no code path that could carry `is_editorial` (or anything else non-listed) into a real
+  user's own private Journal data.
 
 ## Storage note
 
