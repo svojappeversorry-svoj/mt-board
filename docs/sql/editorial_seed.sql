@@ -3,10 +3,10 @@
 -- and re-run it instead. See docs/EDITORIAL_SEED.md for the full runbook.
 --
 -- PREREQUISITES (see docs/EDITORIAL_SEED.md for details):
---   1. An @svoj Supabase Auth user already exists (created once via the dashboard).
---   2. is_editorial column exists on public_journal_moments (see JOURNAL_PUBLIC_TABLE.md).
---   3. Replace 'hello@svoj.app' below with the real email you used for that account,
---      in BOTH places it appears, if you chose a different one.
+--   1. An @svoj Supabase Auth user already exists (created once via the dashboard),
+--      using the email svojappeversorry@gmail.com.
+--   2. public.usernames exists (see docs/USERNAMES_TABLE.md).
+--   3. is_editorial column exists on public_journal_moments (see JOURNAL_PUBLIC_TABLE.md).
 --
 -- Safe to re-run: every insert upserts by its stable id, so running this migration
 -- again (e.g. after fixing a typo above) never creates duplicate rows.
@@ -15,9 +15,9 @@ do $$
 declare
   svoj_id uuid;
 begin
-  select id into svoj_id from auth.users where email = 'hello@svoj.app';
+  select id into svoj_id from auth.users where email = 'svojappeversorry@gmail.com';
   if svoj_id is null then
-    raise exception 'No auth.users row for hello@svoj.app — create the @svoj account first, see docs/EDITORIAL_SEED.md';
+    raise exception 'No auth.users row for svojappeversorry@gmail.com — create the @svoj account first, see docs/EDITORIAL_SEED.md';
   end if;
 
   insert into public.usernames (username, user_id)

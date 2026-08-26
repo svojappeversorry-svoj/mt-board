@@ -37,6 +37,11 @@ import sys
 from datetime import datetime, timedelta, timezone
 from urllib.parse import quote
 
+# The real email behind the @svoj Supabase Auth account — change this and re-run the generator
+# if the account is ever recreated under a different address. Only referenced here so it never
+# drifts out of sync between the generated SQL and docs/EDITORIAL_SEED.md.
+SVOJ_EMAIL = 'svojappeversorry@gmail.com'
+
 OUT_PATH = "docs/sql/editorial_seed.sql"
 
 def qs(query):
@@ -529,10 +534,10 @@ def emit_sql(rows):
     lines.append("-- and re-run it instead. See docs/EDITORIAL_SEED.md for the full runbook.")
     lines.append("--")
     lines.append("-- PREREQUISITES (see docs/EDITORIAL_SEED.md for details):")
-    lines.append("--   1. An @svoj Supabase Auth user already exists (created once via the dashboard).")
-    lines.append("--   2. is_editorial column exists on public_journal_moments (see JOURNAL_PUBLIC_TABLE.md).")
-    lines.append("--   3. Replace 'hello@svoj.app' below with the real email you used for that account,")
-    lines.append("--      in BOTH places it appears, if you chose a different one.")
+    lines.append("--   1. An @svoj Supabase Auth user already exists (created once via the dashboard),")
+    lines.append(f"--      using the email {SVOJ_EMAIL}.")
+    lines.append("--   2. public.usernames exists (see docs/USERNAMES_TABLE.md).")
+    lines.append("--   3. is_editorial column exists on public_journal_moments (see JOURNAL_PUBLIC_TABLE.md).")
     lines.append("--")
     lines.append("-- Safe to re-run: every insert upserts by its stable id, so running this migration")
     lines.append("-- again (e.g. after fixing a typo above) never creates duplicate rows.")
@@ -541,9 +546,9 @@ def emit_sql(rows):
     lines.append("declare")
     lines.append("  svoj_id uuid;")
     lines.append("begin")
-    lines.append("  select id into svoj_id from auth.users where email = 'hello@svoj.app';")
+    lines.append(f"  select id into svoj_id from auth.users where email = '{SVOJ_EMAIL}';")
     lines.append("  if svoj_id is null then")
-    lines.append("    raise exception 'No auth.users row for hello@svoj.app — create the @svoj account first, see docs/EDITORIAL_SEED.md';")
+    lines.append(f"    raise exception 'No auth.users row for {SVOJ_EMAIL} — create the @svoj account first, see docs/EDITORIAL_SEED.md';")
     lines.append("  end if;")
     lines.append("")
     lines.append("  insert into public.usernames (username, user_id)")

@@ -19,33 +19,75 @@ project.
 
 ### 1. Create the @svoj account
 
-Supabase Dashboard → **Authentication → Users → Add user**. Use a real email you control (e.g.
-`hello@svoj.app` if you own that domain, or any address — it never needs to receive real mail
-since you're creating the account directly, not via a signup flow), any password, and check
-**Auto Confirm User** so no email verification is required.
+Supabase Dashboard → **Authentication → Users → Add user**. Use email
+**`svojappeversorry@gmail.com`** (this is the email `docs/sql/editorial_seed.sql` is generated to
+look up — see `SVOJ_EMAIL` in `scripts/generate_editorial_seed_sql.py` if you ever need to change
+it), any password, and check **Auto Confirm User** so no email verification is required.
 
-> If you use an email other than `hello@svoj.app`, edit the top of
-> `docs/sql/editorial_seed.sql` (the `select id into svoj_id from auth.users where email = '...'`
-> line — it appears once) to match, or re-run the generator with a different constant (see
-> "Regenerating the content" below).
+### 2. Create the two tables the seed depends on (skip any you already have)
 
-### 2. Add the `is_editorial` column (if you haven't already)
+Run each block below in **SQL Editor → New query** if the table doesn't already exist in your
+project. This is the exact mistake that produces `ERROR: 42P01: relation "public.usernames" does
+not exist` when running step 3 — the seed inserts a row into `usernames`, so that table must
+exist first.
 
-If you're setting up `public_journal_moments` for the first time, use the full SQL in
-`docs/JOURNAL_PUBLIC_TABLE.md` — it already includes this column. If that table already exists
-from before, just run:
+**`public.usernames`** (full policy set in `docs/USERNAMES_TABLE.md`):
 
 ```sql
+create table if not exists public.usernames (
+  username    text primary key,
+  user_id     uuid not null unique references auth.users(id) on delete cascade,
+  created_at  timestamptz not null default now()
+);
+alter table public.usernames enable row level security;
+create policy "anyone can view usernames" on public.usernames for select using (true);
+create policy "individuals can claim their own username" on public.usernames for insert with check (auth.uid() = user_id);
+create policy "individuals can update their own username" on public.usernames for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "individuals can delete their own username" on public.usernames for delete using (auth.uid() = user_id);
+```
+
+**`public.public_journal_moments`** (full policy set + shareable-URL notes in
+`docs/JOURNAL_PUBLIC_TABLE.md`) — if this table already exists from an earlier step, just run the
+one `alter table` line to add `is_editorial`:
+
+```sql
+create table if not exists public.public_journal_moments (
+  id            text primary key,
+  user_id       uuid not null references auth.users(id) on delete cascade,
+  author        text not null default '',
+  type          text not null,
+  title         text not null default '',
+  description   text not null default '',
+  image         text,
+  thumb         text,
+  external_url  text,
+  location      jsonb,
+  artist        text,
+  is_editorial  boolean not null default false,
+  created_at    timestamptz not null default now(),
+  updated_at    timestamptz not null default now(),
+  published_at  timestamptz not null default now()
+);
 alter table public.public_journal_moments add column if not exists is_editorial boolean not null default false;
+alter table public.public_journal_moments enable row level security;
+create policy "anyone can view public journal moments" on public.public_journal_moments for select using (true);
+create policy "individuals can insert their own public journal moments" on public.public_journal_moments for insert with check (auth.uid() = user_id);
+create policy "individuals can update their own public journal moments" on public.public_journal_moments for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "individuals can delete their own public journal moments" on public.public_journal_moments for delete using (auth.uid() = user_id);
+create index if not exists public_journal_moments_published_at_idx on public.public_journal_moments (published_at desc);
 ```
 
 ### 3. Run the seed migration
 
 Supabase Dashboard → **SQL Editor → New query** → paste the entire contents of
-`docs/sql/editorial_seed.sql` → **Run**.
+`docs/sql/editorial_seed.sql` (it now looks up the account by `svojappeversorry@gmail.com`) →
+**Run**.
 
-That's it. This claims the `svoj` username for the account from step 1 and inserts all ~130
-editorial moments, each already public, each attributed to `@svoj`.
+That's it. This claims the `svoj` username for the account from step 1 and inserts all 134
+editorial moments, each already public, each attributed to `@svoj`. Re-run end-to-end against a
+real local Postgres 16 instance after this change (fresh schema, real generated SQL, real email)
+to confirm it still lands 134 rows and 1 username row, and that running it twice in a row leaves
+both counts unchanged.
 
 ## Safe to run again
 
