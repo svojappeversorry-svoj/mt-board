@@ -93,6 +93,20 @@ another device.
 - **Default:** `""`.
 - **Write:** Settings name field, on every keystroke (`input` event); once during onboarding.
 
+### `wp-username-v1`
+- **Purpose:** the public `@handle` used in Explore and on public moments instead of the real
+  name above — see `journalAuthorName()`. Onboarding now requires claiming one (step 2 of the
+  flow); existing accounts from before this feature can set one any time from My Profile.
+- **Shape:** plain string, lowercase, no leading `@` (the app adds that only when displaying it),
+  `^[a-z0-9_]{3,20}$`.
+- **Default:** `""` — an account with no username yet shows as `"SVOJ member"` in public content,
+  never the real name/email (see `docs/USERNAMES_TABLE.md`).
+- **Write:** My Profile's Username field; once during onboarding.
+- **Global uniqueness:** enforced by a separate, publicly-readable `usernames` Supabase table —
+  same reasoning and same "required manual SQL step" caveat as `public_journal_moments` (see
+  `docs/USERNAMES_TABLE.md`). This key stores the canonical value; the table exists only to
+  answer "is this taken" and to let a stranger's client resolve who authored a public moment.
+
 ### `wp-avatar-v1`
 - **Purpose:** chosen avatar character.
 - **Shape:** string id from the 15-item `AVATAR_COLLECTION` (`"glamour-chihuahua"`,
@@ -104,7 +118,9 @@ another device.
   drawn border, transparent square canvas around it), shown at 1:1 inside a
   `border-radius:50%` clipping container with no zoom/crop.
 - **Default:** `""`.
-- **Write:** Settings avatar grid; once during onboarding.
+- **Write:** Settings avatar grid; once during onboarding (now **required** — onboarding's avatar
+  step has no `skippable`/Skip affordance and its Next button stays disabled until one is picked;
+  see `ONB_PAGES`'s `avatar` entry and `onbWireAvatar()` in `index.html`).
 - **Replaced set (this pass):** the previous 10-item collection (`angel-pig`, `glam-cow`,
   `glam-dog`, `beach-bird`, `koala`, `chaotic-monkey`, `hamster-glasses`, `duck`,
   `capybara-rose`, and an earlier `fairy-horse` piece of art) was removed wholesale and its
@@ -195,10 +211,10 @@ another device.
   | `description` | string            | freeform, always optional, default `""` |
   | `image`       | string            | data URL, ~1000px/0.8 quality (`resizeImageJPEG`) — only ever set for `photo`, and optionally for `movie`/`recipe`; `""` otherwise. Only loaded into the DOM when the moment is actually opened, never in the list/card view |
   | `thumb`       | string            | data URL, ~220px/0.72 quality, generated from the same source file as `image` in one pass (`journalProcessPhoto()`) — this is what every list/card/Explore grid actually renders, so opening Journal never has to decode a full-size photo |
-  | `externalUrl` | string            | data URL is never stored here — just the URL string itself, for `song`/`movie`/`recipe`/`link` (required for `link`, optional otherwise); `""` if none. Only ever rendered as a clickable `href` through `journalSafeUrl()`, which strips anything that isn't a plain `http(s)` link |
-  | `location`    | object \| `null`  | `place` only: `{ name: string, url: string }` (`url` optional — a pasted external map link, never map content itself) |
+  | `externalUrl` | string            | data URL is never stored here — just the URL string itself, for `song`/`movie`/`recipe`/`link`/`photo`/`note` (required for `link`, optional otherwise). `photo` and `note` gained this field this pass (previously they had no link field at all) specifically so the public-visibility requirement below has something to check for every type. `""` if none. Only ever rendered as a clickable `href` through `journalSafeUrl()`, which strips anything that isn't a plain `http(s)` link |
+  | `location`    | object \| `null`  | `place` only: `{ name: string, url: string }` (`url` optional — a pasted external map link, never map content itself). For `place`, this `url` (not `externalUrl`) is what the public-visibility link requirement checks — see `journalMomentLinkValue()` |
   | `artist`      | string            | `song` only, optional, default `""` |
-  | `visibility`  | string            | `'private' \| 'public'` — **always starts `'private'`**; flipped only by the explicit Make Public/Make Private action |
+  | `visibility`  | string            | `'private' \| 'public'` — **always starts `'private'`**; flipped only by the explicit Make Public/Make Private action, and only when `journalCanPublish(m)` passes: both a link (`externalUrl`, or `location.url` for `place`) and a non-empty `description` must be present. Saving privately has no such requirement — only going public gates on it. Editing an already-public moment down to missing either one automatically demotes it back to `'private'` (`journalBindMomentForm`'s save handler) rather than leaving an invalid public state |
   | `savedFrom`   | object \| `null`  | set only when this moment was copied in via Explore's "Save to My Journal": `{ momentId: string (the public row's id), author: string }` — provenance only, this copy is fully independent afterward |
   | `sourceUnavailable` | boolean     | `savedFrom`-only. `false` until `journalCheckSavedSource()` confirms the original public row is gone (the author made it private/deleted it), at which point `true` and every content field above (`title`/`description`/`image`/`thumb`/`externalUrl`/`location`/`artist`) is wiped to `''`/`null` — see "Revoking a saved copy" below |
   | `unavailableSince` | number \| `null` | `Date.now()` at the moment `sourceUnavailable` flipped to `true`; `null` otherwise. Drives the 48-hour auto-removal below |
@@ -223,6 +239,17 @@ another device.
   SQL to create it, and why this session cannot run that SQL for you. Until that table exists in
   your Supabase project, Make Public/Explore/Save-to-My-Journal are inert no-ops (fail silently,
   logged to the console) — every private Journal feature above works today regardless.
+- **`author` field (on the public row, not this key):** now the publisher's `@username`
+  (`journalAuthorName()`, see `wp-username-v1` above) instead of the real name/email prefix it
+  used to snapshot — never the real name for anything public. Rows published before this change
+  keep their old snapshotted value (not retroactively rewritten); see
+  `docs/USERNAMES_TABLE.md`.
+- **Shareable public URL:** a public moment's own `id` (this key's `id` field, same value as the
+  public row's primary key) doubles as its shareable link's slug — `?moment=<id>`, resolved by
+  `renderPublicMomentView()` near the top of `index.html` (before `buildApp()`/sign-in, so it
+  works for a signed-out visitor). "Copy link"/"Share" (Explore, and a moment's own detail view
+  when public) just builds this URL client-side (`publicMomentUrl(id)`) — no server-issued token.
+  See docs/JOURNAL_PUBLIC_TABLE.md's "Shareable public URL" section.
 - **Revoking a saved copy:** Make Private must actually revoke access, including from anyone who
   already ran "Save to My Journal" on it — not just remove it from *future* Explore visitors.
   `journalCheckSavedSource(m)` re-checks (by id, against `public_journal_moments`) every time a
@@ -255,21 +282,38 @@ another device.
   ```
   {
     enabled: string[],       // ordered widget ids, e.g. ['mood','water','sleep','tasks','notes']
-                              // ids are either built-in ("mood","water","sleep","steps",
-                              // "tasks","notes","gratitude","dailyHighlight","freeText","photos",
-                              // "music","movie","favoriteThing") or a custom widget's own id
-                              // (format "custom:<timestamp><random>")
+                              // ids are either built-in ("mood","water","sleep","steps","tasks",
+                              // "notes","photos", or one of the 7 Journal-bridge ids below) or a
+                              // custom widget's own id (format "custom:<timestamp><random>")
     customWidgets: {
       id: string,             // "custom:<timestamp><random>"
       name: string,
       description: string,
-      type: "text" | "checklist" | "number" | "counter" | "rating"
+      type: "text" | "checklist" | "number" | "counter" | "rating" | "toggle" | "scale" | "timer"
     }[]
   }
   ```
 - **Default:** `{ enabled:['mood','water','sleep','tasks','notes'], customWidgets:[] }`.
 - **Limits enforced client-side (not in the stored data):** at most 10 built-in widgets enabled
   at once, at most 3 custom widgets total.
+- **Mandatory ids:** `"tasks"` and `"mood"` (`MANDATORY_WIDGET_IDS`) can never be removed — their
+  remove button is hidden (shows "required" instead) and `removeWidgetFromPage()` no-ops for
+  them defensively. `sanitizeWidgetConfig()` also re-adds either one to `enabled` if it's ever
+  found missing (e.g. an account whose data predates this rule), so it self-heals rather than
+  requiring a one-time migration.
+- **Journal-bridge ids** (`kind:'journalMoment'`): `momentPhoto`, `momentPlace`, `momentSong`,
+  `momentMovie`, `momentRecipe`, `momentLink`, `momentNote` — one per Journal moment type. These
+  have **no storage of their own** in `wp-widget-daily-v1` below; they read/write straight into
+  `wp-journal-moments-v1` (filtered by date + type), so a moment created from a My Day widget is
+  the exact same record Journal itself shows — never a duplicate. See `genericWidgetHtml`'s
+  `'journalMoment'` branch and `journalOpenMomentForm()` in `index.html`.
+- **Removed built-in widgets (this pass):** `gratitude`, `dailyHighlight`, `freeText`, `music`,
+  `movie` (the old generic Entertainment one — distinct from the new `momentMovie` Journal-bridge
+  widget above), and `favoriteThing`. Same self-healing as the `"vibes"` removal below — any
+  account with one of these still in a saved `enabled` array has it silently dropped on next load.
+- **`steps`'s `kind` changed** from `'number'` (manual entry) to `'healthSteps'` — it no longer
+  accepts typed-in values at all; see the `wp-widget-daily-v1` entry below and
+  `docs/IOS_READINESS.md`'s Steps/HealthKit section for the full architecture.
 - **Known display-only exception:** the dedicated My Day page hides `"notes"` from what it
   renders even when it's present in `enabled` — that filter happens at render time in
   `buildDateView()` and does **not** modify this stored value. My Space (a different screen, see
@@ -290,16 +334,21 @@ another device.
   depends on that widget's `kind` (from `wp-widget-config-v1.customWidgets` for custom ones, or
   the built-in `SYSTEM_WIDGETS` table for system ones):
 
-  | `kind`      | stored value type                          |
-  |-------------|---------------------------------------------|
-  | `text`      | string |
-  | `number`    | number, or `null` if cleared |
-  | `counter`   | number ≥ 0 |
-  | `rating`    | number, 0–5 |
-  | `checklist` | `{ id: number, title: string, done: boolean }[]` |
-  | *(the built-in `steps` widget explicitly declares `kind:'number'`)* | number |
+  | `kind`        | stored value type                          |
+  |----------------|---------------------------------------------|
+  | `text`         | string |
+  | `number`       | number, or `null` if cleared |
+  | `counter`      | number ≥ 0 |
+  | `rating`       | number, 0–5 |
+  | `checklist`    | `{ id: number, title: string, done: boolean }[]` |
+  | `toggle`       | boolean |
+  | `scale`        | number, 1–5 |
+  | `timer`        | boolean — "marked done today"; the displayed streak (`widgetStreakLabel`) is never stored, always recomputed fresh from consecutive `true` days via `widgetStreakCount()` |
+  | `healthSteps`  | number — the built-in `steps` widget (changed from `kind:'number'` this pass). This is a **cache of the last real Health read**, written by `STEPS_SOURCE.fetchStepsFor()` once permission is granted — never a manually-typed value. See `docs/IOS_READINESS.md`'s Steps/HealthKit section. |
+  | `journalMoment`| **nothing** — the 7 Journal-bridge widgets (`momentPhoto`, ...) never write here at all; see the `wp-widget-config-v1` entry above. |
 
-- **Write:** the whole object re-saved on every widget-value change.
+- **Write:** the whole object re-saved on every widget-value change (except `journalMoment`-kind
+  widgets, which never touch this key).
 - **Merge-on-first-sign-in:** yes, per-date-key union.
 
 ### `wp-myspace-layout-v1`
@@ -458,31 +507,14 @@ another device.
   just saves your preference for when reminders launch"). Don't build iOS notification logic
   that assumes these flags currently mean anything operational.
 
-### `wp-customstickers-v5`
-- **Purpose:** user-uploaded decorative stickers (separate from the 4 built-in sticker packs,
-  which are static files under `/assets/stickers/` and never stored here).
-- **Shape:** array of `{ id: number (Date.now()+Math.random() — a number, not a string, unlike
-  every other id in this document), src: string (base64 PNG data URL) }`.
-- **Limit:** at most 60 (`MAX_STICKERS`).
+### Stickers — removed
 
-### `wp-stickerzones-v5`
-- **Purpose:** where decorative stickers have been placed. Placement only exists on the Date
-  View (My Day detail page) today — there is no other placement surface.
-- **Shape:** object keyed by `dateKey`, each value an array of:
-  ```
-  {
-    iid: number,           // Date.now()+Math.random() — this placed instance's own id
-    sid: string | number,  // which sticker: "b:<packId>:<fileBaseName>" for a built-in pack
-                            // (packId one of "digital-chrome","y2k-vixen","dark-romance",
-                            // "petal-botanical" — see the iOS audit's note on these ids not
-                            // matching current theme names), or a wp-customstickers-v5 entry's
-                            // numeric id for a custom upload
-    x: number, y: number,  // percentage position within the page
-    rot: number,           // degrees
-    scale: number
-  }
-  ```
-- **Limit:** at most 14 placed stickers per day.
+The decorative sticker feature (`wp-customstickers-v5`, `wp-stickerzones-v5`, built-in packs
+under `/assets/stickers/`, the sticker FAB/sheet UI) was removed entirely as part of the
+Journal-centric product redesign. It never overlapped with any other feature's data — no
+migration is needed for accounts that had placed stickers; that data simply stops being read.
+The unrelated per-task mood emoji (`todo.vibe`, see the `wp-days-v5` table above) is a
+different feature and was not touched.
 
 ### `wp-month-goals-v1-<monthKey>` (one row per month, `monthKey = "YYYY-MM"`)
 - **Purpose:** the Month view's goals checklist for that specific month.
@@ -512,7 +544,7 @@ These bypass `save()`/`load()` entirely and talk to `localStorage` directly — 
 
 ## Currency codes, category values, and other "free text" fields
 
-Several fields above (`currency`, `category`, custom widget `type`, sticker pack ids) are plain
+Several fields above (`currency`, `category`, custom widget `type`) are plain
 strings rather than a fixed enum enforced by storage — the *current* valid values are whatever
 the Web UI's own dropdowns offer today. If those dropdowns' option lists change in the Web app
 in the future, this document's "current values" call-outs (not the general shape) would need a

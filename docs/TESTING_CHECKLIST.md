@@ -357,6 +357,83 @@ browser (same approach as above); not checked into the repo.
       default) see no behavior change — one "View in" value, one Spending-by-Currency row, normal
       Income/Spent/Net.
 
+## Journal-centric redesign (stickers removed, usernames, public sharing, widget catalog overhaul, onboarding rebuild)
+
+A large product pass making Journal a first-class, connected part of My Day rather than a
+separate feature — verified with ad-hoc Playwright scripts against a real Chromium browser (same
+approach as above, plus a fresh-account offline-mode walkthrough of the entire new onboarding
+flow); not checked into the repo. All 4 themes were cycled through mid-session with zero console
+errors.
+
+- [ ] **Stickers are gone entirely**: no sticker FAB, no sticker sheet, no placed stickers
+      anywhere, on any theme. `.sticker-sheet-close` (CSS class) and the `stickerSheetClose`
+      string still work — they're shared by every other bottom sheet's close button (txnSheet,
+      My Space library, Journal, Currency settings) and were kept on purpose.
+- [ ] **Journal empty-state message disappears after the first moment**: "Did you find something
+      worth keeping today?" shows only when today has zero moments; once one exists, the prompt
+      card is replaced entirely by the moments list + a single "+ Keep another moment" button (no
+      duplicate "+ Keep a Moment" button also lingering above the list).
+- [ ] **Public moments require a link + description**: attempting Make Public without both shows
+      a clear "To make this moment public, add: a link, a description" message and does **not**
+      flip visibility. Adding both, then Make Public again, succeeds. Every type (including
+      `photo` and `note`, which gained an optional link field this pass) can go public once both
+      are filled. Editing a public moment's link/description away demotes it back to private
+      automatically rather than leaving an invalid public state.
+- [ ] **Shareable public URL**: "Copy link"/"Share" (in Explore's detail view, and in a moment's
+      own detail view once it's public) copies a `?moment=<id>` URL. Opening that URL in a fresh,
+      signed-out browser context shows the public moment (or a graceful "not available"/"can't
+      reach SVOJ" state) — the auth screen and normal onboarding are bypassed entirely, and
+      nothing beyond that single moment is ever exposed.
+- [ ] **Username/@handle system**: onboarding's username step blocks Next until a valid,
+      available handle is entered (3–20 chars, letters/numbers/underscore); typing an
+      already-taken one shows a clear "taken" message. My Profile can set/change a username for
+      existing accounts too. Explore/public moments show `@handle`, never the real name or email.
+- [ ] **My Day ↔ Journal bridge**: all 7 Journal moment types (Photo/Place/Song/Movie/Recipe/
+      Link/Note) exist as My Day widgets — creating one from My Day writes into the same
+      `wp-journal-moments-v1` record Journal itself shows (open Journal afterward and confirm it
+      appears there, not as a duplicate). A My Day photo's "Save to Journal" button offers
+      Private/Public; choosing Public opens the moment's edit form so the link+description
+      requirement can be satisfied before it actually publishes.
+- [ ] **Widget catalog changes**: Gratitude, Daily Highlight, Free Text, Music, Movie/Series, and
+      Favorite Thing are gone from "Add System Widget". The 7 Journal-bridge widgets appear under
+      a new "Journal" category. 3 new custom widget types (Yes/No toggle, 1–5 Scale, Streak) are
+      selectable when creating a custom widget and behave correctly (Streak's day-count is
+      derived live from consecutive marked days, never stored as its own number).
+- [ ] **Tasks and Mood can't be removed**: in the Widget Library's "Your Widgets" list, Tasks and
+      Mood show a "required" label instead of a remove button; every other widget still shows
+      "remove" and works normally. An account whose saved config somehow lacks one gets it
+      silently restored on next load.
+- [ ] **Widget icons are stable everywhere**: the same emoji shows in the "Add System Widget"
+      catalog, the onboarding widget picker, the "Your Widgets" reorder list, and the actual My
+      Day card — across all 4 themes (some themes reskin certain icons; the reskinned version
+      should appear consistently in all four places, not just some of them).
+- [ ] **Steps has no manual entry**: no number input anywhere for Steps; it shows a clear status
+      (checking / not available on web / connect Health / a real number with "from Apple Health")
+      and never fabricates a value. This is architecture-only in the web app — there is no real
+      HealthKit binding to test against here (see docs/IOS_READINESS.md).
+- [ ] **Media photo viewer**: tapping outside the photo (not a dedicated button) closes it; the
+      download button actually downloads; there is **no delete button** in the viewer. A photo
+      can still be deleted, but only from its own thumbnail back on the original My Day entry
+      (which also has a "Save to Journal" button); Media's own thumbnail grid has neither button.
+- [ ] **Month view no longer shows Monthly Expenses**: navigating from My Day into the month
+      view shows Monthly Recap/Goals/Loved/Notes but no expense list or add-expense form — Budget
+      still has all of this. The Recap card's small "💰 Spent" summary tile is unrelated
+      pre-existing functionality and was intentionally left alone.
+- [ ] **Bottom nav priority**: order is My Day, Journal, Budget, Media, Settings (My Day keeps
+      its slightly larger icon). Nothing was added or removed from the nav.
+- [ ] **First-launch onboarding, full flow**: a brand-new account (fresh `localStorage`, offline
+      mode is enough to trigger it) walks through, in order: a short SVOJ intro → name → required
+      unique username → the existing "why SVOJ" explainer → a short My Day intro → the widget
+      picker → a short Journal intro (what it's for, the 7 types, private/public) → theme/
+      appearance → the existing nav tour → first-day quick-fill → **avatar (required — Next stays
+      disabled until one is picked, and there is no Skip on this page)** → a closing "fold away"
+      animation → "Hi, @username!" → lands on My Day. No extra tutorial appears after that.
+- [ ] **Explore search**: a plain text box filters Explore's already-loaded public moments by
+      title/description/type — real, working, client-side only. Hybrid semantic search
+      (`docs/SEARCH_ARCHITECTURE.md`) is a documented future spec, not implemented here — it
+      needs server-side infrastructure (Edge Function, pgvector) this environment can't build or
+      test against.
+
 ## Regression checks worth re-running specifically after future CSS/theme changes
 
 - Onboarding avatar picker: all 10 avatars should render as clean circles (no visible

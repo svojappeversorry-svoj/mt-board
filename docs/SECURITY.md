@@ -123,12 +123,14 @@ behavioral change for any normal (non-`<`-containing) text.
 `accept="image/*"` on file inputs is a UI hint only, not an enforced restriction — nothing stops
 a differently-typed file from being selected. Checked the actual impact: images are read via
 `FileReader` → drawn to a `<canvas>` → re-encoded, so a non-image file simply fails to decode; it
-is never executed or trusted as anything other than pixel data. One real bug found and fixed:
-`resizeImagePNG()` (used for custom sticker uploads) had no `onerror` handler, unlike its sibling
-`resizeImageJPEG()` — selecting a corrupt/non-image file left that upload's `await` hanging
-**forever**, silently breaking the sticker-upload flow for the rest of that session. Fixed to
-resolve `null` on failure (matching the JPEG path's behavior) and the caller now skips `null`
-results instead of pushing a broken entry. No size limit exists before reading a selected file
+is never executed or trusted as anything other than pixel data. One real bug found and fixed at
+the time: `resizeImagePNG()` (used for custom sticker uploads — the sticker feature itself, and
+this function with it, was removed entirely in a later pass) had no `onerror` handler, unlike its
+sibling `resizeImageJPEG()` (still in use today, by Photos and Journal) — selecting a corrupt/
+non-image file left that upload's `await` hanging **forever**, silently breaking the
+sticker-upload flow for the rest of that session. Fixed to resolve `null` on failure (matching
+the JPEG path's behavior) and the caller skipped `null` results instead of pushing a broken
+entry. No size limit exists before reading a selected file
 into memory — a very large file could make one browser tab slow/unresponsive during that read,
 but never reaches Supabase (only the small resized output is ever saved), so this is a UX
 robustness gap, not a security one. Not fixed in this pass; low priority.

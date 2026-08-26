@@ -83,6 +83,20 @@ taps **Make Public** on a moment, or opens **Explore**, it starts working.
 If/when the DEV Supabase project from `docs/SUPABASE_ENVIRONMENTS.md` is created, run the exact
 same SQL there too so DEV stays a faithful mirror of PROD's schema.
 
+## Shareable public URL
+
+Every public moment's own `id` (the primary key above) doubles as its shareable link's slug —
+no separate slug/token column was added. The app has zero routing otherwise (see
+`docs/IOS_READINESS.md`), so this is intentionally the simplest possible mechanism: a
+`?moment=<id>` query param, read once at page load (`renderPublicMomentView()` in `index.html`).
+When present, the ENTIRE normal app boot (auth screen, onboarding, sign-in) is skipped in favor
+of a minimal read-only card showing just that one row, fetched with the anon key — this works
+for a signed-out visitor because the table's own SELECT policy already allows anonymous reads.
+Nothing beyond that single row is ever exposed: no other public moments, no private data, no
+Explore listing. "Copy link"/"Share" in Explore and in a moment's own detail view (when public)
+both just build this same URL client-side (`publicMomentUrl(id)`) — there is no server-issued
+token to keep in sync.
+
 ## Storage note
 
 Like every other photo in this app (see `docs/SUPABASE_ENVIRONMENTS.md` → "Storage buckets"),

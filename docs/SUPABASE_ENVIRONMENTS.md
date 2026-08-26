@@ -172,9 +172,9 @@ query by `updated_at` across users, which nothing does today.
 
 ## Storage buckets
 
-**Not needed.** The current app doesn't use Supabase Storage at all — photos and custom stickers
-are stored as base64 `data:` URLs directly inside `app_data`'s `jsonb` column (see
-`docs/DATA_CONTRACTS.md` → `wp-photos-v1` / `wp-customstickers-v5`). A DEV project needs no
+**Not needed.** The current app doesn't use Supabase Storage at all — photos (and Journal moment
+images) are stored as base64 `data:` URLs directly inside `app_data`'s `jsonb` column (see
+`docs/DATA_CONTRACTS.md` → `wp-photos-v1` / `wp-journal-moments-v1`). A DEV project needs no
 Storage bucket to be a faithful match of PROD's current architecture. Moving photos to real
 Storage buckets is a real future improvement (smaller `app_data` rows, a CDN for images) but it's
 a deliberate architecture change, not a prerequisite for iOS parity — do it later, as its own

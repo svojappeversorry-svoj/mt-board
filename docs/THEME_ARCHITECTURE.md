@@ -41,36 +41,12 @@ Theme-specific *behavior* (not just color) is centralized the same way, each key
 Same story as the CSS contract: a 5th theme adds one entry to each table; nothing that *reads*
 these tables needs to change.
 
-## Known inconsistency: sticker pack ids don't match current theme names
+## Stickers — removed
 
-The 4 built-in decorative sticker packs (placed on Date View pages, a separate system from the
-per-theme task-mood icons above) are stored under
-`assets/stickers/{digital-chrome, y2k-vixen, dark-romance, petal-botanical}/`, and referenced
-internally by those exact folder names (`BUILTIN_STICKER_PACKS[].id`). Two of those four predate
-a later rename: the *theme* now called "Pink Pop" still has its sticker pack's internal id as
-`y2k-vixen`, and "Botanical" (formerly "Petal") still has its pack folder as `petal-botanical`.
-
-- **User-visible impact, fixed in this pass:** the Sticker Sheet's tab label for the Pink Pop
-  pack read "Y2K Vixen" instead of "Pink Pop" — this was a plain display-string bug (the label
-  text shown to users), safe to fix without touching any stored data, so it's fixed now.
-- **What's deliberately *not* touched, and why:** the internal folder names/ids
-  (`y2k-vixen`, `petal-botanical`) still don't match current theme names. Renaming them would
-  mean moving files and changing the id strings baked into `BUILTIN_STICKER_INDEX` keys
-  (`"b:<packId>:<fileName>"`) — and any user who has **already placed** one of those stickers on
-  a day has that exact string saved in their `wp-stickerzones-v5` data (see Data Contracts). A
-  silent id rename would make their already-placed stickers stop resolving (the image would just
-  disappear). This is exactly the kind of "looks safe, actually touches live user data" trap this
-  preparation pass was told to avoid — if it's ever worth cleaning up, it needs a real one-time
-  data migration (rewrite every `sid` referencing the old id to the new one, for every existing
-  user), not just a find-and-replace in the code.
-
-## Known inconsistency: decorative sticker packs aren't tied to the active theme
-
-The Sticker Sheet lets a user pick *any* of the 4 built-in packs regardless of which theme is
-currently active — a user on Dark Romance can freely place Digital Chrome stickers. This may well
-be intentional (creative freedom, not everyone wants their stickers locked to their theme), but
-it's worth a deliberate decision rather than leaving it as an unexamined default, since the pack
-names strongly imply a per-theme pairing. Not a bug — a product decision to make, not code to fix.
+The two "known inconsistency" sections that used to live here (sticker pack ids not matching
+theme names; packs not tied to the active theme) no longer apply — the entire decorative sticker
+feature (`BUILTIN_STICKER_PACKS`, `assets/stickers/`, the Sticker Sheet, `wp-stickerzones-v5`)
+was removed in a later pass. See `docs/DATA_CONTRACTS.md`'s "Stickers — removed" section.
 
 ## Duplicated (but not wasteful-for-no-reason) CSS: the glass-card treatment
 
@@ -91,9 +67,9 @@ with full visual regression screenshots, if it's ever revisited — not as an in
 
 - **Backgrounds:** not files — base64 WebP images embedded directly in each theme's CSS
   `--theme-photo-bg` values (this is also the main reason `index.html` is 3.6&nbsp;MB).
-- **Stickers, avatars, app icons:** real files under `/assets/` and the repo root, referenced by
-  relative path — these load like any other static asset and need no special handling to reuse in
-  an iOS build.
+- **Avatars, app icons:** real files under `/assets/` and the repo root, referenced by relative
+  path — these load like any other static asset and need no special handling to reuse in an iOS
+  build. (Stickers used to be here too — removed, see above.)
 - Nothing found hardcodes a raw hex color for anything that should have been theme-aware. The few
   raw hex colors that do exist in component CSS (e.g. a fixed green for income amounts, a fixed
   red for negative balances) are semantic status colors used identically across all 4 themes —

@@ -1,5 +1,12 @@
 # Project cleanup audit
 
+> **Note:** this is a point-in-time audit from an earlier pass. The sticker feature it describes
+> below (`assets/stickers/`, `BUILTIN_STICKER_PACKS`) was removed entirely in a later pass — see
+> `docs/DATA_CONTRACTS.md`'s "Stickers — removed" section and `docs/TESTING_CHECKLIST.md`'s
+> Journal-redesign section. The avatar count below is also stale (now 15, not 10) after a later
+> replacement pass. Left as-is rather than rewritten, since this file records what was true at
+> the time of that original audit.
+
 ## Repo-level files
 
 Every file in the repository was checked for whether it's actually referenced. Result: **all of

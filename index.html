@@ -230,7 +230,6 @@
   body.theme-pop .bottom-nav,
   body.theme-pop .onb-tour-tip,
   body.theme-pop .myspace-lib-inner,
-  body.theme-pop .sticker-sheet-inner,
   body.theme-pop .budget-hero-stat,
   body.theme-pop .month-recap-card,
   body.theme-pop .onb-widget-card,
@@ -460,7 +459,6 @@
   body.theme-forest .bottom-nav,
   body.theme-forest .onb-tour-tip,
   body.theme-forest .myspace-lib-inner,
-  body.theme-forest .sticker-sheet-inner,
   body.theme-forest .budget-hero-stat,
   body.theme-forest .month-recap-card,
   body.theme-forest .onb-widget-card,
@@ -699,7 +697,6 @@
   body.theme-botanical .bottom-nav,
   body.theme-botanical .onb-tour-tip,
   body.theme-botanical .myspace-lib-inner,
-  body.theme-botanical .sticker-sheet-inner,
   body.theme-botanical .budget-hero-stat,
   body.theme-botanical .month-recap-card,
   body.theme-botanical .onb-widget-card,
@@ -908,7 +905,6 @@
   body.theme-berry.appearance-dark .bottom-nav,
   body.theme-berry.appearance-dark .onb-tour-tip,
   body.theme-berry.appearance-dark .myspace-lib-inner,
-  body.theme-berry.appearance-dark .sticker-sheet-inner,
   body.theme-berry.appearance-dark .budget-hero-stat,
   body.theme-berry.appearance-dark .month-recap-card,
   body.theme-berry.appearance-dark .onb-widget-card,
@@ -1012,7 +1008,6 @@
   body.theme-berry.appearance-light .bottom-nav,
   body.theme-berry.appearance-light .onb-tour-tip,
   body.theme-berry.appearance-light .myspace-lib-inner,
-  body.theme-berry.appearance-light .sticker-sheet-inner,
   body.theme-berry.appearance-light .budget-hero-stat,
   body.theme-berry.appearance-light .month-recap-card,
   body.theme-berry.appearance-light .onb-widget-card,
@@ -1388,7 +1383,6 @@
   .week-row-tag{ font-family:var(--font-mono); font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.4px;
     background:rgba(255,255,255,0.25); padding:4px 10px; border-radius:100px; }
   .week-row:not(.is-current) .week-row-tag{ background:var(--gold-soft); color:var(--gold); }
-  .sticker-lib-block{ margin-top:44px; padding-top:30px; border-top:2px dashed var(--line); }
   .week-range-btn{ background:none; border:none; padding:0; cursor:pointer; text-align:left; font:inherit; color:inherit; }
   .week-range-btn:hover .week-range{ color:var(--accent); text-decoration:underline; }
 
@@ -1474,18 +1468,10 @@
   .cam-btn span{ width:6px; height:6px; border-radius:50%; background: rgba(255,255,255,0.5); }
   .empty-box{ font-family:var(--font-hand); font-weight:700; font-size:17px; color: var(--ink-dim); text-align:center; padding:34px 10px; border:2px dashed var(--line); border-radius:16px; grid-column: 1 / -1; }
 
-  /* ===== STICKER BOOK (library page) ===== */
-  .sticker-lib-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap:14px; }
-  .sticker-lib-item{ position:relative; background: var(--paper2); border:1.5px solid var(--line); border-radius:14px; padding:8px; display:flex; align-items:center; justify-content:center; aspect-ratio:1/1; box-shadow: 0 4px 10px rgba(28,18,22,0.1); }
-  .sticker-lib-item img{ max-width:100%; max-height:100%; object-fit:contain; }
-  .sticker-lib-del{ position:absolute; top:-8px; right:-8px; width:22px; height:22px; border-radius:50%; background: var(--rose); color:#fff; border:2px solid #fff; font-size:11px; font-family:var(--font-mono); cursor:pointer; box-shadow:0 2px 5px rgba(28,18,22,0.25); }
-
   .add-btn-outline{ font-family:var(--font-mono); font-weight:700; text-transform:uppercase; font-size:11px; letter-spacing:0.4px; background: var(--paper2); border:2px dashed var(--line); border-radius:100px; padding:7px 14px; cursor:pointer; color: var(--ink-dim); }
   .add-btn-outline:hover{ border-color: var(--rose); color: var(--rose); }
   .add-btn-outline:disabled{ opacity:0.45; cursor:not-allowed; }
   .add-btn-outline:disabled:hover{ border-color: var(--line); color: var(--ink-dim); }
-  .picker-sticker{ width:48px; height:48px; border-radius:10px; border:1.5px solid var(--line); background:var(--paper); cursor:pointer; padding:4px; display:flex; align-items:center; justify-content:center; }
-  .picker-sticker img{ max-width:100%; max-height:100%; object-fit:contain; }
 
   /* task mood picker (15 options) */
   .task-mood-btn{ width:42px; flex-shrink:0; border-radius:10px; border:2px solid var(--line); background: var(--paper2); font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
@@ -1496,43 +1482,10 @@
   .mood-opt .e{ font-size:19px; }
   .mood-opt .l{ font-size:8px; font-weight:700; text-transform:uppercase; color: var(--ink-dim); letter-spacing:0.2px; text-align:center; line-height:1.1; }
 
-  /* ===== GLOBAL STICKER LAYER (any page, freeform) =====
-     Placed stickers are purely decorative until tapped: tapping an unselected
-     sticker only selects it (no move on that same gesture, so a stray touch
-     while scrolling can't drag it). Only while .selected are the resize/rotate/
-     delete handles rendered — they're children of the rotated+scaled element so
-     they'd normally inherit its transform; each handle carries an inline
-     counter-transform (rotate(-rot) scale(1/scale)) so it always renders at a
-     natural, upright size/orientation while still tracking the sticker's corner. */
-  .sticker-layer{ position:absolute; inset:0; z-index:40; pointer-events:none; }
-  .stick-inst{ position:absolute; width:64px; height:64px; touch-action:none; cursor:pointer; user-select:none; pointer-events:auto; }
-  .stick-inst img{ width:100%; height:100%; object-fit:contain; pointer-events:none; filter: drop-shadow(1px 4px 4px rgba(0,0,0,0.35)); }
-  .stick-inst.selected{ cursor:grab; }
-  .stick-inst.selected:active{ cursor:grabbing; }
-  .stick-inst.selected::before{ content:''; position:absolute; inset:-6px; border:2px dashed var(--accent, #C9536B); border-radius:12px; pointer-events:none; }
-  .stick-inst .stk-handle{ display:none; position:absolute; width:26px; height:26px; border-radius:50%; align-items:center; justify-content:center; font-size:12px; cursor:pointer; box-shadow:0 2px 6px rgba(28,18,22,0.35); touch-action:none; background:var(--paper); border:2px solid var(--ink); }
-  .stick-inst.selected .stk-handle{ display:flex; }
-  .stick-inst .stk-handle.resize{ right:-13px; bottom:-13px; cursor:nwse-resize; }
-  .stick-inst .stk-handle.rotate{ top:-32px; left:50%; margin-left:-13px; cursor:grab; }
-  .stick-inst .stk-handle.rotate:active{ cursor:grabbing; }
-  .stick-inst .stk-handle.del{ top:-13px; right:-13px; background: var(--rose); color:#fff; border-color:#fff; }
-
-  .sticker-fab{ position:fixed; right: calc(18px + var(--safe-right)); bottom: calc(14px + var(--nav-height) + var(--safe-bottom)); z-index:60; width:60px; height:60px; border-radius:50%; background: var(--accent); color:#fff;
-    border:3px solid var(--paper); box-shadow: 0 8px 20px rgba(28,18,22,0.35); font-size:24px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
-  .sticker-fab:hover{ filter:brightness(1.08); }
-  .sticker-sheet{ display:none; position:fixed; inset:0; z-index:70; background: rgba(58,35,20,0.45); align-items:flex-end; justify-content:center; }
-  .sticker-sheet.open{ display:flex; }
-  .sticker-sheet-inner{ background: var(--paper); width:100%; max-width:640px; max-height:70vh; overflow-y:auto; border-radius:22px 22px 0 0; padding:20px 20px calc(30px + var(--safe-bottom)); box-shadow: 0 -10px 30px rgba(0,0,0,0.3); }
-  .sticker-sheet-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
-  .sticker-sheet-title{ font-family:var(--font-xl); font-size:22px; color: var(--ink); }
+  /* NOTE: .sticker-sheet-close (shared "close" button style) is reused by txnSheet/
+     mySpaceLibClose/journalSheetClose/currencySheetClose/currencyPickerClose — kept below
+     even though the sticker feature itself is gone. */
   .sticker-sheet-close{ font-family:var(--font-mono); font-weight:700; background:none; border:none; color: var(--ink-dim); font-size:13px; cursor:pointer; text-decoration:underline; }
-  .sticker-pack-tabs{ display:flex; gap:7px; overflow-x:auto; padding-bottom:4px; margin-bottom:12px; }
-  .pack-tab{ flex-shrink:0; font-family:var(--font-mono); font-weight:700; font-size:11.5px; text-transform:uppercase; letter-spacing:0.3px; padding:8px 13px; border-radius:100px; border:1.5px solid var(--line); background: var(--paper2); color: var(--ink-dim); cursor:pointer; white-space:nowrap; }
-  .pack-tab.active{ background: var(--accent); border-color: var(--accent); color:#fff; }
-  .sticker-sheet-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap:12px; }
-  .sticker-sheet-item{ background: var(--paper2); border:1.5px solid var(--line); border-radius:12px; padding:8px; cursor:pointer; aspect-ratio:1/1; display:flex; align-items:center; justify-content:center; }
-  .sticker-sheet-item img{ max-width:100%; max-height:100%; object-fit:contain; }
-  .sticker-sheet-item:active{ transform:scale(0.92); }
 
   /* ===== DAYS ===== */
   .day-note{ padding-top:32px; }
@@ -1790,12 +1743,25 @@
   .widget-counter-val{ font-family:var(--font-mono); font-size:20px; font-weight:700; color:var(--ink); min-width:28px; text-align:center; }
   .widget-rating-row{ display:flex; gap:4px; }
   .widget-star{ background:none; border:none; font-size:24px; cursor:pointer; color:var(--gold); padding:0; }
+  .widget-toggle-btn{ font-family:var(--font-mono); font-weight:700; font-size:13px; padding:9px 16px; border-radius:100px; border:2px solid var(--line); background:var(--paper); color:var(--ink-dim); cursor:pointer; }
+  .widget-toggle-btn.is-on{ border-color:var(--accent); color:var(--accent); background:var(--rose-soft); }
+  .widget-scale-row{ display:flex; gap:6px; }
+  .widget-scale-btn{ width:32px; height:32px; border-radius:50%; border:2px solid var(--line); background:var(--paper); font-family:var(--font-mono); font-weight:700; font-size:13px; cursor:pointer; color:var(--ink-dim); }
+  .widget-scale-btn.is-selected{ border-color:var(--accent); color:#fff; background:var(--accent); }
+  .widget-streak-note{ font-family:var(--font-mono); font-size:11px; color:var(--ink-dim); margin-top:6px; }
+  .steps-value{ font-family:var(--font-ui); font-weight:700; font-size:22px; color:var(--ink); }
+  .steps-status{ font-family:var(--font-mono); font-size:10.5px; color:var(--ink-dim); margin-top:2px; }
+  .steps-connect-btn{ margin-top:8px; }
   .widget-customize-link-row{ text-align:center; margin-top:16px; }
 
   /* ===== PHOTOS (functional shell only, no visual redesign) ===== */
   .photo-thumb-row{ display:flex; flex-wrap:wrap; gap:8px; margin:8px 0; }
-  .photo-thumb-wrap{ width:76px; height:76px; border-radius:8px; overflow:hidden; border:2px solid var(--line); flex-shrink:0; }
+  .photo-thumb-wrap{ position:relative; width:76px; height:76px; border-radius:8px; overflow:hidden; border:2px solid var(--line); flex-shrink:0; }
   .photo-thumb{ width:100%; height:100%; object-fit:cover; cursor:pointer; display:block; }
+  .photo-thumb-del{ position:absolute; top:2px; right:2px; width:18px; height:18px; line-height:16px; padding:0; border-radius:50%;
+    border:1px solid rgba(255,255,255,0.6); background:rgba(10,8,14,0.6); color:#fff; font-size:10px; cursor:pointer; }
+  .photo-thumb-journal{ position:absolute; bottom:2px; right:2px; width:18px; height:18px; line-height:16px; padding:0; border-radius:50%;
+    border:1px solid rgba(255,255,255,0.6); background:rgba(10,8,14,0.6); color:#fff; font-size:10px; cursor:pointer; }
   .photo-viewer{ display:none; position:fixed; inset:0; z-index:300; background:rgba(10,8,14,0.86); align-items:center; justify-content:center;
     padding: calc(20px + var(--safe-top)) calc(20px + var(--safe-right)) calc(20px + var(--safe-bottom)) calc(20px + var(--safe-left)); }
   .photo-viewer.open{ display:flex; }
@@ -2062,10 +2028,18 @@
   }
   .diary-page.turn-anim{ transition: transform 0.62s cubic-bezier(0.5,0.05,0.3,1); }
   .diary-page.turned{ transform: rotateY(-176deg); }
+  /* Onboarding's closing beat: the last page folds away flat (rather than turning like every
+     page before it) to read as "done", right before the "Hi, @username" greeting appears. */
+  .diary-page.fold-away{
+    transition: transform 0.55s cubic-bezier(0.4,0,0.2,1), opacity 0.5s ease;
+    transform: perspective(700px) rotateX(65deg) scale(0.82) translateY(30px);
+    opacity: 0;
+  }
   @media (prefers-reduced-motion: reduce){
     .diary-page{ transition:none !important; }
     .diary-page.turn-anim{ transition: opacity 0.2s ease !important; }
     .diary-page.turned{ transform:rotateY(0deg) !important; opacity:0; pointer-events:none; }
+    .diary-page.fold-away{ transition: opacity 0.2s ease !important; transform:none !important; opacity:0; }
   }
   .diary-eyebrow{ font-family:var(--font-mono); font-weight:700; font-size:10.5px; letter-spacing:1.2px; text-transform:uppercase; color: var(--ink-dim); margin-bottom:14px; }
   .diary-title{ font-family:var(--font-xl); font-weight:400; font-size:34px; line-height:1.12; color:var(--ink); margin-bottom:10px; }
@@ -2193,6 +2167,9 @@
 
   .onb-field-block{ margin-top:16px; }
   .onb-field-label{ font-family:var(--font-mono); font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:0.4px; color:var(--ink-dim); margin-bottom:6px; display:flex; align-items:center; gap:6px; }
+  .onb-field-msg{ font-family:var(--font-ui); font-weight:700; font-size:12.5px; margin-top:8px; min-height:16px; color:var(--ink-dim); }
+  .onb-field-msg.error{ color:var(--accent); }
+  .onb-field-msg.ok{ color:var(--moss); }
   .onb-mood-row{ display:flex; gap:8px; margin-top:2px; }
   .onb-mood-btn{ flex:1; font-size:24px; padding:10px 0; border-radius:12px; border:2px solid var(--line); background:var(--paper2); cursor:pointer; min-height:44px; }
   .onb-mood-btn.selected{ border-color:var(--accent); background:var(--rose-soft); }
@@ -2396,6 +2373,24 @@
   </div>
 </header>
 
+<!-- ============ PUBLIC MOMENT (shared link, no sign-in required) ============
+     Shown instead of everything else when the URL has a ?moment=<id> param — see
+     renderPublicMomentView() near the end of the script. Reuses the auth screen's own
+     card/scene visual language rather than inventing a new one. -->
+<div class="auth-screen" id="publicMomentView" style="display:none;">
+  <div class="auth-scene" aria-hidden="true">
+    <span class="auth-deco auth-deco-1"></span>
+    <span class="auth-deco auth-deco-2"></span>
+    <span class="auth-deco auth-deco-3"></span>
+    <span class="auth-deco auth-deco-4"></span>
+  </div>
+  <div class="auth-card note" style="--peek: var(--rose-soft); --peek-rot:-2deg;">
+    <div class="pin"></div>
+    <h1 class="auth-title">SVOJ</h1>
+    <div id="publicMomentInner"><div class="diary-body">Loading…</div></div>
+  </div>
+</div>
+
 <div class="auth-screen" id="authScreen">
   <div class="auth-scene" aria-hidden="true">
     <span class="auth-deco auth-deco-1"></span>
@@ -2569,26 +2564,8 @@
     <img id="photoViewerImg" src="" alt="">
     <div class="photo-viewer-actions">
       <button type="button" class="settings-btn-outline" id="photoViewerDownload">⬇</button>
-      <button type="button" class="settings-btn-danger" id="photoViewerDelete">✕</button>
       <button type="button" class="settings-btn-outline" id="photoViewerClose">×</button>
     </div>
-  </div>
-</div>
-
-<button class="sticker-fab" id="stickerFab" type="button" title="Place a sticker">🏷️</button>
-<div class="sticker-sheet" id="stickerSheet">
-  <div class="sticker-sheet-inner">
-    <div class="sticker-sheet-head">
-      <span class="sticker-sheet-title">Stick it!</span>
-      <button class="sticker-sheet-close" id="stickerSheetClose" type="button">close</button>
-    </div>
-    <div class="sticker-pack-tabs" id="stickerPackTabs"></div>
-    <div class="sticker-sheet-upload-row">
-      <button class="upload-btn" id="stkUploadBtn" type="button">+ Upload stickers</button>
-      <input type="file" id="stkInput" accept="image/*" style="display:none" multiple>
-      <span class="hint-text" id="stkHint">0 / 60 added</span>
-    </div>
-    <div class="sticker-sheet-grid" id="stickerSheetGrid"></div>
   </div>
 </div>
 
@@ -2597,9 +2574,9 @@
      completely until dismissed, same layering as <header>. Populated/labelled by JS
      (bindBottomNav()) so it stays in sync with the localization system. -->
 <nav class="bottom-nav" id="bottomNav">
-  <button type="button" class="bottom-nav-btn" id="navBtnBudget" data-nav="budget"><span class="ic">💶</span><span class="lbl"></span></button>
-  <button type="button" class="bottom-nav-btn" id="navBtnJournal" data-nav="journal"><span class="ic">📖</span><span class="lbl"></span></button>
   <button type="button" class="bottom-nav-btn is-central" id="navBtnToday" data-nav="today"><span class="ic">📔</span><span class="lbl"></span></button>
+  <button type="button" class="bottom-nav-btn" id="navBtnJournal" data-nav="journal"><span class="ic">📖</span><span class="lbl"></span></button>
+  <button type="button" class="bottom-nav-btn" id="navBtnBudget" data-nav="budget"><span class="ic">💶</span><span class="lbl"></span></button>
   <button type="button" class="bottom-nav-btn" id="navBtnMedia" data-nav="media"><span class="ic">🖼️</span><span class="lbl"></span></button>
   <button type="button" class="bottom-nav-btn" id="navBtnSettings" data-nav="settings"><span class="ic">⚙️</span><span class="lbl"></span></button>
 </nav>
@@ -2736,7 +2713,7 @@ const STRINGS = {
     recapGoals:'goals completed', recapDays:'days journaled', recapMood:'average mood', recapFavorites:'favorites this month',
     recapWater:'water logged',
     recapEmpty:'Nothing recorded yet this month — once you do, your recap will show up here.',
-    monthlyExpenses:'💶 Monthly Expenses', totalIn:'Total in', amountPlaceholder:'amount', notePlaceholder:'note (optional)',
+    totalIn:'Total in', amountPlaceholder:'amount', notePlaceholder:'note (optional)',
     addExpense:'+ Add expense', currenciesInUse:'currencies in use:', addCurrency:'+ currency',
     noExpensesYet:'nothing yet', checkingRates:'checking exchange rates…',
     fxFileOffline:"can't reach the internet from a file opened locally — open the site's real web address instead to convert currencies (per-currency totals above still work either way)",
@@ -2759,9 +2736,7 @@ const STRINGS = {
     waterGoalMlLabel:'Daily goal (ml)', waterCompactLabel:'WATER',
     // widget names
     widgetTasks:'Tasks', widgetNotes:'Notes', widgetMood:'Mood', widgetWater:'Water',
-    widgetSleep:'Sleep', widgetSteps:'Steps', widgetGratitude:'Gratitude',
-    widgetDailyHighlight:'Daily Highlight', widgetFreeText:'Free Text', widgetMusic:'Music',
-    widgetMovie:'Movie / Series', widgetFavoriteThing:'Favorite Thing', widgetPhotos:'Photos',
+    widgetSleep:'Sleep', widgetSteps:'Steps', widgetPhotos:'Photos', widgetRequired:'required',
     photosLabel:'photos', addPhotos:'+ Add Photos', noPhotosYet:'no photos yet', deletePhotoConfirm:'Delete this photo? This cannot be undone.',
     mediaFilesTitle:'📁 Media Files', downloadPhoto:'Download',
     // widget library
@@ -2775,6 +2750,7 @@ const STRINGS = {
     widgetDescPlaceholder:'description (optional)', create:'Create', deleteWidgetConfirm:'Delete "{name}"? This will remove the widget and its associated data.',
     widgetNamePrompt:'Widget name:', widgetDescPrompt:'Description (optional):',
     typeText:'Text', typeChecklist:'Checklist', typeNumber:'Number', typeCounter:'Counter', typeRating:'Rating',
+    typeToggle:'Yes/No', typeScale:'Scale (1-5)', typeTimer:'Streak',
     // settings
     settings:'Settings', account:'Account', accountSecurity:'Account security', personalization:'Personalization',
     regional:'Regional', notifications:'Notifications', media:'Media Files', dataPrivacy:'Data & Privacy',
@@ -2786,7 +2762,7 @@ const STRINGS = {
     exportBoard:'Export SVOJ', exportNote:'Downloads everything currently stored for your account as a JSON file.',
     deleteData:'Delete my data', deleteDataNote:'Permanently erases all your planner data (days, months, expenses, settings) from this account. This cannot be undone.',
     deleteAccountNote:"Full account deletion (removing your login itself) isn't available directly in the app yet — delete your data above, or get in touch to close the account entirely.",
-    logOut:'Log out', settingsTooltip:'Settings', placeSticker:'Place a sticker', notePlaceholderShort:'note',
+    logOut:'Log out', settingsTooltip:'Settings', notePlaceholderShort:'note',
     newEmailExample:'new@email.com', newPasswordExample:'new password (6+ chars)',
     back:'← Back', save:'Save', cancel:'Cancel', offlineNote:'Sign in with an account to sync settings across devices — currently saved on this device only.',
     widgetLibraryLink:'🧩 Daily Page Widgets', customizeArrow:'Customize →',
@@ -2796,26 +2772,39 @@ const STRINGS = {
     deleteAllConfirm2:'Really sure? Every day, month, expense and setting will be permanently erased.',
     cloudDeleteError:'could not delete cloud data: {msg}',
     toggleDone:'toggle done', customColor:'custom color', catHi:'hi 🐾', legacyCurrency:'legacy',
+    toggleYes:'Yes', toggleNo:'No', toggleDoneToday:'Done today', toggleMarkToday:'Mark today',
+    widgetStreakLabel:'{n}-day streak',
+    stepsCheckingLabel:'checking…', stepsFromHealth:'from Apple Health', stepsPermissionDenied:'Health access denied — enable it in system settings to see steps',
+    stepsNotConnected:'not connected yet', stepsUnsupportedWeb:'not available on web — connect on iOS',
+    stepsConnectAction:'Connect Health',
     // categories
     catFood:'Food', catTransport:'Transport', catShopping:'Shopping', catBills:'Bills', catEntertainment:'Entertainment',
     catHealth:'Health', catTravel:'Travel', catHome:'Home', catSubscriptions:'Subscriptions', catOther:'Other', noCategory:'no category',
-    catProductivity:'Productivity', catLifestyle:'Lifestyle', catPersonal:'Personal', catEntertainmentGroup:'Entertainment',
+    catProductivity:'Productivity', catLifestyle:'Lifestyle', catPersonal:'Personal', catJournalGroup:'Journal',
     // favorites presets
     favMusic:'🎵 Music of the month', favMovie:'🎬 Movie of the month', favSeries:'📺 Series of the month',
     favBook:'📖 Book of the month', favGame:'🎮 Game of the month', favFood:'🍜 Food of the month',
     favCoffee:'☕ Coffee shop of the month', favPlace:'📍 Place of the month', favPurchase:'🛍 Purchase of the month',
     favMemory:'📸 Favorite memory', favWin:'❤️ Biggest win this month',
-    // sticker sheet
-    stickerSheetTitle:'Stick it!', stickerSheetClose:'close', uploadStickers:'+ Upload stickers',
-    stickersAddedCount:'{n} / {max} added', noStickersYet:'no stickers yet — upload some above',
-    deleteSticker:'delete sticker', pickerDone:'done', resizeSticker:'resize', rotateSticker:'rotate',
-    stickerPackCustom:'My stickers', stickerPackDigitalChrome:'Digital Chrome', stickerPackY2kVixen:'Pink Pop',
-    stickerPackDarkRomance:'Dark Romance', stickerPackPetalBotanical:'Botanical',
+    // shared "close" label for bottom sheets (txnSheet/mySpaceLib/journalSheet/currencySheet/
+    // currencyPickerSheet) — name kept from the now-removed sticker sheet that originated it.
+    stickerSheetClose:'close',
     // onboarding
     onbNext:'next →', onbBack:'← back', onbSkip:'skip', onbSkipTour:'Skip tour', onbEnterSpace:'Enter SVOJ',
+    onbIntroTitle:'A quiet place that’s entirely yours.', onbIntroP1:'SVOJ is where you keep your days — your tasks, your moods, your money, and the little things worth remembering.',
+    onbIntroHighlight:'Nothing here is public unless you say so.',
     onbHelloTitle:'Hi.', onbHelloSub:"Let's get to know each other.",
     onbNameLabel:'My name is…', onbNamePlaceholder:'Your name',
-    onbWhyEyebrow:'Page two', onbWhyP1:'I started this diary to write down everything that happens to me.',
+    onbUsernameEyebrow:'Your handle', onbUsernameTitle:'Now, what should we call you publicly?',
+    onbUsernameSub:'Anything you ever share publicly (Explore, a public moment link) shows this — never your real name.',
+    onbMyDayEyebrow:'Where you live day to day', onbMyDayTitle:'This is My Day.',
+    onbMyDayBody:'Tasks, mood, water, sleep, photos — whatever you want to track shows up here, every day.',
+    onbJournalEyebrow:'A place to keep what you find', onbJournalTitle:'And this is Journal.',
+    onbJournalBody:'Journal is where you keep things you find interesting or worth remembering.',
+    onbJournalTypes:'Photos, places, songs, movies, recipes, links, notes.',
+    onbJournalPrivacy:'Keep them private, or make individual moments public to share.',
+    usernameAvailable:'✓ available',
+    onbWhyEyebrow:'Why SVOJ', onbWhyP1:'I started this diary to write down everything that happens to me.',
     onbWhyP2:'It can hold my plans. My money. My photos. My thoughts. My little wins. My strange days. Anything I want to keep.',
     onbWhyHighlight:'This is your space.\nYou decide what belongs here.',
     onbWidgetsTitle:'What belongs in your diary?', onbWidgetsSub:'Choose what you want to see in your space.',
@@ -2823,7 +2812,7 @@ const STRINGS = {
     onbThemeTitle:'How should your diary look?', onbThemeSub:'You can change this anytime.',
     onbAppearanceTitle:'Light or dark?', onbAppearanceSub:'Pick whatever feels right to read in.',
     appearanceLight:'Light', appearanceDark:'Dark', appearanceSystem:'System',
-    onbAvatarTitle:'Now choose yourself.', onbAvatarSub:'Pick a little face to greet you here — just for fun.',
+    onbAvatarTitle:'Now choose yourself.', onbAvatarSub:'Pick a little face to greet you here — one last thing before we let you in.',
     onbTourBudgetText:'Track your spending and income here.',
     onbTourJournalText:'Keep the things you find worth remembering — a photo, a song, a place — in seconds.',
     onbTourTodayText:'Your day, all in one place — tasks, mood, water, sleep and more.',
@@ -2875,11 +2864,19 @@ const STRINGS = {
     journalAddPhoto:'Add photo', journalSave:'Save', journalCancel:'Cancel',
     journalMakePublic:'Make Public', journalMakePrivate:'Make Private',
     journalPublicBadge:'Public · visible in Explore', journalPrivateBadge:'Private',
+    journalPublishMissingIntro:'To make this moment public, add:', journalMissingLink:'a link', journalMissingDescription:'a description',
+    journalCopyLink:'Copy link', journalLinkCopied:'Link copied!', journalCopyLinkManually:'Copy this link:',
+    publicMomentLoading:'Loading…', publicMomentNotFound:"This moment isn't available — it may have been made private or removed.",
+    publicMomentOffline:"Can't reach SVOJ right now — try again in a moment.", publicMomentOpenApp:'Open SVOJ →',
+    journalSaveToJournalAction:'Save to Journal', journalSaveToJournalTitle:'Save to Journal',
+    journalSaveToJournalHint:'Keep this photo in your Journal too — private or public?',
+    journalSavedAsPrivateNote:'Saved as private for now — add these and tap Make Public from Journal when ready.',
     journalDelete:'Delete', journalEdit:'Edit', journalDeleteConfirm:'Delete this moment?',
     journalOpenLink:'Open link ↗', journalOpenMap:'Open map ↗',
     journalSavedFrom:'Saved from SVOJ Explore', journalBy:'by',
     journalSaveToMyJournal:'Save to My Journal', journalSavedToJournal:'Saved to your Journal',
     journalExploreEmpty:'No public discoveries yet — be the first to share one.',
+    journalExploreSearchPlaceholder:'Search Explore…', journalExploreNoResults:'No matches for that search.',
     journalExploreUnavailable:"Explore needs an account — sign in to discover what others are sharing.",
     journalExploreLoadError:"Explore couldn't load right now — try again later.",
     journalSourceUnavailableShort:'No longer available', journalSourceUnavailableTitle:'This discovery is no longer available',
@@ -2887,6 +2884,9 @@ const STRINGS = {
     journalByAuthor:'by {name}',
     // Phase 2 — Settings additions
     myProfile:'My Profile', profileName:'Name', profileNamePlaceholder:'Your name', profileAvatar:'Avatar',
+    profileUsername:'Username', usernamePlaceholder:'@yourname', usernameHint:'used on Explore and public moments',
+    usernameInvalid:'3-20 characters: letters, numbers, underscore only', usernameChecking:'checking availability…',
+    usernameTaken:'that username is already taken — try another', usernameSaved:'username saved',
     appearance:'Appearance', appearanceMode:'Light / Dark', mySpaceSettingsSection:'My Space',
     manageMySpace:'Manage My Space', myDaySettingsSection:'My Day', svojPlus:'SVOJ+', svojPlusNote:'Premium features are coming later.',
     aboutSvoj:'About SVOJ', appVersion:'Version', feedback:'Send feedback', whatsNew:"What's new",
@@ -3112,7 +3112,64 @@ function startOffline(){
   updateHeaderAvatar(); // AVATAR_COLLECTION/avatarById are defined inside buildApp()
 }
 
-if(sb){
+// A ?moment=<id> URL is a shared public-moment link — it must work for a signed-out visitor
+// with zero auth/onboarding friction, so it completely bypasses the normal sign-in/offline
+// boot below. renderPublicMomentView (defined later in the script, after MOMENT_TYPE_ICON/
+// journalEsc/etc.) is deferred via setTimeout so it only runs once every later const/function
+// in this file has actually been declared — calling it synchronously here would hit those
+// declarations before they exist.
+// Self-contained on purpose: everything from buildApp() onward (Journal, widgets, onboarding,
+// Budget, ...) only exists after a sign-in/offline decision runs buildApp() — but a visitor
+// following a shared public-moment link must see it WITHOUT any of that. So this small block
+// carries its own trimmed copies of the couple of pure helpers it needs (escaping, safe-URL
+// checking, the type→label map) rather than depending on buildApp()'s internal versions, which
+// are simply not defined yet at this point in a fresh page load. Only sb/t()/STRINGS (declared
+// above, before buildApp()) are shared with the rest of the app.
+function publicMomentEsc(s){ return String(s==null?'':s).replace(/[&<>"]/g, c=> ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]); }
+function publicMomentSafeUrl(url){
+  if(!url) return '';
+  try{ const u = new URL(String(url), location.href); return (u.protocol==='http:'||u.protocol==='https:') ? u.href : ''; }
+  catch(e){ return ''; }
+}
+const PUBLIC_MOMENT_TYPE_LABEL_KEY = { photo:'journalTypePhoto', place:'journalTypePlace', song:'journalTypeSong', movie:'journalTypeMovie', recipe:'journalTypeRecipe', link:'journalTypeLink', note:'journalTypeNote' };
+function publicMomentNotFoundHtml(){
+  return `<div class="diary-body">${t('publicMomentNotFound')}</div><a class="auth-skip" href="${location.origin}${location.pathname}">${t('publicMomentOpenApp')}</a>`;
+}
+function publicMomentContentHtml(row){
+  const label = t(PUBLIC_MOMENT_TYPE_LABEL_KEY[row.type] || 'journalTypeNote');
+  const linkUrl = publicMomentSafeUrl(row.type === 'place' ? (row.location && row.location.url) : row.external_url);
+  return `
+    <div class="journal-moment-detail-type">${label}${row.artist ? ' · '+publicMomentEsc(row.artist) : ''}</div>
+    ${row.image ? `<img class="journal-moment-detail-img" src="${row.image}" alt="">` : ''}
+    <h3 class="month-section-title" style="margin-bottom:2px;">${publicMomentEsc(row.title || label)}</h3>
+    ${row.description ? `<div class="journal-moment-detail-desc">${publicMomentEsc(row.description)}</div>` : ''}
+    ${linkUrl ? `<a class="journal-moment-detail-link" href="${publicMomentEsc(linkUrl)}" target="_blank" rel="noopener noreferrer">${row.type === 'place' ? t('journalOpenMap') : t('journalOpenLink')}</a>` : ''}
+    <div class="journal-moment-provenance">${t('journalByAuthor',{name:publicMomentEsc(row.author||'—')})}</div>
+    <a class="auth-skip" href="${location.origin}${location.pathname}">${t('publicMomentOpenApp')}</a>`;
+}
+async function renderPublicMomentView(id){
+  const inner = document.getElementById('publicMomentInner');
+  if(!inner) return;
+  if(!sb){
+    inner.innerHTML = `<div class="diary-body">${t('publicMomentOffline')}</div><a class="auth-skip" href="${location.origin}${location.pathname}">${t('publicMomentOpenApp')}</a>`;
+    return;
+  }
+  try{
+    const { data, error } = await sb.from('public_journal_moments').select('*').eq('id', id).maybeSingle();
+    if(error) throw error;
+    inner.innerHTML = data ? publicMomentContentHtml(data) : publicMomentNotFoundHtml();
+  } catch(err){
+    console.warn('public moment fetch failed', err);
+    inner.innerHTML = publicMomentNotFoundHtml();
+  }
+}
+let urlMomentId = null;
+try{ urlMomentId = new URLSearchParams(location.search).get('moment'); }catch(e){}
+if(urlMomentId){
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('publicMomentView').style.display = 'flex';
+  renderPublicMomentView(urlMomentId);
+} else if(sb){
   document.getElementById('authSignupBtn').addEventListener('click', async ()=>{
     const email = document.getElementById('authEmail').value.trim();
     const password = document.getElementById('authPassword').value;
@@ -3230,35 +3287,6 @@ function currentTaskMoods(){ return THEME_TASK_MOODS[currentTheme] || TASK_MOODS
 const THEME_TASK_MOOD_DEFAULT = { berry:'🔮', pop:'💗', botanical:'🌱', forest:'🕯️' };
 function taskMoodDefaultIcon(){ return THEME_TASK_MOOD_DEFAULT[currentTheme] || '🎈'; }
 
-/* ============ GLOBAL STICKER LIBRARY (upload lives in the sticker sheet itself) ============ */
-const MAX_STICKERS = 60;
-let customStickers = load('wp-customstickers-v5', []);
-const stkInput = document.getElementById('stkInput');
-const stkUploadBtn = document.getElementById('stkUploadBtn');
-stkUploadBtn.addEventListener('click', ()=> stkInput.click());
-function resizeImagePNG(file, maxSize){
-  // Resolves null (never rejects) on a corrupt/non-image file, matching resizeImageJPEG's
-  // existing error handling — previously a bad file left this promise unresolved forever,
-  // silently hanging the sticker-upload loop for the rest of that session.
-  return new Promise((resolve)=>{
-    const reader = new FileReader();
-    reader.onload = (e)=>{
-      const img = new Image();
-      img.onload = ()=>{
-        let { width, height } = img;
-        if(width > height){ if(width > maxSize){ height *= maxSize/width; width = maxSize; } }
-        else { if(height > maxSize){ width *= maxSize/height; height = maxSize; } }
-        const c = document.createElement('canvas'); c.width = width; c.height = height;
-        c.getContext('2d').drawImage(img, 0, 0, width, height);
-        resolve(c.toDataURL('image/png'));
-      };
-      img.onerror = ()=> resolve(null);
-      img.src = e.target.result;
-    };
-    reader.onerror = ()=> resolve(null);
-    reader.readAsDataURL(file);
-  });
-}
 function resizeImageJPEG(file, maxSize, quality){
   return new Promise((resolve, reject)=>{
     const reader = new FileReader();
@@ -3281,309 +3309,12 @@ function resizeImageJPEG(file, maxSize, quality){
     reader.readAsDataURL(file);
   });
 }
-stkInput.addEventListener('change', async (e)=>{
-  const files = Array.from(e.target.files || []);
-  const room = MAX_STICKERS - customStickers.length;
-  for(const file of files.slice(0, Math.max(0,room))){
-    const dataURL = await resizeImagePNG(file, 240);
-    if(dataURL) customStickers.push({ id: Date.now()+Math.random(), src: dataURL });
-  }
-  save('wp-customstickers-v5', customStickers);
-  renderStickerSheetGrid();
-  stkInput.value = '';
-});
-
-/* ============ BUILT-IN STICKER PACKS (Digital Chrome, Y2K Vixen, Dark Romance, Botanical) ============
-   Assets live in assets/stickers/<pack>/*.webp next to this file, referenced by relative path
-   rather than inlined — unlike customStickers (user uploads, stored as base64 dataURLs so they
-   survive as pure app state), these are static files shipped alongside index.html. A placed
-   instance's `sid` for a built-in sticker is "b:<packId>:<file>"; resolveStickerSrc() checks
-   this index first, then falls back to customStickers, so one lookup covers both sources. */
-const BUILTIN_STICKER_PACKS = [
-  { id:'digital-chrome', nameKey:'stickerPackDigitalChrome', files:[
-    '01-chrome-star','02-holographic-heart','03-cd-disc','04-digital-smiley','05-tiny-computer',
-    '06-chrome-butterfly','07-holographic-bow','08-chrome-headphones','09-flip-phone','10-chrome-flower',
-    '11-holographic-planet','12-loading-character','13-starburst-sparkle','14-digital-cloud','15-mini-robot',
-  ]},
-  { id:'y2k-vixen', nameKey:'stickerPackY2kVixen', files:[
-    '01-glossy-heart','02-leopard-heart','03-cherry-friends','04-sassy-bow','05-lipstick',
-    '06-handbag','07-high-heel','08-diva-rose','09-cherry-cola','10-dreamy-butterfly',
-    '11-excited-star','12-fashion-magazine','13-shocked-flip-phone','14-leopard-compact','15-main-character-crown',
-  ]},
-  { id:'dark-romance', nameKey:'stickerPackDarkRomance', files:[
-    '01-black-rose-lady','02-cherry-duo','03-broken-heart','04-perfume-bottle','05-blood-candle',
-    '06-lace-bow','07-moon-face','08-lipstick','09-love-letter','10-hand-mirror',
-    '11-heart-locket','12-dark-ring','13-black-rose','14-black-cat','15-winged-heart',
-  ]},
-  { id:'petal-botanical', nameKey:'stickerPackPetalBotanical', files:[
-    '01-rose','02-daisy','03-sleepy-tulip','04-peony-mirror','05-lavender',
-    '06-sunflower','07-cherry-blossom','08-cactus','09-potted-plant','10-watering-can',
-    '11-snail','12-butterfly','13-bee','14-seed-packet','15-garden-journal',
-  ]},
-];
-const BUILTIN_STICKER_INDEX = {};
-BUILTIN_STICKER_PACKS.forEach(pack=>{
-  pack.files.forEach(file=>{ BUILTIN_STICKER_INDEX['b:'+pack.id+':'+file] = `assets/stickers/${pack.id}/${file}.webp`; });
-});
-function resolveStickerSrc(sid){
-  if(Object.prototype.hasOwnProperty.call(BUILTIN_STICKER_INDEX, sid)) return BUILTIN_STICKER_INDEX[sid];
-  const c = customStickers.find(x=> String(x.id) === String(sid));
-  return c ? c.src : null;
-}
-
-/* ============ GLOBAL STICKER PLACEMENT (Date View only, freeform) ============
-   Placed stickers are decorative-only until tapped: a tap on an unselected sticker only
-   selects it (shows resize/rotate/delete handles + a dashed outline) without moving it, so a
-   stray touch while scrolling can't drag it. A second, explicit drag on an already-selected
-   sticker moves it; tapping anywhere outside any sticker deselects it back to a clean, fixed
-   decoration. This mirrors the tap-to-edit / tap-outside-to-deselect pattern already used for
-   MySpace widgets elsewhere in the app. */
-let stickerZones = load('wp-stickerzones-v5', {});
-function zoneItems(zoneKey){ return stickerZones[zoneKey] || (stickerZones[zoneKey] = []); }
-function stickerTransformCSS(rot, scale){
-  return { main:`rotate(${rot}deg) scale(${scale})`, counter:`rotate(${-rot}deg) scale(${1/scale})` };
-}
-function applyStickerTransform(el, rot, scale){
-  const { main, counter } = stickerTransformCSS(rot, scale);
-  el.style.transform = main;
-  el.querySelectorAll('.stk-handle').forEach(h=> h.style.transform = counter);
-}
-function stickerLayerHtml(dataKey){
-  const items = zoneItems(dataKey);
-  return items.map(it=>{
-    const src = resolveStickerSrc(it.sid);
-    if(!src) return '';
-    const scale = it.scale || 1;
-    const rot = it.rot || 0;
-    const { main, counter } = stickerTransformCSS(rot, scale);
-    return `<div class="stick-inst" data-key="${dataKey}" data-iid="${it.iid}" style="left:${it.x}%; top:${it.y}%; transform:${main};">
-      <img src="${src}" alt="sticker">
-      <div class="stk-handle resize" style="transform:${counter};" title="${t('resizeSticker')}">⇲</div>
-      <div class="stk-handle rotate" style="transform:${counter};" title="${t('rotateSticker')}">↻</div>
-      <div class="stk-handle del" style="transform:${counter};" title="${t('deleteSticker')}">✕</div>
-    </div>`;
-  }).join('');
-}
-function renderStickerLayer(domSlotKey, dataKey){
-  const layer = document.getElementById('stickerLayer-'+domSlotKey);
-  if(!layer) return;
-  const keepSelectedIid = (selectedStickerZoneEl === layer) ? selectedStickerIid : null;
-  layer.innerHTML = stickerLayerHtml(dataKey);
-  deselectAllStickers();
-  layer.querySelectorAll('.stick-inst').forEach(el=>{
-    makeDraggableInZone(el, layer, dataKey);
-    el.querySelector('.stk-handle.del').addEventListener('click', (ev)=>{
-      ev.stopPropagation();
-      stickerZones[dataKey] = zoneItems(dataKey).filter(s=> String(s.iid) !== el.dataset.iid);
-      save('wp-stickerzones-v5', stickerZones);
-      deselectAllStickers();
-      renderStickerLayer(domSlotKey, dataKey);
-    });
-    if(keepSelectedIid && String(el.dataset.iid) === String(keepSelectedIid)) selectSticker(el, layer);
-  });
-}
-let selectedStickerIid = null;
-let selectedStickerZoneEl = null;
-function deselectAllStickers(){
-  if(selectedStickerZoneEl){
-    const prev = selectedStickerZoneEl.querySelector('.stick-inst.selected');
-    if(prev) prev.classList.remove('selected');
-  }
-  selectedStickerIid = null; selectedStickerZoneEl = null;
-}
-function selectSticker(el, zoneEl){
-  if(selectedStickerIid === el.dataset.iid && selectedStickerZoneEl === zoneEl) return;
-  deselectAllStickers();
-  el.classList.add('selected');
-  selectedStickerIid = el.dataset.iid;
-  selectedStickerZoneEl = zoneEl;
-}
-document.addEventListener('pointerdown', (e)=>{
-  if(!selectedStickerIid) return;
-  if(e.target.closest('.stick-inst')) return;
-  deselectAllStickers();
-});
-function makeDraggableInZone(el, zone, zoneKey){
-  const pointers = new Map();
-  let mode = null; // 'drag' | 'pinch' | 'resize' | 'rotate'
-  let offX=0, offY=0;
-  let pinchStartDist=0, pinchStartScale=1, liveScale = null;
-  let resizeStartDist=0, resizeStartScale=1;
-  let rotateStartAngle=0, rotateStartRot=0, liveRot = null;
-
-  function getStored(){ return zoneItems(zoneKey).find(s=> String(s.iid) === el.dataset.iid); }
-  function dist(a,b){ return Math.hypot(a.x-b.x, a.y-b.y); }
-  function currentRot(){ const st = getStored(); return st ? (st.rot||0) : 0; }
-  function currentScale(){ const st = getStored(); return st ? (st.scale||1) : 1; }
-  function center(){ const r = el.getBoundingClientRect(); return { x:r.left+r.width/2, y:r.top+r.height/2 }; }
-
-  function startDrag(e){
-    mode = 'drag';
-    const rect = zone.getBoundingClientRect();
-    offX = e.clientX - (rect.left + (parseFloat(el.style.left)/100)*rect.width);
-    offY = e.clientY - (rect.top + (parseFloat(el.style.top)/100)*rect.height);
-  }
-  function startPinch(){
-    mode = 'pinch';
-    const pts = Array.from(pointers.values());
-    pinchStartDist = dist(pts[0], pts[1]);
-    pinchStartScale = currentScale();
-  }
-  function startResize(e){
-    mode = 'resize';
-    const c = center();
-    resizeStartDist = Math.max(1, Math.hypot(e.clientX-c.x, e.clientY-c.y));
-    resizeStartScale = currentScale();
-  }
-  function startRotate(e){
-    mode = 'rotate';
-    const c = center();
-    rotateStartAngle = Math.atan2(e.clientY-c.y, e.clientX-c.x) * 180/Math.PI;
-    rotateStartRot = currentRot();
-  }
-
-  el.addEventListener('pointerdown', (e)=>{
-    if(e.target.closest('.stk-handle')) return; // handles have their own listeners below
-    if(!el.classList.contains('selected')){
-      selectSticker(el, zone);
-      return; // this tap only selects — moving it takes an explicit second gesture
-    }
-    el.setPointerCapture(e.pointerId);
-    pointers.set(e.pointerId, { x:e.clientX, y:e.clientY });
-    if(pointers.size === 1) startDrag(e);
-    else if(pointers.size === 2) startPinch();
-  });
-
-  el.addEventListener('pointermove', (e)=>{
-    if(!pointers.has(e.pointerId)) return;
-    pointers.set(e.pointerId, { x:e.clientX, y:e.clientY });
-
-    if(mode === 'pinch' && pointers.size >= 2){
-      const pts = Array.from(pointers.values());
-      const newDist = dist(pts[0], pts[1]);
-      if(pinchStartDist > 0){
-        let scale = pinchStartScale * (newDist / pinchStartDist);
-        scale = Math.max(0.4, Math.min(3, scale));
-        liveScale = scale;
-        applyStickerTransform(el, currentRot(), scale);
-      }
-    } else if(mode === 'drag' && pointers.size === 1){
-      const rect = zone.getBoundingClientRect();
-      if(rect.width < 1) return;
-      let xPct = ((e.clientX - offX - rect.left)/rect.width)*100;
-      let yPct = ((e.clientY - offY - rect.top)/rect.height)*100;
-      xPct = Math.max(0, Math.min(94, xPct)); yPct = Math.max(0, Math.min(96, yPct));
-      el.style.left = xPct+'%'; el.style.top = yPct+'%';
-    }
-  });
-
-  function release(e){
-    pointers.delete(e.pointerId);
-    const st = getStored();
-    if(st){
-      st.x = parseFloat(el.style.left); st.y = parseFloat(el.style.top);
-      if(liveScale !== null){ st.scale = liveScale; }
-      save('wp-stickerzones-v5', stickerZones);
-    }
-    if(pointers.size === 1){
-      // one finger remains after a pinch — resume dragging with it
-      liveScale = null;
-      const [remaining] = pointers.values();
-      startDrag({ clientX: remaining.x, clientY: remaining.y });
-    } else if(pointers.size === 0){
-      mode = null; liveScale = null;
-    }
-  }
-  el.addEventListener('pointerup', release);
-  el.addEventListener('pointercancel', release);
-
-  /* resize/rotate handles compute their gesture from the sticker's live on-screen center
-     (getBoundingClientRect already reflects the current transform), so both work correctly
-     regardless of the sticker's current rotation — no rotation-aware vector math needed for
-     resize (distance-from-center is rotation-invariant), and rotation is just the pointer's
-     angle around that same center. */
-  const resizeHandle = el.querySelector('.stk-handle.resize');
-  resizeHandle.addEventListener('pointerdown', (e)=>{
-    e.stopPropagation();
-    resizeHandle.setPointerCapture(e.pointerId);
-    startResize(e);
-  });
-  resizeHandle.addEventListener('pointermove', (e)=>{
-    if(mode !== 'resize') return;
-    const c = center();
-    const d = Math.max(1, Math.hypot(e.clientX-c.x, e.clientY-c.y));
-    let scale = resizeStartScale * (d/resizeStartDist);
-    scale = Math.max(0.4, Math.min(3, scale));
-    liveScale = scale;
-    applyStickerTransform(el, currentRot(), scale);
-  });
-  function endResize(){
-    if(mode !== 'resize') return;
-    const st = getStored();
-    if(st && liveScale !== null) st.scale = liveScale;
-    save('wp-stickerzones-v5', stickerZones);
-    liveScale = null; mode = null;
-  }
-  resizeHandle.addEventListener('pointerup', endResize);
-  resizeHandle.addEventListener('pointercancel', endResize);
-
-  const rotateHandle = el.querySelector('.stk-handle.rotate');
-  rotateHandle.addEventListener('pointerdown', (e)=>{
-    e.stopPropagation();
-    rotateHandle.setPointerCapture(e.pointerId);
-    startRotate(e);
-  });
-  rotateHandle.addEventListener('pointermove', (e)=>{
-    if(mode !== 'rotate') return;
-    const c = center();
-    const angle = Math.atan2(e.clientY-c.y, e.clientX-c.x) * 180/Math.PI;
-    liveRot = rotateStartRot + (angle - rotateStartAngle);
-    applyStickerTransform(el, liveRot, currentScale());
-  });
-  function endRotate(){
-    if(mode !== 'rotate') return;
-    const st = getStored();
-    if(st && liveRot !== null) st.rot = liveRot;
-    save('wp-stickerzones-v5', stickerZones);
-    liveRot = null; mode = null;
-  }
-  rotateHandle.addEventListener('pointerup', endRotate);
-  rotateHandle.addEventListener('pointercancel', endRotate);
-}
-let activeStickerZone = null; // {domSlotKey, dataKey} — set whenever the Date View opens a specific day
-function addStickerToCurrentPage(sid){
-  if(!activeStickerZone) return;
-  const { domSlotKey, dataKey } = activeStickerZone;
-  const items = zoneItems(dataKey);
-  if(items.length >= 14) return;
-  const iid = Date.now()+Math.random();
-  items.push({ iid, sid, x: 20+Math.random()*50, y: 20+Math.random()*45, rot: Number((Math.random()*20-10).toFixed(1)), scale:1 });
-  save('wp-stickerzones-v5', stickerZones);
-  renderStickerLayer(domSlotKey, dataKey);
-  stickerSheet.classList.remove('open');
-  const layer = document.getElementById('stickerLayer-'+domSlotKey);
-  const newEl = layer && layer.querySelector(`.stick-inst[data-iid="${iid}"]`);
-  if(newEl) selectSticker(newEl, layer);
-}
-
-/* floating sticker button + bottom sheet */
-const stickerFab = document.getElementById('stickerFab');
-const stickerSheet = document.getElementById('stickerSheet');
-const stickerSheetGrid = document.getElementById('stickerSheetGrid');
-let activeStickerPack = 'custom'; // 'custom' | one of BUILTIN_STICKER_PACKS ids
 function applyHeaderLanguage(){
   const brandTitle = document.querySelector('.brand h1'); if(brandTitle) brandTitle.textContent = APP_NAME;
   logoutBtn.textContent = t('logOut');
   headerAvatarBtnEl.title = t('myProfile');
-  if(stickerFab) stickerFab.title = t('placeSticker');
   const dl = document.getElementById('photoViewerDownload'); if(dl) dl.title = t('downloadPhoto');
-  const del = document.getElementById('photoViewerDelete'); if(del) del.title = t('delete');
   const close = document.getElementById('photoViewerClose'); if(close) close.title = t('cancel');
-  const sheetTitle = document.querySelector('.sticker-sheet-title'); if(sheetTitle) sheetTitle.textContent = t('stickerSheetTitle');
-  const sheetClose = document.getElementById('stickerSheetClose'); if(sheetClose) sheetClose.textContent = t('stickerSheetClose');
-  if(stkUploadBtn) stkUploadBtn.textContent = t('uploadStickers');
-  renderStickerPackTabs();
-  renderStickerSheetGrid();
   applyBottomNavLanguage();
 }
 applyHeaderLanguage();
@@ -3635,62 +3366,6 @@ function bindBottomNav(){
   document.getElementById('navBtnSettings').addEventListener('click', ()=> showSettingsView());
 }
 bindBottomNav();
-function renderStickerPackTabs(){
-  const wrap = document.getElementById('stickerPackTabs');
-  if(!wrap) return;
-  const tabs = [{ id:'custom', label:t('stickerPackCustom') }, ...BUILTIN_STICKER_PACKS.map(p=> ({ id:p.id, label:t(p.nameKey) }))];
-  wrap.innerHTML = tabs.map(tb=> `<button type="button" class="pack-tab${tb.id===activeStickerPack?' active':''}" data-pack="${tb.id}">${tb.label}</button>`).join('');
-  wrap.querySelectorAll('.pack-tab').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      activeStickerPack = btn.dataset.pack;
-      renderStickerPackTabs();
-      renderStickerSheetGrid();
-    });
-  });
-}
-function renderStickerSheetGrid(){
-  const uploadRow = document.querySelector('.sticker-sheet-upload-row');
-  if(activeStickerPack !== 'custom'){
-    if(uploadRow) uploadRow.style.display = 'none';
-    const pack = BUILTIN_STICKER_PACKS.find(p=> p.id === activeStickerPack);
-    stickerSheetGrid.innerHTML = pack ? pack.files.map(file=>{
-      const sid = 'b:'+pack.id+':'+file;
-      return `<div class="sticker-lib-item"><button type="button" class="sticker-sheet-item" data-sid="${sid}"><img src="${BUILTIN_STICKER_INDEX[sid]}" alt=""></button></div>`;
-    }).join('') : '';
-    stickerSheetGrid.querySelectorAll('.sticker-sheet-item').forEach(btn=>{
-      btn.addEventListener('click', ()=> addStickerToCurrentPage(btn.dataset.sid));
-    });
-    return;
-  }
-  if(uploadRow) uploadRow.style.display = '';
-  document.getElementById('stkHint').textContent = t('stickersAddedCount', { n:customStickers.length, max:MAX_STICKERS });
-  stkUploadBtn.disabled = customStickers.length >= MAX_STICKERS;
-  if(!customStickers.length){
-    stickerSheetGrid.innerHTML = `<div class="empty-box" style="grid-column:1/-1;">${t('noStickersYet')}</div>`;
-    return;
-  }
-  stickerSheetGrid.innerHTML = customStickers.map(s=>`
-    <div class="sticker-lib-item">
-      <button type="button" class="sticker-sheet-item" data-sid="${s.id}"><img src="${s.src}" alt="sticker"></button>
-      <button type="button" class="sticker-lib-del" data-sid="${s.id}" aria-label="${t('deleteSticker')}">✕</button>
-    </div>`).join('');
-  stickerSheetGrid.querySelectorAll('.sticker-sheet-item').forEach(btn=>{
-    btn.addEventListener('click', ()=> addStickerToCurrentPage(btn.dataset.sid));
-  });
-  stickerSheetGrid.querySelectorAll('.sticker-lib-del').forEach(btn=>{
-    btn.addEventListener('click', (ev)=>{
-      ev.stopPropagation();
-      customStickers = customStickers.filter(s=> String(s.id) !== btn.dataset.sid);
-      save('wp-customstickers-v5', customStickers);
-      renderStickerSheetGrid();
-    });
-  });
-}
-stickerFab.addEventListener('click', ()=>{ renderStickerPackTabs(); renderStickerSheetGrid(); stickerSheet.classList.add('open'); });
-document.getElementById('stickerSheetClose').addEventListener('click', ()=> stickerSheet.classList.remove('open'));
-stickerSheet.addEventListener('click', (e)=>{ if(e.target === stickerSheet) stickerSheet.classList.remove('open'); });
-renderStickerSheetGrid();
-
 
 /* ============ DAY PAGES ============ */
 const MOOD_FACES = ['😴','😕','🙂','😄','🤩'];
@@ -3909,9 +3584,6 @@ function hideAllViews(){
     const el = document.getElementById(id);
     if(el){ el.classList.remove('active'); el.innerHTML = ''; }
   });
-  stickerFab.style.display = 'none';
-  activeStickerZone = null;
-  deselectAllStickers();
 }
 function showYearView(){
   hideAllViews();
@@ -4482,7 +4154,7 @@ function renderExpenseList(containerId, items, opts){
 }
 function refreshAllExpenseViews(){
   const mv = document.getElementById('monthView');
-  if(mv && mv.classList.contains('active') && currentMonthKey){ renderMonthExpenseSection(currentMonthKey); renderMonthRecap(); }
+  if(mv && mv.classList.contains('active') && currentMonthKey){ renderMonthRecap(); }
   const dv = document.getElementById('dateView');
   if(dv && dv.classList.contains('active') && openDate) renderDateExpenseSection(dateKeyOf(openDate));
   const sv = document.getElementById('mySpaceView');
@@ -4626,66 +4298,6 @@ document.getElementById('currencyPickerSearch').addEventListener('input', (e)=> 
 function defaultExpenseDateForMonth(monthKey){
   const todayKey = dateKeyOf(todayReal);
   return todayKey.slice(0,7) === monthKey ? todayKey : monthKey+'-01';
-}
-async function renderMonthExpenseSection(monthKey){
-  const items = expensesForMonth(monthKey).slice().sort((a,b)=> a.date<b.date?-1:a.date>b.date?1:0);
-  const totalsByCcy = {};
-  items.forEach(e=> totalsByCcy[e.currency] = (totalsByCcy[e.currency]||0)+e.amount);
-  const totalsCcys = Object.keys(totalsByCcy); // only currencies actually spent this month — no padding with zero-balance currencies
-  const totalsEl = document.getElementById('expenseCurrencyTotals');
-  if(totalsEl) totalsEl.innerHTML = totalsCcys.length
-    ? totalsCcys.map(c=> `<div class="expense-ccy-total"><span>${c}</span><span>${fmtMoney(totalsByCcy[c], c)}</span></div>`).join('')
-    : `<div class="month-expense-empty">${t('noExpensesYet')}</div>`;
-
-  renderExpenseList('monthExpenseList', items, { showDate:true });
-
-  // the "Total in ___" picker can still offer any currency the user has added, even with $0 this month —
-  // it's a converter picker, not a totals display, so it's unaffected by the fix above.
-  const dispCcys = Array.from(new Set([...expenseCurrencies.filter(c=>ALLOWED_CURRENCIES.includes(c)), ...totalsCcys]));
-  const dispSel = document.getElementById('expenseDisplayCcy');
-  if(dispSel){ dispSel.innerHTML = dispCcys.map(c=> `<option value="${c}" ${c===expenseDisplayCcy?'selected':''}>${c}</option>`).join(''); }
-
-  fillCurrencySelect(document.getElementById('expCurrency'));
-  fillCategorySelect(document.getElementById('expCategory'));
-  const dateEl = document.getElementById('expDate');
-  if(dateEl && !dateEl.value) dateEl.value = defaultExpenseDateForMonth(monthKey);
-
-  renderCurrencyChips();
-  await refreshCombinedTotal(items);
-}
-async function refreshCombinedTotal(items){
-  const valueEl = document.getElementById('expenseCombinedValue');
-  const statusEl = document.getElementById('expenseFxStatus');
-  if(!valueEl || !statusEl) return;
-  valueEl.textContent = '…';
-  statusEl.textContent = t('checkingRates');
-  const rates = await getFxRates(expenseDisplayCcy);
-  if(!rates.rates){
-    valueEl.textContent = '—';
-    statusEl.textContent = rates.error === 'file://'
-      ? t('fxFileOffline')
-      : rates.error && rates.error.indexOf('offline')===0
-      ? t('fxNoCacheOffline')
-      : t('fxUnavailable');
-    return;
-  }
-  let total = 0, anyMissing = false;
-  items.forEach(e=>{ const v = convertViaRates(e.amount, e.currency, rates); if(v===null) anyMissing=true; else total += v; });
-  valueEl.textContent = fmtMoney(total, expenseDisplayCcy) + (anyMissing ? ' *' : '');
-  const when = rates.fetchedAt ? timeAgo(rates.fetchedAt) : t('timeUnknown');
-  statusEl.textContent = (rates.stale ? t('fxCached',{when}) : t('fxUpdated',{when})) + (anyMissing ? t('fxMissingNote') : '');
-}
-function addMonthExpenseNew(){
-  const amount = parseFloat(document.getElementById('expAmount').value);
-  const currency = document.getElementById('expCurrency').value;
-  const date = document.getElementById('expDate').value;
-  const category = document.getElementById('expCategory').value;
-  const note = document.getElementById('expNote').value.trim();
-  if(!amount || !date) return;
-  expenses.push({ id:newId(), date, amount, currency, category, note, createdAt:Date.now(), updatedAt:Date.now() });
-  saveExpenses();
-  document.getElementById('expAmount').value = ''; document.getElementById('expNote').value = '';
-  refreshAllExpenseViews();
 }
 
 function renderDateExpenseSection(dateKey){
@@ -4961,18 +4573,20 @@ function ensurePhotosDay(dateKey){ return photosData[dateKey] || (photosData[dat
 function savePhotosData(){ save('wp-photos-v1', photosData); }
 function allPhotoDateKeys(){ return Object.keys(photosData).filter(k=> photosData[k] && photosData[k].length).sort(); }
 
-function photoThumbsHtml(photos){
+function photoThumbsHtml(photos, allowDelete){
   if(!photos.length) return `<div class="month-goal-empty">${t('noPhotosYet')}</div>`;
   return `<div class="photo-thumb-row">` + photos.map(p=>`
     <div class="photo-thumb-wrap">
       <img class="photo-thumb" src="${p.src}" data-view="${p.id}" alt="">
+      ${allowDelete ? `<button type="button" class="photo-thumb-del" data-del="${p.id}" title="${t('delete')}">✕</button>
+      <button type="button" class="photo-thumb-journal" data-journal="${p.id}" title="${t('journalSaveToJournalAction')}">📖</button>` : ''}
     </div>`).join('') + `</div>`;
 }
 function photosSectionHtml(key){
   const photos = ensurePhotosDay(key);
   return `<div class="photos-block" data-key="${key}">
       <div class="habit-label">${t('photosLabel')} (${photos.length})</div>
-      <div id="photoThumbs-${key}">${photoThumbsHtml(photos)}</div>
+      <div id="photoThumbs-${key}">${photoThumbsHtml(photos, true)}</div>
       <input type="file" id="photoInput-${key}" accept="image/*" multiple style="display:none">
       <button type="button" class="add-btn-outline" id="photoAddBtn-${key}" ${photos.length>=MAX_PHOTOS_PER_DAY?'disabled':''}>${t('addPhotos')}</button>
     </div>`;
@@ -4996,10 +4610,19 @@ function bindPhotosSection(key, root){
   const thumbsEl = wrap.querySelector(`#photoThumbs-${key}`);
   function rerenderThumbs(){
     const photos = ensurePhotosDay(key);
-    thumbsEl.innerHTML = photoThumbsHtml(photos);
+    thumbsEl.innerHTML = photoThumbsHtml(photos, true);
     wrap.querySelector('.habit-label').textContent = `${t('photosLabel')} (${photos.length})`;
     addBtn.disabled = photos.length >= MAX_PHOTOS_PER_DAY;
     thumbsEl.querySelectorAll('.photo-thumb').forEach(img=> img.addEventListener('click', ()=> openPhotoViewer(key, img.dataset.view)));
+    thumbsEl.querySelectorAll('.photo-thumb-del').forEach(btn=> btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      deletePhoto(key, btn.dataset.del, rerenderThumbs);
+    }));
+    thumbsEl.querySelectorAll('.photo-thumb-journal').forEach(btn=> btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const photo = ensurePhotosDay(key).find(p=> String(p.id)===btn.dataset.journal);
+      if(photo) openSaveToJournalPrompt(photo, key);
+    }));
   }
   rerenderThumbs();
   addBtn.addEventListener('click', ()=> input.click());
@@ -5040,19 +4663,6 @@ document.getElementById('photoViewer').addEventListener('click', (e)=>{ if(e.tar
 document.getElementById('photoViewerDownload').addEventListener('click', ()=>{
   const v = document.getElementById('photoViewer');
   downloadPhoto(v.dataset.dateKey, v.dataset.photoId);
-});
-document.getElementById('photoViewerDelete').addEventListener('click', ()=>{
-  const v = document.getElementById('photoViewer');
-  deletePhoto(v.dataset.dateKey, v.dataset.photoId, ()=>{
-    closePhotoViewer();
-    // refresh whichever screen is currently showing this day's photos
-    if(document.getElementById('dateView').classList.contains('active') && openDate && dateKeyOf(openDate)===v.dataset.dateKey){
-      const thumbsEl = document.getElementById('photoThumbs-'+v.dataset.dateKey);
-      if(thumbsEl){ thumbsEl.innerHTML = photoThumbsHtml(ensurePhotosDay(v.dataset.dateKey));
-        thumbsEl.querySelectorAll('.photo-thumb').forEach(img=> img.addEventListener('click', ()=> openPhotoViewer(v.dataset.dateKey, img.dataset.view))); }
-    }
-    if(document.getElementById('mediaView').classList.contains('active') && currentMediaMonth !== null) buildMediaMonthView(currentMediaMonth, currentMediaYear);
-  });
 });
 
 /* ============ JOURNAL ============
@@ -5169,10 +4779,12 @@ async function journalCheckSavedSource(m){
 
 function journalMomentsForDate(dateKey){ return journalMoments.filter(m=> m.date===dateKey).sort((a,b)=> a.createdAt-b.createdAt); }
 function journalFindMoment(id){ return journalMoments.find(m=> m.id===id); }
+// Public content (Explore, the public moment URL) is attributed to the @username, never the
+// real name/email in wp-user-name-v1 — accounts created before usernames existed fall back to
+// a neutral placeholder rather than leaking a real name into public content.
 function journalAuthorName(){
-  const name = (load('wp-user-name-v1','')||'').trim();
-  if(name) return name;
-  if(currentUserEmail) return currentUserEmail.split('@')[0];
+  const uname = (load(USERNAME_KEY,'')||'').trim();
+  if(uname) return '@'+uname;
   return 'SVOJ member';
 }
 
@@ -5182,6 +4794,60 @@ function journalAuthorName(){
 async function journalProcessPhoto(file){
   const [image, thumb] = await Promise.all([ resizeImageJPEG(file, 1000, 0.8), resizeImageJPEG(file, 220, 0.72) ]);
   return { image, thumb };
+}
+
+/* ---- Save to Journal: bridges an existing My Day photo into a real Journal moment (a new
+   record, not a reference — a My Day photo and its Journal copy are different concepts: the
+   original stays exactly where it was, in that day's photo album). Always saves privately
+   first (per spec, saving must stay simple); choosing Public only sets the INTENT to publish —
+   the actual publish only happens once the same link+description gate everywhere else in
+   Journal enforces is satisfied, via the normal moment-edit form. */
+function openSaveToJournalPrompt(photo, dateKey){
+  document.getElementById('journalSheetTitle').textContent = t('journalSaveToJournalTitle');
+  document.getElementById('journalSheetClose').textContent = t('stickerSheetClose');
+  document.getElementById('journalSheetBody').innerHTML = `
+    <div class="diary-body">${t('journalSaveToJournalHint')}</div>
+    <div class="moment-form-actions">
+      <button type="button" class="add-btn-outline" id="saveToJournalPrivateBtn">${t('journalPrivateBadge')}</button>
+      <button type="button" class="add-btn-outline" id="saveToJournalPublicBtn">${t('journalMakePublic')}</button>
+    </div>`;
+  document.getElementById('journalSheet').classList.add('open');
+  function refreshAfter(){
+    buildJournalView();
+    if(document.getElementById('dateView').classList.contains('active') && openDate) buildDateView(openDate);
+  }
+  document.getElementById('saveToJournalPrivateBtn').addEventListener('click', ()=>{
+    journalMoments.push({
+      id:newId(), date:dateKey, type:'photo', title:'', description:'',
+      image:photo.src, thumb:photo.src, externalUrl:'', location:null, artist:'',
+      visibility:'private', savedFrom:null, createdAt:Date.now(), updatedAt:Date.now(), publishedAt:null,
+    });
+    saveJournalMoments();
+    document.getElementById('journalSheet').classList.remove('open');
+    refreshAfter();
+  });
+  document.getElementById('saveToJournalPublicBtn').addEventListener('click', ()=>{
+    const id = newId();
+    journalMoments.push({
+      id, date:dateKey, type:'photo', title:'', description:'',
+      image:photo.src, thumb:photo.src, externalUrl:'', location:null, artist:'',
+      visibility:'private', savedFrom:null, createdAt:Date.now(), updatedAt:Date.now(), publishedAt:null,
+    });
+    saveJournalMoments();
+    document.getElementById('journalSheet').classList.remove('open');
+    journalOpenMomentForm('photo', id, ()=>{
+      const saved = journalFindMoment(id);
+      if(saved){
+        if(journalCanPublish(saved)){
+          saved.visibility = 'public'; saved.updatedAt = Date.now(); saved.publishedAt = Date.now();
+          saveJournalMoments(); journalSyncPublic(saved);
+        } else {
+          alert(t('journalPublishMissingIntro') + '\n' + journalPublishMissingList(saved).map(x=>'• '+x).join('\n') + '\n\n' + t('journalSavedAsPrivateNote'));
+        }
+      }
+      refreshAfter();
+    });
+  });
 }
 
 async function journalSyncPublic(m){
@@ -5203,6 +4869,29 @@ async function journalSyncPublic(m){
     }
   } catch(err){ console.warn('journal public sync unavailable — has public_journal_moments been created? see docs/JOURNAL_PUBLIC_TABLE.md', err); }
 }
+// Every public moment's own id (the same value used as the public_journal_moments primary key)
+// doubles as its shareable URL slug — no separate slug/token column needed. The app has no
+// other routing of any kind (see docs/IOS_READINESS.md); renderPublicMomentView() (near the TOP
+// of the script, called once at boot if ?moment= is present — before buildApp() even runs) is
+// what actually resolves a visitor's link into a rendered moment.
+function publicMomentUrl(id){ return location.origin + location.pathname + '?moment=' + encodeURIComponent(id); }
+async function copyPublicMomentLink(id, btn){
+  const url = publicMomentUrl(id);
+  try{
+    await navigator.clipboard.writeText(url);
+    if(btn){ const old = btn.textContent; btn.textContent = t('journalLinkCopied'); setTimeout(()=>{ btn.textContent = old; }, 1500); }
+  } catch(err){
+    prompt(t('journalCopyLinkManually'), url); // clipboard API unavailable (older browser / insecure context)
+  }
+}
+// NOTE: the actual renderPublicMomentView() lives OUTSIDE buildApp(), near the top of the
+// script (right where the ?moment= URL param is detected) — not here. Everything in this file
+// from here down (Journal, widgets, onboarding, Budget, ...) is defined INSIDE buildApp(),
+// which only ever runs after a sign-in/offline decision; a public-link visitor's whole point is
+// to see a moment WITHOUT going through that, so this feature can't depend on anything in this
+// scope. It only reuses the top-level sb/t()/STRINGS — see the top-level copy of MOMENT_TYPE_
+// ICON/LABEL_KEY, journalEsc, journalSafeUrl it carries for that reason (kept in sync with the
+// definitions below by hand, since they're intentionally small and unlikely to change often).
 async function journalFetchExplore(){
   if(!sb || !currentUserId) return { items:[], unavailable:true };
   try{
@@ -5297,8 +4986,8 @@ function buildJournalDayView(){
   const isToday = dateKey === dateKeyOf(todayReal);
   const moments = journalMomentsForDate(dateKey);
   let promptText = '';
-  if(isToday) promptText = t('journalPrompt');
-  else if(!moments.length) promptText = t('journalEmptyOtherDay');
+  if(isToday && !moments.length) promptText = t('journalPrompt');
+  else if(!isToday && !moments.length) promptText = t('journalEmptyOtherDay');
   el.innerHTML = `
     <h2 class="month-view-title">${t('journalTitle')}</h2>
     <div class="journal-header-row">
@@ -5308,19 +4997,21 @@ function buildJournalDayView(){
         <button type="button" class="journal-icon-btn journal-explore-btn" id="journalExploreToggleBtn">${t('journalExplore')}</button>
       </div>
     </div>
+    ${!moments.length ? `
     <div class="note month-section journal-prompt-card">
       <div class="pin"></div>
       ${promptText ? `<div class="journal-prompt-text">${promptText}</div>` : ''}
       <button type="button" class="add-btn-outline journal-keep-btn" id="journalKeepBtn">${t('journalKeepMoment')}</button>
     </div>
-    ${moments.length ? `
+    ` : `
       <div class="journal-moments-list" id="journalMomentsList">${moments.map(journalMomentCardHtml).join('')}</div>
       <button type="button" class="add-btn-outline journal-keep-another" id="journalKeepAnotherBtn">${t('journalKeepAnother')}</button>
-    ` : ''}
+    `}
   `;
   document.getElementById('journalCalendarBtn').addEventListener('click', journalOpenDatePicker);
   document.getElementById('journalExploreToggleBtn').addEventListener('click', ()=>{ journalMode = 'explore'; buildJournalView(); });
-  document.getElementById('journalKeepBtn').addEventListener('click', journalOpenTypePicker);
+  const keepBtn = document.getElementById('journalKeepBtn');
+  if(keepBtn) keepBtn.addEventListener('click', journalOpenTypePicker);
   const keepAnotherBtn = document.getElementById('journalKeepAnotherBtn');
   if(keepAnotherBtn) keepAnotherBtn.addEventListener('click', journalOpenTypePicker);
   el.querySelectorAll('[data-journal-moment]').forEach(card=>{
@@ -5369,6 +5060,7 @@ function journalMomentFormHtml(type, m){
   if(type === 'photo') fields = `
       ${journalPhotoFieldHtml(m)}
       <input type="text" id="momentTitle" placeholder="${t('journalTitlePlaceholder')}" value="${title}">
+      <input type="url" id="momentUrl" placeholder="${t('journalUrlPlaceholderOptional')}" value="${url}">
       <textarea id="momentDesc" placeholder="${t('journalDescPlaceholder')}">${desc}</textarea>`;
   else if(type === 'place') fields = `
       <input type="text" id="momentTitle" placeholder="${t('journalPlaceNamePlaceholder')}" value="${title}">
@@ -5395,20 +5087,21 @@ function journalMomentFormHtml(type, m){
       <textarea id="momentDesc" placeholder="${t('journalDescPlaceholder')}">${desc}</textarea>`;
   else if(type === 'note') fields = `
       <input type="text" id="momentTitle" placeholder="${t('journalTitlePlaceholder')}" value="${title}">
-      <textarea id="momentDesc" placeholder="${t('journalNotePlaceholder')}">${desc}</textarea>`;
+      <textarea id="momentDesc" placeholder="${t('journalNotePlaceholder')}">${desc}</textarea>
+      <input type="url" id="momentUrl" placeholder="${t('journalUrlPlaceholderOptional')}" value="${url}">`;
   return `<div class="moment-form" data-type="${type}">${fields}
       <div class="moment-form-actions"><button type="button" class="add-btn-outline" id="momentSaveBtn">${t('journalSave')}</button></div>
     </div>`;
 }
-function journalOpenMomentForm(type, editId){
+function journalOpenMomentForm(type, editId, onSaved){
   const m = editId ? journalFindMoment(editId) : null;
   document.getElementById('journalSheetTitle').textContent = t(MOMENT_TYPE_LABEL_KEY[type]);
   document.getElementById('journalSheetClose').textContent = t('stickerSheetClose');
   document.getElementById('journalSheetBody').innerHTML = journalMomentFormHtml(type, m);
-  journalBindMomentForm(type, m);
+  journalBindMomentForm(type, m, onSaved);
   document.getElementById('journalSheet').classList.add('open');
 }
-function journalBindMomentForm(type, m){
+function journalBindMomentForm(type, m, onSaved){
   let pendingPhoto = { image: m && m.image || '', thumb: m && m.thumb || '' };
   const photoInput = document.getElementById('momentPhotoInput');
   if(photoInput){
@@ -5441,18 +5134,22 @@ function journalBindMomentForm(type, m){
     if(type === 'note' && !description) return;
 
     const hasOwnPhoto = type === 'photo' || type === 'movie' || type === 'recipe';
-    const hasUrl = type === 'song' || type === 'movie' || type === 'recipe' || type === 'link';
+    const hasUrl = type === 'photo' || type === 'song' || type === 'movie' || type === 'recipe' || type === 'link' || type === 'note';
     const location = type === 'place' ? { name:title, url:placeUrl } : null;
 
     if(m){
+      const wasPublic = m.visibility === 'public';
       m.title = title; m.description = description;
       if(hasOwnPhoto){ m.image = pendingPhoto.image; m.thumb = pendingPhoto.thumb; }
       if(hasUrl) m.externalUrl = url;
       if(type === 'place') m.location = location;
       if(type === 'song') m.artist = artist;
       m.updatedAt = Date.now();
+      // Editing away the link/description of an already-public moment can't leave it silently
+      // public without them — demote it back to private rather than violate that invariant.
+      if(m.visibility === 'public' && !journalCanPublish(m)){ m.visibility = 'private'; m.publishedAt = null; }
       saveJournalMoments();
-      if(m.visibility === 'public') journalSyncPublic(m);
+      if(wasPublic || m.visibility === 'public') journalSyncPublic(m);
     } else {
       journalMoments.push({
         id:newId(), date:journalViewedDate, type, title, description,
@@ -5463,7 +5160,7 @@ function journalBindMomentForm(type, m){
       saveJournalMoments();
     }
     document.getElementById('journalSheet').classList.remove('open');
-    buildJournalView();
+    if(onSaved) onSaved(); else buildJournalView();
   });
 }
 
@@ -5499,6 +5196,7 @@ function journalOpenMomentDetail(id){
       <span class="moment-visibility-label">${m.visibility === 'public' ? t('journalPublicBadge') : t('journalPrivateBadge')}</span>
       <button type="button" class="add-btn-outline" id="momentToggleVisibilityBtn">${m.visibility === 'public' ? t('journalMakePrivate') : t('journalMakePublic')}</button>
     </div>
+    ${m.visibility === 'public' ? `<div class="moment-form-actions"><button type="button" class="add-btn-outline" id="momentShareBtn">${t('journalCopyLink')}</button></div>` : ''}
     <div class="moment-form-actions">
       <button type="button" class="add-btn-outline" id="momentEditBtn">${t('journalEdit')}</button>
       <button type="button" class="add-btn-outline" id="momentDeleteBtn">${t('journalDelete')}</button>
@@ -5510,13 +5208,29 @@ function journalOpenMomentDetail(id){
     });
   }
   document.getElementById('momentToggleVisibilityBtn').addEventListener('click', ()=> journalToggleVisibility(m.id));
+  const shareBtn = document.getElementById('momentShareBtn');
+  if(shareBtn) shareBtn.addEventListener('click', (e)=> copyPublicMomentLink(m.id, e.currentTarget));
   document.getElementById('momentEditBtn').addEventListener('click', ()=> journalOpenMomentForm(m.type, m.id));
   document.getElementById('momentDeleteBtn').addEventListener('click', ()=> journalDeleteMoment(m.id));
   document.getElementById('journalSheet').classList.add('open');
 }
+// A public moment must always carry a link + description — Explore/the public URL are the
+// only things a stranger sees, so there has to be enough there to make sense on its own.
+function journalMomentLinkValue(m){ return m.type === 'place' ? (m.location && m.location.url) : m.externalUrl; }
+function journalCanPublish(m){ return !!(journalMomentLinkValue(m)||'').trim() && !!(m.description||'').trim(); }
+function journalPublishMissingList(m){
+  const missing = [];
+  if(!(journalMomentLinkValue(m)||'').trim()) missing.push(t('journalMissingLink'));
+  if(!(m.description||'').trim()) missing.push(t('journalMissingDescription'));
+  return missing;
+}
 function journalToggleVisibility(id){
   const m = journalFindMoment(id);
   if(!m) return;
+  if(m.visibility !== 'public' && !journalCanPublish(m)){
+    alert(t('journalPublishMissingIntro') + '\n' + journalPublishMissingList(m).map(x=>'• '+x).join('\n'));
+    return;
+  }
   m.visibility = m.visibility === 'public' ? 'private' : 'public';
   m.updatedAt = Date.now();
   m.publishedAt = m.visibility === 'public' ? Date.now() : null;
@@ -5538,6 +5252,23 @@ function journalDeleteMoment(id){
 }
 
 /* ---- Explore: public discoveries from other users, reached from inside Journal ---- */
+// Plain client-side substring match over the already-fetched public rows (title/description/
+// type label) — a real, working baseline search that only ever touches Explore's public data,
+// never private Journal content. Hybrid text+semantic search (matching "chicken recipes" to
+// "Creamy garlic chicken for Sunday dinner") needs a server-side embeddings pipeline this
+// session can't build/test without deployed Supabase Edge Function + pgvector infrastructure —
+// see docs/SEARCH_ARCHITECTURE.md for the concrete spec to build that against later; this
+// function is exactly the seam it would slot into (replace/augment the filter below with a
+// ranked server-side result set, same render path).
+function journalExploreMatches(items, query){
+  const q = query.trim().toLowerCase();
+  if(!q) return items;
+  return items.filter(row=>{
+    const label = t(MOMENT_TYPE_LABEL_KEY[row.type] || 'journalTypeNote');
+    const hay = [row.title, row.description, label, row.artist].filter(Boolean).join(' \n ').toLowerCase();
+    return hay.includes(q);
+  });
+}
 async function buildJournalExploreView(){
   const el = document.getElementById('journalView');
   el.innerHTML = `
@@ -5546,6 +5277,7 @@ async function buildJournalExploreView(){
       <button type="button" class="journal-icon-btn" id="journalBackBtn">${t('journalBackToJournal')}</button>
       <button type="button" class="journal-icon-btn journal-explore-btn active" id="journalExploreToggleBtn">${t('journalExplore')}</button>
     </div>
+    <input type="text" class="settings-input" id="journalExploreSearch" placeholder="${t('journalExploreSearchPlaceholder')}" style="margin:10px 0;">
     <div id="journalExploreBody"><div class="month-goal-empty">…</div></div>`;
   document.getElementById('journalBackBtn').addEventListener('click', ()=>{ journalMode = 'day'; buildJournalView(); });
   document.getElementById('journalExploreToggleBtn').addEventListener('click', ()=>{ journalMode = 'day'; buildJournalView(); });
@@ -5553,15 +5285,21 @@ async function buildJournalExploreView(){
   const body = document.getElementById('journalExploreBody');
   if(!body) return; // user navigated away while this was loading
   journalExploreCache = items;
-  if(unavailable) body.innerHTML = `<div class="month-goal-empty">${t('journalExploreUnavailable')}</div>`;
-  else if(error) body.innerHTML = `<div class="month-goal-empty">${t('journalExploreLoadError')}</div>`;
-  else if(!items.length) body.innerHTML = `<div class="month-goal-empty">${t('journalExploreEmpty')}</div>`;
-  else {
-    body.innerHTML = `<div class="journal-explore-grid">${items.map(journalExploreCardHtml).join('')}</div>`;
+  function renderList(query){
+    if(unavailable){ body.innerHTML = `<div class="month-goal-empty">${t('journalExploreUnavailable')}</div>`; return; }
+    if(error){ body.innerHTML = `<div class="month-goal-empty">${t('journalExploreLoadError')}</div>`; return; }
+    if(!items.length){ body.innerHTML = `<div class="month-goal-empty">${t('journalExploreEmpty')}</div>`; return; }
+    const shown = journalExploreMatches(items, query || '');
+    body.innerHTML = shown.length
+      ? `<div class="journal-explore-grid">${shown.map(journalExploreCardHtml).join('')}</div>`
+      : `<div class="month-goal-empty">${t('journalExploreNoResults')}</div>`;
     body.querySelectorAll('[data-explore-item]').forEach(card=>{
       card.addEventListener('click', ()=> journalOpenExploreDetail(card.dataset.exploreItem));
     });
   }
+  renderList('');
+  const searchInput = document.getElementById('journalExploreSearch');
+  if(searchInput && !unavailable && !error && items.length) searchInput.addEventListener('input', ()=> renderList(searchInput.value));
 }
 function journalExploreCardHtml(row){
   const label = t(MOMENT_TYPE_LABEL_KEY[row.type] || 'journalTypeNote');
@@ -5590,8 +5328,12 @@ function journalOpenExploreDetail(id){
     ${row.description ? `<div class="journal-moment-detail-desc">${journalEsc(row.description)}</div>` : ''}
     ${linkUrl ? `<a class="journal-moment-detail-link" href="${journalEsc(linkUrl)}" target="_blank" rel="noopener noreferrer">${row.type === 'place' ? t('journalOpenMap') : t('journalOpenLink')}</a>` : ''}
     <div class="journal-moment-provenance">${t('journalByAuthor',{name:journalEsc(row.author||'—')})}</div>
-    <div class="moment-form-actions"><button type="button" class="add-btn-outline" id="exploreSaveBtn">${t('journalSaveToMyJournal')}</button></div>`;
+    <div class="moment-form-actions">
+      <button type="button" class="add-btn-outline" id="exploreSaveBtn">${t('journalSaveToMyJournal')}</button>
+      <button type="button" class="add-btn-outline" id="exploreShareBtn">${t('journalCopyLink')}</button>
+    </div>`;
   document.getElementById('exploreSaveBtn').addEventListener('click', ()=> journalSaveExploreItemToMyJournal(row));
+  document.getElementById('exploreShareBtn').addEventListener('click', (e)=> copyPublicMomentLink(row.id, e.currentTarget));
   document.getElementById('journalSheet').classList.add('open');
 }
 function journalSaveExploreItemToMyJournal(row){
@@ -5668,33 +5410,6 @@ function buildMonthView(monthIdx, year){
 
     <div class="note month-section">
       <div class="pin"></div>
-      <h3 class="month-section-title">${t('monthlyExpenses')}</h3>
-      <div class="expense-currency-totals" id="expenseCurrencyTotals"></div>
-      <div class="expense-combined-total">
-        <span>${t('totalIn')}</span>
-        <select id="expenseDisplayCcy"></select>
-        <span class="expense-combined-value" id="expenseCombinedValue">—</span>
-      </div>
-      <div class="expense-fx-status" id="expenseFxStatus"></div>
-      <ul class="month-expense-list" id="monthExpenseList"></ul>
-      <div class="expense-add-form">
-        <input type="number" id="expAmount" placeholder="${t('amountPlaceholder')}" step="0.01" min="0">
-        <select id="expCurrency" title="${t('expenseCurrencyTooltip')}"></select>
-        <input type="date" id="expDate">
-        <select id="expCategory"></select>
-        <input type="text" id="expNote" placeholder="${t('notePlaceholder')}">
-        <button type="button" class="add-btn-outline" id="expAddBtn">${t('addExpense')}</button>
-      </div>
-      <div class="expense-currency-manage">
-        <span class="hint-text">${t('currenciesInUse')}</span>
-        <span id="expenseCurrencyChips"></span>
-        <select id="expAddCurrencySelect" class="settings-select" title="${t('addCurrencyTooltip')}"></select>
-        <button type="button" class="add-btn-outline" id="expAddCurrencyBtn">${t('addCurrency')}</button>
-      </div>
-    </div>
-
-    <div class="note month-section">
-      <div class="pin"></div>
       <h3 class="month-section-title">${t('monthLoved')}</h3>
       <div class="month-fav-cats" id="monthFavCats"></div>
       <select id="monthFavPreset">
@@ -5725,17 +5440,6 @@ function buildMonthView(monthIdx, year){
   renderMonthGoals();
   document.getElementById('monthGoalAddBtn').addEventListener('click', addMonthGoal);
   document.getElementById('monthGoalInput').addEventListener('keydown', e=>{ if(e.key==='Enter') addMonthGoal(); });
-
-  renderMonthExpenseSection(currentMonthKey);
-  document.getElementById('expAddBtn').addEventListener('click', addMonthExpenseNew);
-  document.getElementById('expAmount').addEventListener('keydown', e=>{ if(e.key==='Enter') addMonthExpenseNew(); });
-  document.getElementById('expNote').addEventListener('keydown', e=>{ if(e.key==='Enter') addMonthExpenseNew(); });
-  document.getElementById('expAddCurrencyBtn').addEventListener('click', ()=> addCurrencyFlow('expAddCurrencySelect'));
-  document.getElementById('expenseDisplayCcy').addEventListener('change', (e)=>{
-    expenseDisplayCcy = e.target.value;
-    save('wp-expense-display-ccy-v1', expenseDisplayCcy);
-    refreshCombinedTotal(expensesForMonth(currentMonthKey));
-  });
 
   renderMonthFavorites();
   document.getElementById('monthFavPreset').addEventListener('change', (e)=>{
@@ -5936,7 +5640,6 @@ function showDateView(d){
   openDate = new Date(d);
   hideAllViews();
   document.getElementById('dateView').classList.add('active');
-  stickerFab.style.display = '';
   buildDateView(openDate);
   setActiveNavTab('today');
 }
@@ -6052,7 +5755,6 @@ function buildDateView(d){
   const cardStyle = `--fill:${hex}; --pin-color:${hex}; --peek: color-mix(in srgb, ${hex} 20%, var(--paper)); --peek-rot: -2deg;`;
   const dateLine = isToday ? t('greeting',{date:fmtFull(d)}) : fmtFull(d);
   const weekdayName = weekdayFullName(d);
-  activeStickerZone = { domSlotKey:'dateview', dataKey:key };
 
   // "Notes" stays available as a My Space card, but reads as a low-value filler panel
   // inside the My Day detail page itself — hidden here only, without touching the shared
@@ -6098,7 +5800,6 @@ function buildDateView(d){
         </div>
       </div>
     </div>
-    <div class="sticker-layer" id="stickerLayer-dateview"></div>
     <div class="widget-customize-link-row"><button type="button" class="back-link" id="customizeWidgetsFromDayBtn">${t('customizeWidgets')}</button></div>
   `;
 
@@ -6110,7 +5811,6 @@ function buildDateView(d){
   dayViewWidgetIds.forEach(wid=> bindWidgetBlock(wid, key, dateViewEl));
   if(!widgetConfig.enabled.includes('photos')) bindPhotosSection(key, dateViewEl);
 
-  renderStickerLayer('dateview', key);
   renderDateExpenseSection(key);
   document.getElementById('dayExpAddBtn').addEventListener('click', ()=> addDayExpense(key));
   document.getElementById('dayExpAmount').addEventListener('keydown', e=>{ if(e.key==='Enter') addDayExpense(key); });
@@ -6302,6 +6002,10 @@ function buildProfileView(){
       <div class="profile-avatar-hero" id="profileAvatarHero"></div>
       <div class="settings-row"><span class="settings-row-label">${t('profileName')}</span>
         <input type="text" class="settings-input" id="settingsNameInput" placeholder="${t('profileNamePlaceholder')}" maxlength="40" value="${(load(USER_NAME_KEY,'')||'').replace(/</g,'&lt;').replace(/"/g,'&quot;')}"></div>
+      <div class="settings-row"><span class="settings-row-label">${t('profileUsername')}</span>
+        <input type="text" class="settings-input" id="settingsUsernameInput" placeholder="${t('usernamePlaceholder')}" maxlength="21" value="${load(USERNAME_KEY,'') ? '@'+load(USERNAME_KEY,'') : ''}"></div>
+      <div class="settings-row"><span class="settings-row-sub">${t('usernameHint')}</span><button type="button" class="settings-btn-outline" id="settingsUsernameSaveBtn">${t('save')}</button></div>
+      <div class="settings-msg" id="usernameMsg"></div>
       <div class="settings-row-label" style="margin-top:14px; margin-bottom:8px;">${t('profileAvatar')}</div>
       <div class="onb-avatar-grid" id="settingsAvatarGrid">${AVATAR_COLLECTION.map(a=> `<button type="button" class="onb-avatar-btn${load(AVATAR_KEY,'')===a.id?' selected':''}" data-avatar="${a.id}"><img src="${a.asset}" alt="${a.name}" draggable="false"></button>`).join('')}</div>
       <div class="settings-row" style="margin-top:14px;"><div><div class="settings-row-label">${t('email')}</div><div class="settings-row-sub">${currentUserEmail || '— (offline mode, no account) —'}</div></div></div>
@@ -6334,6 +6038,19 @@ function buildProfileView(){
   renderAvatarHero();
 
   document.getElementById('settingsNameInput').addEventListener('input', (e)=> save(USER_NAME_KEY, e.target.value));
+  document.getElementById('settingsUsernameSaveBtn').addEventListener('click', async ()=>{
+    const msgEl = document.getElementById('usernameMsg');
+    const input = document.getElementById('settingsUsernameInput');
+    const raw = usernameNormalize(input.value);
+    if(load(USERNAME_KEY,'') === raw && raw){ msgEl.textContent = ''; return; } // unchanged, nothing to do
+    if(!usernameFormatValid(raw)){ msgEl.textContent = t('usernameInvalid'); msgEl.className = 'settings-msg error'; return; }
+    msgEl.textContent = t('usernameChecking'); msgEl.className = 'settings-msg';
+    const avail = await usernameIsAvailable(raw);
+    if(!avail.available){ msgEl.textContent = t('usernameTaken'); msgEl.className = 'settings-msg error'; return; }
+    const res = await claimUsername(raw);
+    if(res.ok){ msgEl.textContent = t('usernameSaved'); msgEl.className = 'settings-msg ok'; input.value = '@'+raw; }
+    else { msgEl.textContent = t('usernameTaken'); msgEl.className = 'settings-msg error'; }
+  });
   document.getElementById('settingsAvatarGrid').querySelectorAll('.onb-avatar-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       const current = load(AVATAR_KEY, '');
@@ -6382,21 +6099,27 @@ const SYSTEM_WIDGETS = {
   mood:           { id:'mood',           labelKey:'widgetMood',           icon:'🙂', category:'Lifestyle' },
   water:          { id:'water',          labelKey:'widgetWater',          icon:'💧', category:'Lifestyle' },
   sleep:          { id:'sleep',          labelKey:'widgetSleep',          icon:'🌙', category:'Lifestyle' },
-  steps:          { id:'steps',          labelKey:'widgetSteps',          icon:'👣', category:'Lifestyle', kind:'number' },
-  gratitude:      { id:'gratitude',      labelKey:'widgetGratitude',      icon:'🙏', category:'Personal', kind:'text' },
-  dailyHighlight: { id:'dailyHighlight', labelKey:'widgetDailyHighlight', icon:'✨', category:'Personal', kind:'text' },
-  freeText:       { id:'freeText',       labelKey:'widgetFreeText',       icon:'✏️', category:'Personal', kind:'text' },
+  steps:          { id:'steps',          labelKey:'widgetSteps',          icon:'👣', category:'Lifestyle', kind:'healthSteps' },
   photos:         { id:'photos',          labelKey:'widgetPhotos',         icon:'📷', category:'Personal' },
-  music:          { id:'music',          labelKey:'widgetMusic',          icon:'🎵', category:'Entertainment', kind:'text' },
-  movie:          { id:'movie',          labelKey:'widgetMovie',          icon:'🎬', category:'Entertainment', kind:'text' },
-  favoriteThing:  { id:'favoriteThing',  labelKey:'widgetFavoriteThing',  icon:'⭐', category:'Entertainment', kind:'text' },
+  // ---- Journal-type widgets: no storage of their own — they read/write directly into
+  // journalMoments via genericWidgetHtml/bindGenericWidget's 'journalMoment' branch, so a
+  // moment created from My Day is the exact same record Journal shows (never duplicated). ----
+  momentPhoto:  { id:'momentPhoto',  labelKey:'journalTypePhoto',  icon:MOMENT_TYPE_ICON.photo,  category:'Journal', kind:'journalMoment', momentType:'photo' },
+  momentPlace:  { id:'momentPlace',  labelKey:'journalTypePlace',  icon:MOMENT_TYPE_ICON.place,  category:'Journal', kind:'journalMoment', momentType:'place' },
+  momentSong:   { id:'momentSong',   labelKey:'journalTypeSong',   icon:MOMENT_TYPE_ICON.song,   category:'Journal', kind:'journalMoment', momentType:'song' },
+  momentMovie:  { id:'momentMovie',  labelKey:'journalTypeMovie',  icon:MOMENT_TYPE_ICON.movie,  category:'Journal', kind:'journalMoment', momentType:'movie' },
+  momentRecipe: { id:'momentRecipe', labelKey:'journalTypeRecipe', icon:MOMENT_TYPE_ICON.recipe, category:'Journal', kind:'journalMoment', momentType:'recipe' },
+  momentLink:   { id:'momentLink',   labelKey:'journalTypeLink',   icon:MOMENT_TYPE_ICON.link,   category:'Journal', kind:'journalMoment', momentType:'link' },
+  momentNote:   { id:'momentNote',   labelKey:'journalTypeNote',   icon:MOMENT_TYPE_ICON.note,   category:'Journal', kind:'journalMoment', momentType:'note' },
 };
-const WIDGET_CATEGORY_ORDER = ['Productivity','Lifestyle','Personal','Entertainment'];
-const WIDGET_CATEGORY_LABEL_KEYS = { Productivity:'catProductivity', Lifestyle:'catLifestyle', Personal:'catPersonal', Entertainment:'catEntertainmentGroup' };
+const WIDGET_CATEGORY_ORDER = ['Productivity','Lifestyle','Personal','Journal'];
+const WIDGET_CATEGORY_LABEL_KEYS = { Productivity:'catProductivity', Lifestyle:'catLifestyle', Personal:'catPersonal', Journal:'catJournalGroup' };
 const SPECIAL_WIDGET_IDS = ['mood','water','sleep','tasks','notes','photos']; // reuse existing daysData/photos storage as-is
+const MANDATORY_WIDGET_IDS = ['tasks','mood']; // can never be removed from My Day — see sanitizeWidgetConfig/removeWidgetFromPage
 const CUSTOM_WIDGET_TYPES = [
   { type:'text', labelKey:'typeText' }, { type:'checklist', labelKey:'typeChecklist' }, { type:'number', labelKey:'typeNumber' },
   { type:'counter', labelKey:'typeCounter' }, { type:'rating', labelKey:'typeRating' },
+  { type:'toggle', labelKey:'typeToggle' }, { type:'scale', labelKey:'typeScale' }, { type:'timer', labelKey:'typeTimer' },
 ];
 const MAX_SYSTEM_WIDGETS = 10;
 const MAX_CUSTOM_WIDGETS = 3;
@@ -6405,6 +6128,42 @@ let widgetConfig = load('wp-widget-config-v1', { enabled:['mood','water','sleep'
 function saveWidgetConfig(){ save('wp-widget-config-v1', widgetConfig); }
 let widgetDailyData = load('wp-widget-daily-v1', {});
 function ensureWidgetDay(dateKey){ return widgetDailyData[dateKey] || (widgetDailyData[dateKey] = {}); }
+
+/* ---- Steps: real Health data only, never fabricated ----
+   The web has no way to read step counts — architected here so a future Capacitor/native build
+   can drop in a real HealthKit bridge without touching anything else in the app: it only needs
+   to set window.SVOJ_NATIVE_HEALTH = { permissionState, requestPermission, fetchStepsFor } and
+   every caller below (and the Steps widget itself) picks it up automatically. Until that
+   bridge exists, permissionState() always resolves 'unsupported' and no step number is ever
+   invented — the widget shows a clear "not available on web" state instead of fake/manual data. */
+const STEPS_SOURCE = {
+  // 'unsupported' | 'not_determined' | 'granted' | 'denied'
+  async permissionState(){
+    if(window.SVOJ_NATIVE_HEALTH && window.SVOJ_NATIVE_HEALTH.permissionState) return window.SVOJ_NATIVE_HEALTH.permissionState();
+    return 'unsupported';
+  },
+  async requestPermission(){
+    if(window.SVOJ_NATIVE_HEALTH && window.SVOJ_NATIVE_HEALTH.requestPermission) return window.SVOJ_NATIVE_HEALTH.requestPermission();
+    return 'unsupported';
+  },
+  async fetchStepsFor(dateKey){
+    if(window.SVOJ_NATIVE_HEALTH && window.SVOJ_NATIVE_HEALTH.fetchStepsFor) return window.SVOJ_NATIVE_HEALTH.fetchStepsFor(dateKey);
+    return null; // null = "no real data available right now" — never a fabricated number
+  },
+};
+// Consecutive days (walking backward from fromKey, inclusive) a 'timer'-kind widget was marked
+// true — no separate streak counter is stored; it's always derived fresh from widgetDailyData
+// so it can never drift out of sync with the day-by-day marks themselves.
+function widgetStreakCount(widgetId, fromKey){
+  let count = 0;
+  let d = parseDateKey(fromKey);
+  while(true){
+    const k = dateKeyOf(d);
+    if(widgetDailyData[k] && widgetDailyData[k][widgetId] === true){ count++; d = new Date(d.getFullYear(), d.getMonth(), d.getDate()-1); }
+    else break;
+  }
+  return count;
+}
 function saveWidgetDaily(){ save('wp-widget-daily-v1', widgetDailyData); }
 
 // Defensive normalization for widgetConfig, run once at load. Handles: a partially-shaped saved
@@ -6432,6 +6191,11 @@ function saveWidgetDaily(){ save('wp-widget-daily-v1', widgetDailyData); }
   });
   if(cleaned.length !== widgetConfig.enabled.length) changed = true;
   widgetConfig.enabled = cleaned;
+  // Tasks and Mood are mandatory — an account whose enabled list predates this rule (or lost
+  // one some other way) gets it silently restored rather than staying permanently missing it.
+  MANDATORY_WIDGET_IDS.forEach(id=>{
+    if(!widgetConfig.enabled.includes(id)){ widgetConfig.enabled.unshift(id); changed = true; }
+  });
   if(typeof widgetDailyData !== 'object' || widgetDailyData === null){ widgetDailyData = {}; save('wp-widget-daily-v1', widgetDailyData); }
   if(changed) saveWidgetConfig();
 })();
@@ -6440,16 +6204,16 @@ function saveWidgetDaily(){ save('wp-widget-daily-v1', widgetDailyData); }
    universal set, applied only where My Day's energy/lifestyle widgets read visibly "off-theme"
    (a rainbow, a target, a pencil...). Other themes keep the original SYSTEM_WIDGETS icons
    untouched; a future theme can add its own map the same way without disturbing this one. */
-const BERRY_WIDGET_ICONS = { tasks:'🛰️', mood:'🌙', water:'🔷', gratitude:'💜', steps:'🚀', freeText:'🔹' };
+const BERRY_WIDGET_ICONS = { tasks:'🛰️', mood:'🌙', water:'🔷', steps:'🚀' };
 /* Pink Pop's own curated vocabulary — glam/fashion-editorial rather than Digital Chrome's
-   sci-fi one, per the reference mockups (mood check-in, tasks/to-dos, gratitude, steps and
-   free-text all get a Pop-appropriate glyph). Same lookup mechanism, so a future theme adds
-   its own map the same way without touching this function again. */
-const POP_WIDGET_ICONS = { tasks:'💅', mood:'💋', gratitude:'🎀', steps:'👠', freeText:'💌' };
+   sci-fi one, per the reference mockups (mood check-in, tasks/to-dos and steps all get a
+   Pop-appropriate glyph). Same lookup mechanism, so a future theme adds its own map the same
+   way without touching this function again. */
+const POP_WIDGET_ICONS = { tasks:'💅', mood:'💋', steps:'👠' };
 /* Botanical's own curated vocabulary — restrained, editorial nature imagery rather than Pop's
    glam glyphs or Digital Chrome's sci-fi ones. */
-const BOTANICAL_WIDGET_ICONS = { tasks:'🌿', mood:'🌸', gratitude:'🕊️', steps:'🌾', freeText:'🖋️' };
-const FOREST_WIDGET_ICONS = { tasks:'🗝️', mood:'💋', gratitude:'🖤', steps:'👠', freeText:'🖋️' };
+const BOTANICAL_WIDGET_ICONS = { tasks:'🌿', mood:'🌸', steps:'🌾' };
+const FOREST_WIDGET_ICONS = { tasks:'🗝️', mood:'💋', steps:'👠' };
 const THEME_WIDGET_ICONS = { berry: BERRY_WIDGET_ICONS, pop: POP_WIDGET_ICONS, botanical: BOTANICAL_WIDGET_ICONS, forest: FOREST_WIDGET_ICONS };
 function widgetIcon(id){
   const base = SYSTEM_WIDGETS[id] ? SYSTEM_WIDGETS[id].icon : '🧩';
@@ -6495,6 +6259,41 @@ function genericWidgetHtml(def, key){
       <div class="month-goal-add-row"><input type="text" class="widget-checklist-input"><button type="button" class="add-btn-outline widget-checklist-add" data-widget="${def.id}" data-key="${key}">${t('add')}</button></div>
     </div>`;
   }
+  if(def.kind === 'toggle'){
+    const val = dayVal === true;
+    return `<div class="day-widget-cell">${labelRow}<button type="button" class="widget-toggle-btn${val?' is-on':''}" data-widget="${def.id}" data-key="${key}">${val ? '✓ '+t('toggleYes') : '○ '+t('toggleNo')}</button></div>`;
+  }
+  if(def.kind === 'scale'){
+    const n = typeof dayVal === 'number' ? dayVal : 0;
+    return `<div class="day-widget-cell">${labelRow}<div class="widget-scale-row" data-widget="${def.id}" data-key="${key}">
+      ${[1,2,3,4,5].map(i=>`<button type="button" class="widget-scale-btn${i===n?' is-selected':''}" data-scale="${i}">${i}</button>`).join('')}
+    </div></div>`;
+  }
+  if(def.kind === 'timer'){
+    const val = dayVal === true;
+    return `<div class="day-widget-cell">${labelRow}
+      <button type="button" class="widget-toggle-btn${val?' is-on':''}" data-widget="${def.id}" data-key="${key}">${val ? '✓ '+t('toggleDoneToday') : '○ '+t('toggleMarkToday')}</button>
+      <div class="widget-streak-note" data-widget="${def.id}">${t('widgetStreakLabel',{n:widgetStreakCount(def.id,key)})}</div>
+    </div>`;
+  }
+  if(def.kind === 'healthSteps'){
+    const cached = typeof dayVal === 'number' ? dayVal : null;
+    return `<div class="day-widget-cell steps-widget" data-widget="${def.id}" data-key="${key}">${labelRow}
+      <div class="steps-value" id="stepsValue-${key}-${def.id}">${cached!==null ? cached.toLocaleString('en-US') : '—'}</div>
+      <div class="steps-status" id="stepsStatus-${key}-${def.id}">${t('stepsCheckingLabel')}</div>
+      <button type="button" class="add-btn-outline steps-connect-btn" id="stepsConnectBtn-${key}-${def.id}" style="display:none;">${t('stepsConnectAction')}</button>
+    </div>`;
+  }
+  if(def.kind === 'journalMoment'){
+    // Bridges My Day to Journal: this widget has no storage of its own — it reads/writes
+    // straight into journalMoments (the same record Journal itself shows), so a moment never
+    // exists twice. See journalMomentsForDate/journalOpenMomentForm.
+    const items = journalMomentsForDate(key).filter(m=> m.type === def.momentType);
+    return `<div class="wide-block">${labelRow}
+      ${items.length ? `<div class="journal-moments-list widget-moment-list" data-widget="${def.id}">${items.map(journalMomentCardHtml).join('')}</div>` : ''}
+      <button type="button" class="add-btn-outline widget-moment-add" data-widget="${def.id}" data-moment-type="${def.momentType}" data-key="${key}">+ ${t(MOMENT_TYPE_LABEL_KEY[def.momentType])}</button>
+    </div>`;
+  }
   return '';
 }
 function bindGenericWidget(def, key, root){
@@ -6521,6 +6320,33 @@ function bindGenericWidget(def, key, root){
         ensureWidgetDay(key)[def.id] = n; saveWidgetDaily();
         wrap.querySelectorAll('.widget-star').forEach(s=> s.textContent = (+s.dataset.star<=n?'★':'☆'));
       });
+    });
+  } else if(def.kind === 'toggle'){
+    const btn = root.querySelector(`.widget-toggle-btn[data-widget="${def.id}"]`);
+    if(btn) btn.addEventListener('click', ()=>{
+      const d = ensureWidgetDay(key);
+      const next = !(d[def.id]===true);
+      d[def.id] = next; saveWidgetDaily();
+      btn.classList.toggle('is-on', next);
+      btn.textContent = next ? '✓ '+t('toggleYes') : '○ '+t('toggleNo');
+    });
+  } else if(def.kind === 'scale'){
+    const wrap = root.querySelector(`.widget-scale-row[data-widget="${def.id}"]`);
+    if(wrap) wrap.querySelectorAll('.widget-scale-btn').forEach(b=> b.addEventListener('click', ()=>{
+      const n = +b.dataset.scale;
+      ensureWidgetDay(key)[def.id] = n; saveWidgetDaily();
+      wrap.querySelectorAll('.widget-scale-btn').forEach(x=> x.classList.toggle('is-selected', +x.dataset.scale===n));
+    }));
+  } else if(def.kind === 'timer'){
+    const btn = root.querySelector(`.widget-toggle-btn[data-widget="${def.id}"]`);
+    if(btn) btn.addEventListener('click', ()=>{
+      const d = ensureWidgetDay(key);
+      const next = !(d[def.id]===true);
+      d[def.id] = next; saveWidgetDaily();
+      btn.classList.toggle('is-on', next);
+      btn.textContent = next ? '✓ '+t('toggleDoneToday') : '○ '+t('toggleMarkToday');
+      const note = root.querySelector(`.widget-streak-note[data-widget="${def.id}"]`);
+      if(note) note.textContent = t('widgetStreakLabel', { n: widgetStreakCount(def.id, key) });
     });
   } else if(def.kind === 'checklist'){
     const list = root.querySelector(`.widget-checklist[data-widget="${def.id}"]`);
@@ -6550,6 +6376,43 @@ function bindGenericWidget(def, key, root){
       input.value=''; saveWidgetDaily(); rerender();
     });
     if(input) input.addEventListener('keydown', e=>{ if(e.key==='Enter') addBtn.click(); });
+  } else if(def.kind === 'healthSteps'){
+    const valueEl = root.querySelector(`#stepsValue-${key}-${def.id}`);
+    const statusEl = root.querySelector(`#stepsStatus-${key}-${def.id}`);
+    const connectBtn = root.querySelector(`#stepsConnectBtn-${key}-${def.id}`);
+    async function refreshSteps(){
+      const state = await STEPS_SOURCE.permissionState();
+      if(state === 'granted'){
+        if(statusEl) statusEl.textContent = t('stepsFromHealth');
+        if(connectBtn) connectBtn.style.display = 'none';
+        const steps = await STEPS_SOURCE.fetchStepsFor(key);
+        if(typeof steps === 'number'){
+          ensureWidgetDay(key)[def.id] = steps; saveWidgetDaily();
+          if(valueEl) valueEl.textContent = steps.toLocaleString('en-US');
+        }
+      } else if(state === 'denied'){
+        if(statusEl) statusEl.textContent = t('stepsPermissionDenied');
+        if(connectBtn) connectBtn.style.display = 'none';
+      } else if(state === 'not_determined'){
+        if(statusEl) statusEl.textContent = t('stepsNotConnected');
+        if(connectBtn) connectBtn.style.display = '';
+      } else {
+        if(statusEl) statusEl.textContent = t('stepsUnsupportedWeb');
+        if(connectBtn) connectBtn.style.display = 'none';
+      }
+    }
+    if(connectBtn) connectBtn.addEventListener('click', async ()=>{ await STEPS_SOURCE.requestPermission(); refreshSteps(); });
+    refreshSteps();
+  } else if(def.kind === 'journalMoment'){
+    const listEl = root.querySelector(`.widget-moment-list[data-widget="${def.id}"]`);
+    if(listEl) listEl.querySelectorAll('[data-journal-moment]').forEach(card=>{
+      card.addEventListener('click', ()=> journalOpenMomentDetail(card.dataset.journalMoment));
+    });
+    const addBtn = root.querySelector(`.widget-moment-add[data-widget="${def.id}"]`);
+    if(addBtn) addBtn.addEventListener('click', ()=>{
+      journalViewedDate = key; // new moment saves onto this day, same record Journal itself reads
+      journalOpenMomentForm(def.momentType, null, ()=> buildDateView(parseDateKey(key)));
+    });
   }
 }
 
@@ -6600,7 +6463,7 @@ const MYSPACE_SUMMARY = {
 };
 /* system/custom Day-page widgets that need a little more room because their content is a
    list/text area rather than a single stat — still compact, just not as tiny */
-const MYSPACE_ROOMY_IDS = ['notes','photos','freeText','gratitude','dailyHighlight'];
+const MYSPACE_ROOMY_IDS = ['notes','photos'];
 
 function mySpaceWidgetDef(id){
   if(MYSPACE_LAUNCHERS[id]){ const d = MYSPACE_LAUNCHERS[id]; return { ...d, label:t(d.labelKey) }; }
@@ -6608,7 +6471,7 @@ function mySpaceWidgetDef(id){
   if(id === 'tasks') return { id, label:t('widgetTasks'), icon:widgetIcon('tasks'), category:'Productivity', minW:1, minH:2, defaultW:1, defaultH:3 };
   const dayDef = getWidgetDef(id);
   if(!dayDef) return null;
-  const isRoomy = MYSPACE_ROOMY_IDS.includes(id) || dayDef.kind==='checklist' || dayDef.kind==='text';
+  const isRoomy = MYSPACE_ROOMY_IDS.includes(id) || dayDef.kind==='checklist' || dayDef.kind==='text' || dayDef.kind==='journalMoment';
   return { id, label:dayDef.label, icon:dayDef.icon, category: dayDef.isCustom ? 'Custom' : (dayDef.category||'Personal'),
     isCustom:!!dayDef.isCustom, minW:1, minH: isRoomy?3:2, defaultW: isRoomy?2:1, defaultH: isRoomy?4:3 };
 }
@@ -7148,7 +7011,7 @@ function myspaceMakeResizable(card, handleEl, grid){
 
 /* ---- My Space widget library (bottom sheet, same visual pattern as the sticker sheet) ---- */
 function myspaceCategoryLabel(cat){
-  const map = { Workspaces:'myspaceLibCatWorkspaces', Productivity:'catProductivity', Lifestyle:'catLifestyle', Personal:'catPersonal', Entertainment:'catEntertainmentGroup', Custom:'customWidgets' };
+  const map = { Workspaces:'myspaceLibCatWorkspaces', Productivity:'catProductivity', Lifestyle:'catLifestyle', Personal:'catPersonal', Journal:'catJournalGroup', Custom:'customWidgets' };
   return t(map[cat] || cat);
 }
 function myspaceAvailableCatalog(){
@@ -7285,6 +7148,7 @@ function moveWidget(id, delta){
   saveWidgetConfig(); buildWidgetsView();
 }
 function removeWidgetFromPage(id){
+  if(MANDATORY_WIDGET_IDS.includes(id)) return; // defense in depth — button is hidden for these anyway
   widgetConfig.enabled = widgetConfig.enabled.filter(x=> x!==id);
   saveWidgetConfig(); buildWidgetsView();
 }
@@ -7338,7 +7202,7 @@ function buildWidgetsView(){
           <button type="button" class="widget-arrow-btn" data-move="${id}" data-delta="-1" ${i===0?'disabled':''}>▲</button>
           <button type="button" class="widget-arrow-btn" data-move="${id}" data-delta="1" ${i===enabledDefs.length-1?'disabled':''}>▼</button>
           <span class="widget-order-label">${def.icon} ${(def.label+'').replace(/</g,'&lt;')}${def.isCustom?` <span class="widget-order-sub">(${t('customWidgets')})</span>`:''}</span>
-          <button type="button" class="widget-remove-btn" data-remove="${id}">${t('remove')}</button>
+          ${MANDATORY_WIDGET_IDS.includes(id) ? `<span class="widget-order-sub widget-required-note">${t('widgetRequired')}</span>` : `<button type="button" class="widget-remove-btn" data-remove="${id}">${t('remove')}</button>`}
         </div>`).join('') : `<div class="month-goal-empty">${t('noWidgetsEnabled')}</div>`}
     </div>
 
@@ -7349,7 +7213,7 @@ function buildWidgetsView(){
         <div class="widget-catalog-cat">${t(WIDGET_CATEGORY_LABEL_KEYS[cat])}</div>
         ${catalogByCategory[cat].map(w=>`
           <div class="widget-catalog-row">
-            <span class="widget-order-label">${w.icon} ${t(w.labelKey)}</span>
+            <span class="widget-order-label">${widgetIcon(w.id)} ${t(w.labelKey)}</span>
             <button type="button" class="settings-btn-outline" data-add="${w.id}" ${sysCount>=MAX_SYSTEM_WIDGETS?'disabled':''}>${t('add')}</button>
           </div>`).join('')}` : '').join('') || `<div class="month-goal-empty">${t('allWidgetsAdded')}</div>`}
       ${sysCount>=MAX_SYSTEM_WIDGETS ? `<div class="widget-limit-note">${t('widgetLimitNote',{max:MAX_SYSTEM_WIDGETS})}</div>` : ''}
@@ -7429,6 +7293,56 @@ window.addEventListener('resize', ()=>{
 });
 
 /* ============================================================
+   USERNAMES — public @handle, replaces real name in Explore/public moments
+   ============================================================
+   Every other per-user record in this app lives in app_data, whose RLS is "owner reads/writes
+   their own row only" — that can never answer "is @eva already taken by someone else", the
+   same problem public_journal_moments already solved (see docs/JOURNAL_PUBLIC_TABLE.md). This
+   reuses that exact pattern: one small, publicly-readable table (`usernames`) that is a no-op
+   (falls back to "can't verify right now") until it's created — see docs/USERNAMES_TABLE.md.
+   The username itself is still stored locally like everything else (wp-username-v1, synced via
+   the normal save()/load() → app_data mechanism) — the extra table exists ONLY to enforce
+   global uniqueness and to let a stranger's client resolve "whose moment is this", not as a
+   second copy of profile data. */
+const USERNAME_KEY = 'wp-username-v1';
+const USERNAMES_TABLE = 'usernames';
+function usernameNormalize(raw){ return (raw||'').trim().replace(/^@+/, '').toLowerCase(); }
+function usernameFormatValid(name){ return /^[a-z0-9_]{3,20}$/.test(name); }
+async function usernameIsAvailable(name){
+  if(!sb || !currentUserId) return { available:true, unchecked:true }; // can't verify offline — same tolerant fallback as journalSyncPublic
+  try{
+    const { data, error } = await sb.from(USERNAMES_TABLE).select('user_id').eq('username', name).maybeSingle();
+    if(error) throw error;
+    if(!data || data.user_id === currentUserId) return { available:true };
+    return { available:false };
+  } catch(err){
+    console.warn('username availability check unavailable — has the usernames table been created? see docs/USERNAMES_TABLE.md', err);
+    return { available:true, unchecked:true };
+  }
+}
+// Returns { ok:true } or { ok:false, reason:'invalid'|'taken'|'offline' }. 'offline' still saves
+// locally (same "local-first, cloud when possible" philosophy as the rest of the app) but the
+// name isn't guaranteed globally unique until the next successful claim while online.
+async function claimUsername(rawName){
+  const name = usernameNormalize(rawName);
+  if(!usernameFormatValid(name)) return { ok:false, reason:'invalid' };
+  if(!sb || !currentUserId){ save(USERNAME_KEY, name); return { ok:true, reason:'offline' }; }
+  try{
+    const { error } = await sb.from(USERNAMES_TABLE).upsert({ username:name, user_id:currentUserId }, { onConflict:'user_id' });
+    if(error){
+      if(error.code === '23505') return { ok:false, reason:'taken' }; // unique-violation on the username primary key
+      throw error;
+    }
+    save(USERNAME_KEY, name);
+    return { ok:true };
+  } catch(err){
+    console.warn('username claim unavailable — has the usernames table been created? see docs/USERNAMES_TABLE.md', err);
+    save(USERNAME_KEY, name); // still usable locally/for this account's own Journal even if the shared table isn't reachable
+    return { ok:true, reason:'offline' };
+  }
+}
+
+/* ============================================================
    ONBOARDING — diary-style first run
    ============================================================
    Runs once, before showMySpaceView(), for a genuinely fresh account only (see
@@ -7491,6 +7405,8 @@ function applyAppearance(mode){
 
 let onbState = {
   name: load(USER_NAME_KEY, ''),
+  username: load(USERNAME_KEY, ''),
+  usernameStatus: load(USERNAME_KEY, '') ? 'available' : 'idle', // an account resuming onboarding with one already claimed doesn't need to re-check it
   widgets: new Set(widgetConfig.enabled),
   theme: currentTheme,
   appearance: load(APPEARANCE_KEY, 'system'),
@@ -7502,9 +7418,9 @@ let onbState = {
    nav buttons) rather than a fake mock-up of the UI. onbGoTo() drives the transparent-overlay
    spotlight/tooltip in onbTour* below when passing through these. */
 const TOUR_STEPS = [
-  { target:'navBtnBudget',   icon:'💶', textKey:'onbTourBudgetText' },
-  { target:'navBtnJournal',  icon:'📖', textKey:'onbTourJournalText' },
   { target:'navBtnToday',    icon:'📔', textKey:'onbTourTodayText' },
+  { target:'navBtnJournal',  icon:'📖', textKey:'onbTourJournalText' },
+  { target:'navBtnBudget',   icon:'💶', textKey:'onbTourBudgetText' },
   { target:'navBtnMedia',    icon:'🖼️', textKey:'onbTourMediaText' },
   { target:'navBtnSettings', icon:'⚙️', textKey:'onbTourSettingsText' },
 ];
@@ -7609,7 +7525,7 @@ function onbRenderWidgets(){
     return `<div class="onb-widget-cat-label">${t(WIDGET_CATEGORY_LABEL_KEYS[cat])}</div>
       <div class="onb-widget-grid">${items.map(w=>`
         <button type="button" class="onb-widget-card${onbState.widgets.has(w.id)?' selected':''}" data-widget="${w.id}">
-          <span class="ic">${w.icon}</span><span>${t(w.labelKey)}</span>
+          <span class="ic">${widgetIcon(w.id)}</span><span>${t(w.labelKey)}</span>
         </button>`).join('')}</div>`;
   }).join('');
   return `
@@ -7666,15 +7582,20 @@ function onbWireAvatar(root){
     btn.addEventListener('click', ()=>{
       onbState.avatar = (onbState.avatar === btn.dataset.avatar) ? '' : btn.dataset.avatar;
       root.querySelectorAll('[data-avatar]').forEach(b=> b.classList.toggle('selected', b.dataset.avatar===onbState.avatar));
+      onbUpdateNav(); // avatar is now required — Next's disabled state must react to the pick
     });
   });
 }
 
 /* Only asks about the widgets the user actually chose on the widgets page — an account that
-   picked just Photos/Tasks/Notes never sees Mood or Water here. The generic-kind system
-   widgets (music, movie, favoriteThing, gratitude, dailyHighlight, freeText, steps) reuse
-   their real SYSTEM_WIDGETS definitions directly rather than a second copy of their labels. */
-const ONB_FIRSTDAY_GENERIC_IDS = ['music','movie','favoriteThing','gratitude','dailyHighlight','freeText','steps'];
+   picked just Photos/Tasks/Notes never sees Mood or Water here. Steps is deliberately excluded:
+   it now only ever shows real Health data (never manual entry — see STEPS_SOURCE), so there is
+   nothing to ask for on this page. Journal-type widgets (momentPhoto, momentPlace, ...) are
+   also excluded — their real form (photo picker, title, etc.) lives in journalMomentFormHtml,
+   which a single generic text input can't represent; a first Journal moment can be added from
+   My Day any time after onboarding instead. This list is empty until a future custom-widget
+   kind actually needs the generic single-field treatment again. */
+const ONB_FIRSTDAY_GENERIC_IDS = [];
 function onbRenderFirstDay(){
   const selected = onbState.widgets;
   const blocks = [];
@@ -7753,23 +7674,89 @@ function onbRenderDone(){
   `;
 }
 
+function onbRenderIntro(){
+  return `
+    <div class="diary-eyebrow">SVOJ</div>
+    <div class="diary-title">${t('onbIntroTitle')}</div>
+    <div class="diary-body">${t('onbIntroP1')}</div>
+    <div class="diary-highlight">${t('onbIntroHighlight')}</div>
+  `;
+}
+function onbRenderUsername(){
+  return `
+    <div class="diary-eyebrow">${t('onbUsernameEyebrow')}</div>
+    <div class="diary-title" style="font-size:26px;">${t('onbUsernameTitle')}</div>
+    <div class="diary-sub">${t('onbUsernameSub')}</div>
+    <div class="onb-field-block" style="margin-top:20px;">
+      <input type="text" class="diary-input" id="onbUsernameInput" placeholder="${t('usernamePlaceholder')}" value="${onbState.username?'@'+onbState.username:''}" maxlength="21" autocapitalize="off" autocorrect="off" spellcheck="false">
+      <div class="onb-field-msg" id="onbUsernameMsg"></div>
+    </div>
+  `;
+}
+function onbWireUsername(root){
+  const input = root.querySelector('#onbUsernameInput');
+  const msgEl = root.querySelector('#onbUsernameMsg');
+  if(!input) return;
+  input.focus({ preventScroll:true });
+  let debounceTimer = null;
+  let checkToken = 0;
+  async function check(){
+    const raw = usernameNormalize(input.value);
+    const token = ++checkToken;
+    if(!raw){ onbState.username=''; onbState.usernameStatus='idle'; msgEl.textContent=''; onbUpdateNav(); return; }
+    if(!usernameFormatValid(raw)){ onbState.username=raw; onbState.usernameStatus='invalid'; msgEl.textContent=t('usernameInvalid'); msgEl.className='onb-field-msg error'; onbUpdateNav(); return; }
+    onbState.username = raw; onbState.usernameStatus = 'checking';
+    msgEl.textContent = t('usernameChecking'); msgEl.className = 'onb-field-msg';
+    onbUpdateNav();
+    const avail = await usernameIsAvailable(raw);
+    if(token !== checkToken) return; // a newer keystroke already superseded this check
+    if(avail.available){ onbState.usernameStatus='available'; msgEl.textContent = t('usernameAvailable'); msgEl.className='onb-field-msg ok'; }
+    else { onbState.usernameStatus='taken'; msgEl.textContent = t('usernameTaken'); msgEl.className='onb-field-msg error'; }
+    onbUpdateNav();
+  }
+  input.addEventListener('input', ()=>{ clearTimeout(debounceTimer); debounceTimer = setTimeout(check, 400); });
+  input.addEventListener('keydown', (e)=>{ if(e.key==='Enter') e.preventDefault(); });
+  if(onbState.username && onbState.usernameStatus==='idle') check(); // resume mid-flow with something already typed
+}
+function onbRenderMyDayIntro(){
+  return `
+    <div class="diary-eyebrow">${t('onbMyDayEyebrow')}</div>
+    <div class="diary-title" style="font-size:26px;">${t('onbMyDayTitle')}</div>
+    <div class="diary-body">${t('onbMyDayBody')}</div>
+  `;
+}
+function onbRenderJournalIntro(){
+  return `
+    <div class="diary-eyebrow">${t('onbJournalEyebrow')}</div>
+    <div class="diary-title" style="font-size:26px;">${t('onbJournalTitle')}</div>
+    <div class="diary-body">${t('onbJournalBody')}</div>
+    <div class="diary-hand" style="margin-top:14px;">${t('onbJournalTypes')}</div>
+    <div class="diary-body" style="margin-top:14px;">${t('onbJournalPrivacy')}</div>
+  `;
+}
+
 const ONB_PAGES = [
+  { id:'intro',      render:onbRenderIntro },
   { id:'name',       render:onbRenderName,            canAdvance:()=> onbState.name.trim().length>0 },
+  { id:'username',   render:onbRenderUsername,        canAdvance:()=> onbState.usernameStatus === 'available' },
   { id:'why',        render:onbRenderWhy },
+  { id:'mydayIntro', render:onbRenderMyDayIntro },
   { id:'widgets',    render:onbRenderWidgets,         skippable:true },
+  { id:'journalIntro', render:onbRenderJournalIntro },
   { id:'appearance', render:onbRenderAppearance,      skippable:true },
-  { id:'avatar',     render:onbRenderAvatar,          skippable:true },
   { id:'tour1',      render:()=>'', skippable:true, isTour:true, tourStep:0 },
   { id:'tour2',      render:()=>'', skippable:true, isTour:true, tourStep:1 },
   { id:'tour3',      render:()=>'', skippable:true, isTour:true, tourStep:2 },
   { id:'tour4',      render:()=>'', skippable:true, isTour:true, tourStep:3 },
   { id:'tour5',      render:()=>'', skippable:true, isTour:true, tourStep:4 },
   { id:'firstday',   render:onbRenderFirstDay,        skippable:true },
+  { id:'avatar',     render:onbRenderAvatar,          canAdvance:()=> !!onbState.avatar },
   { id:'done',       render:onbRenderDone,            isFinal:true },
 ];
 function onbWirePage(root, index){
   const id = ONB_PAGES[index].id;
   if(id==='name') onbWireName(root);
+  else if(id==='username') onbWireUsername(root);
   else if(id==='widgets') onbWireWidgets(root);
   else if(id==='appearance') onbWireAppearance(root);
   else if(id==='avatar') onbWireAvatar(root);
@@ -7891,8 +7878,9 @@ function onbHandleSkip(){
     onbGoTo(onbIndex + 1, 1);
   }
 }
-function onbFinish(){
+async function onbFinish(){
   if(onbState.name.trim()) save(USER_NAME_KEY, onbState.name.trim());
+  if(onbState.username) await claimUsername(onbState.username); // best-effort — claimUsername already degrades gracefully offline
   widgetConfig.enabled = Array.from(onbState.widgets).slice(0, MAX_SYSTEM_WIDGETS);
   saveWidgetConfig();
   // My Space and My Day are separate customization surfaces (mySpaceLayout vs
@@ -7922,9 +7910,26 @@ function onbFinish(){
   });
   saveWidgetDaily();
 
-  save(ONBOARDING_COMPLETE_KEY, true);
-  document.getElementById('onboardingScreen').classList.add('hidden');
-  showTodayView();
+  // Closing beat: fold the last page away, THEN reveal My Day underneath, THEN greet by
+  // @username on top of it — same overlay component a returning login's "Hi, {name}!" uses
+  // (showWelcomeBackScreen), just with the handle instead of the real name, and fired here
+  // instead of there. Reduced-motion users get the CSS fallback (plain fade) automatically —
+  // nothing here needs to know which one is playing.
+  const finish = ()=>{
+    save(ONBOARDING_COMPLETE_KEY, true);
+    document.getElementById('onboardingScreen').classList.add('hidden');
+    showTodayView();
+    showWelcomeBackScreen(onbState.username ? '@'+onbState.username : onbState.name);
+  };
+  if(onbFrontEl){
+    let done = false;
+    const onDone = ()=>{ if(done) return; done = true; onbFrontEl.removeEventListener('transitionend', onDone); finish(); };
+    onbFrontEl.addEventListener('transitionend', onDone);
+    onbFrontEl.classList.add('fold-away');
+    setTimeout(onDone, 700); // fallback in case transitionend never fires (e.g. display:none mid-transition)
+  } else {
+    finish();
+  }
 }
 function startOnboarding(){
   onbSlotA = document.getElementById('diaryPageA');

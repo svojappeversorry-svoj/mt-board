@@ -95,6 +95,41 @@ notes below call out both.
 - **For a Capacitor app:** any future external link should open via `@capacitor/browser`'s
   in-app browser rather than a bare `<a>`, so it doesn't hand the whole app off to Safari.
 
+## Steps / HealthKit
+
+- **Today:** the Steps widget (`SYSTEM_WIDGETS.steps`, `kind:'healthSteps'`) never accepts
+  manual entry and never fabricates a number. All reads go through one small abstraction in
+  `index.html` — `STEPS_SOURCE = { permissionState(), requestPermission(), fetchStepsFor(dateKey) }`
+  — which today unconditionally resolves `'unsupported'`/`null`, since no browser API exists for
+  real step data. The widget shows one of four states based on `permissionState()`:
+  `'unsupported'` ("not available on web — connect on iOS"), `'not_determined'` (a "Connect
+  Health" button), `'denied'` ("Health access denied — enable it in system settings"), or
+  `'granted'` (renders the real number from `fetchStepsFor`, cached into `widgetDailyData` like
+  any other generic widget value).
+- **The bridge point:** `STEPS_SOURCE`'s three methods each check for
+  `window.SVOJ_NATIVE_HEALTH` first and delegate to it when present. A future Capacitor build
+  only needs to set, before this script runs:
+  ```js
+  window.SVOJ_NATIVE_HEALTH = {
+    permissionState: async () => 'granted' | 'denied' | 'not_determined',
+    requestPermission: async () => /* same three values, after the OS prompt */,
+    fetchStepsFor: async (dateKey /* "YYYY-MM-DD" */) => /* number, or null if unavailable */,
+  };
+  ```
+  No other app code changes — the widget, My Space's steps card (same generic renderer), and
+  the Month Recap's step total all pick this up automatically since they all read the same
+  `widgetDailyData[date].steps` value this abstraction writes into.
+- **Capacitor path:** implement the above using `@capacitor-community/health` (or an equivalent
+  HealthKit plugin) — `requestPermission()` triggers the real
+  `HKHealthStore.requestAuthorization` prompt (needs `NSHealthShareUsageDescription` in
+  `Info.plist`, same "new permission dance" gap noted under Camera/photo library access above).
+- **Native path:** same three-method contract, implemented directly against `HealthKit`'s
+  `HKStatisticsQuery` for step count, exposed to the WebView (or SwiftUI view model) however
+  that build's bridge works.
+- **Blocker for either path:** none — this is architecture only, deliberately not implemented
+  against a real HealthKit binding in this pass (there is no such binding to test against from a
+  browser sandbox).
+
 ## Future: Spotify integration
 
 - **Today:** does not exist in any form — no Spotify SDK, API call, or UI reference anywhere in
