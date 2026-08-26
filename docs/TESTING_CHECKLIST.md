@@ -388,14 +388,15 @@ errors.
       available handle is entered (3–20 chars, letters/numbers/underscore); typing an
       already-taken one shows a clear "taken" message. My Profile can set/change a username for
       existing accounts too. Explore/public moments show `@handle`, never the real name or email.
-- [ ] **My Day ↔ Journal bridge**: all 7 Journal moment types (Photo/Place/Song/Movie/Recipe/
-      Link/Note) exist as My Day widgets — creating one from My Day writes into the same
+- [ ] **My Day ↔ Journal bridge** (superseded by the "Photo widget de-duplication" section
+      below — Photo is no longer one of these): the 6 Journal moment types (Place/Song/Movie/
+      Recipe/Link/Note) exist as My Day widgets — creating one from My Day writes into the same
       `wp-journal-moments-v1` record Journal itself shows (open Journal afterward and confirm it
       appears there, not as a duplicate). A My Day photo's "Save to Journal" button offers
-      Private/Public; choosing Public opens the moment's edit form so the link+description
-      requirement can be satisfied before it actually publishes.
+      Private/Public; choosing Public just publishes it (a photo's only required core content is
+      the image it already has — see "Type-aware publish requirements" below).
 - [ ] **Widget catalog changes**: Gratitude, Daily Highlight, Free Text, Music, Movie/Series, and
-      Favorite Thing are gone from "Add System Widget". The 7 Journal-bridge widgets appear under
+      Favorite Thing are gone from "Add System Widget". The Journal-bridge widgets appear under
       a new "Journal" category. 3 new custom widget types (Yes/No toggle, 1–5 Scale, Streak) are
       selectable when creating a custom widget and behave correctly (Streak's day-count is
       derived live from consecutive marked days, never stored as its own number).
@@ -421,13 +422,8 @@ errors.
       pre-existing functionality and was intentionally left alone.
 - [ ] **Bottom nav priority**: order is My Day, Journal, Budget, Media, Settings (My Day keeps
       its slightly larger icon). Nothing was added or removed from the nav.
-- [ ] **First-launch onboarding, full flow**: a brand-new account (fresh `localStorage`, offline
-      mode is enough to trigger it) walks through, in order: a short SVOJ intro → name → required
-      unique username → the existing "why SVOJ" explainer → a short My Day intro → the widget
-      picker → a short Journal intro (what it's for, the 7 types, private/public) → theme/
-      appearance → the existing nav tour → first-day quick-fill → **avatar (required — Next stays
-      disabled until one is picked, and there is no Skip on this page)** → a closing "fold away"
-      animation → "Hi, @username!" → lands on My Day. No extra tutorial appears after that.
+- [ ] **First-launch onboarding, full flow** (superseded by "Onboarding reorder" below — this
+      order is stale, kept only as a historical record of what phase A originally shipped).
 - [ ] **Explore search**: a plain text box filters Explore's already-loaded public moments by
       title/description/type — real, working, client-side only. Hybrid semantic search
       (`docs/SEARCH_ARCHITECTURE.md`) is a documented future spec, not implemented here — it
@@ -473,6 +469,68 @@ the editorial-seed pass); not checked into the repo.
 - [ ] **Owned moments are unaffected**: a private or public moment the user created themself still
       shows Edit/Delete/Make Public-or-Private exactly as before — none of the new Saved-Moment
       restrictions apply to content the user actually owns.
+
+## UX/product-logic refinement pass (nav order, Initial Balance removed, type-aware publish, onboarding reorder, public profiles)
+
+A product-logic and UX cleanup pass — deliberately no visual-language redesign (same themes,
+typography, cards, borders, spacing). Verified with ad-hoc Playwright scripts against a real
+Chromium browser: one script drove Budget/Journal/widget-catalog checks with a stubbed
+`window.supabase` client and a signed-in fake user, a second walked the entire onboarding flow
+end to end filling in each required field as it appeared, a third exercised the public creator
+archive's stats/filters against a multi-type stubbed dataset. Zero console errors and zero
+unexpected native dialogs across all three.
+
+- [ ] **Bottom nav order**: exactly My Day, Budget, Journal, Media, Settings, left to right —
+      Budget and Journal were previously swapped. Active-tab highlighting and routing are by
+      `data-nav`/element id, not DOM position, so this was a pure markup reorder; the onboarding
+      tour's nav walkthrough was reordered to match (My Day → Budget → Journal → Media →
+      Settings).
+- [ ] **No Initial Balance anywhere**: Budget's wallet card never shows an "Initial balance"
+      field, and Settings → Currencies no longer has one either. The empty-wallet hint reads
+      "Add your first income or expense to see your balance." (not "...your initial balance or
+      your first income."). Adding an income of 250 then an expense of 40 shows a balance of
+      exactly +€210.00 — the formula is purely income − expenses now.
+- [ ] **Legacy Initial Balance migrates, doesn't just vanish**: an account that had a nonzero
+      `wp-initial-balance-v1` before this change gets it converted into a real transaction
+      (income if positive, expense if negative, dated today, noted "Starting balance") the first
+      time the app loads afterward — their balance total is unchanged, just now backed by a real
+      transaction instead of a separate field. Loading again doesn't create a second one.
+- [ ] **Add Income / Add Expense confirm button**: filled solid with the existing green income
+      accent (`#2e9e6d`, the same color income amounts and the active Income toggle already use)
+      once required fields are filled — clearly the primary action, not the dashed/muted style
+      every other secondary button in the app uses. Still shows the normal dim/disabled look
+      while genuinely incomplete (no amount yet).
+- [ ] **Type-aware publish requirements — no blocking popup**: Make Public on a `place` moment
+      with only a title (no map link, no description) succeeds immediately, no alert. Same for a
+      `note` with only text, a `link` with only a URL, a `recipe`/`song`/`movie` with only a
+      title, and a `photo` with only an image — every type publishes on its own minimum content,
+      never a universal "add a link + description" gate. Creating, editing, and publishing all
+      use the same `journalHasRequiredCore()`/`MOMENT_TYPE_REQUIRED_CORE` check.
+- [ ] **Photo widget de-duplication**: "Add System Widget" no longer offers a `momentPhoto`
+      ("Photo") entry alongside the existing `photos` ("Photos") entry — only "Photos" (My Day's
+      own daily photo album) remains. Its "Add to Journal" 📖 button on each thumbnail is still
+      the only way a My Day photo becomes a Journal moment, unchanged.
+- [ ] **Onboarding reorder**: a brand-new account walks through, in order: intro → name →
+      username (required, availability-checked) → **avatar (required — Next stays disabled until
+      one is picked, no Skip on this page)** → "why SVOJ" → the interactive nav tour (My Day →
+      Budget → Journal → Media → Settings, in that order, each with a "Skip tour" that jumps past
+      the whole tour, not into some other page) → the Journal-specific intro ("A place to keep
+      what you find" / "And this is Journal...") → the My Day intro → the widget picker → theme/
+      appearance → first-day quick-fill ("Let's make your first day") → **Done** → fold-away
+      animation → "Hi, @username!" → lands on My Day. Widgets are asked about only after Journal
+      has been explained, never before the user has seen what the product actually is.
+- [ ] **Intro copy hierarchy**: the very first onboarding page's explanatory sentence ("SVOJ is
+      where you keep your days...") reads visibly heavier/larger than normal body text elsewhere
+      in onboarding — same font family and color as body text, just weight 600 at 16.5px instead
+      of regular 15px — while the eyebrow/headline/highlight tiers above and below it are
+      unchanged.
+- [ ] **Public creator archive — stats and filters**: opening a creator's archive (via a Saved
+      Moment's tappable `@username`, or its "Open creator archive" action) shows the `@username`
+      as the page title, a small stat row with per-type counts (e.g. "2 Place · 1 Song · 1
+      Recipe"), and filter chips ("All" plus one per type actually present). Tapping a filter
+      chip narrows the grid to just that type without a re-fetch; the grid itself reuses
+      Explore's own card/detail/Save code path verbatim. Only ever shows that creator's PUBLIC
+      moments — never a friends/following system, never anything from their private Journal.
 
 ## Regression checks worth re-running specifically after future CSS/theme changes
 

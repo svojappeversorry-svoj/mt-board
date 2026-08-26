@@ -214,7 +214,7 @@ another device.
   | `externalUrl` | string            | data URL is never stored here — just the URL string itself, for `song`/`movie`/`recipe`/`link`/`photo`/`note` (required for `link`, optional otherwise). `photo` and `note` gained this field this pass (previously they had no link field at all) specifically so the public-visibility requirement below has something to check for every type. `""` if none. Only ever rendered as a clickable `href` through `journalSafeUrl()`, which strips anything that isn't a plain `http(s)` link |
   | `location`    | object \| `null`  | `place` only: `{ name: string, url: string }` (`url` optional — a pasted external map link, never map content itself). For `place`, this `url` (not `externalUrl`) is what the public-visibility link requirement checks — see `journalMomentLinkValue()` |
   | `artist`      | string            | `song` only, optional, default `""` |
-  | `visibility`  | string            | `'private' \| 'public'` — **always starts `'private'`**; flipped only by the explicit Make Public/Make Private action, and only when `journalCanPublish(m)` passes: both a link (`externalUrl`, or `location.url` for `place`) and a non-empty `description` must be present. Saving privately has no such requirement — only going public gates on it. Editing an already-public moment down to missing either one automatically demotes it back to `'private'` (`journalBindMomentForm`'s save handler) rather than leaving an invalid public state |
+  | `visibility`  | string            | `'private' \| 'public'` — **always starts `'private'`**; flipped only by the explicit Make Public/Make Private action, and only when `journalCanPublish(m)` passes. There is no universal "every public post needs a link + description" rule — `journalHasRequiredCore()`/`MOMENT_TYPE_REQUIRED_CORE` define a per-type minimum instead (photo needs an image, place/song/movie/recipe need a title, link needs a URL, note needs text), the same minimum already enforced when the moment is first saved (`journalBindMomentForm`), so going public never blocks on anything the moment doesn't already have. Editing a field that type depends on away from an already-public moment demotes it back to `'private'` automatically rather than leaving an invalid public state |
   | `savedFrom`   | object \| `null`  | **legacy, always `null` on any moment created after the three-state Journal model landed.** Earlier versions of "Save to My Journal" duplicated a public moment's entire content into this key with `savedFrom: { momentId, author }` as provenance — that duplicated-content design is exactly what the bookmark model (`wp-journal-saved-v1`, below) replaced, because a saved discovery must never become the saver's own content. A one-time migration (inside `sanitizeJournalSaved()`) converts any pre-existing `savedFrom`-tagged entry into a real bookmark and removes it from this array the first time the app loads after the update; this field is only read at all to support that migration |
   | `sourceUnavailable` | boolean     | **legacy**, same status as `savedFrom` above — only ever meaningful on a pre-migration entry, which the migration removes from this array entirely. Never set on any moment created going forward |
   | `unavailableSince` | number \| `null` | **legacy**, same status as `savedFrom` above |
@@ -327,7 +327,7 @@ another device.
   {
     enabled: string[],       // ordered widget ids, e.g. ['mood','water','sleep','tasks','notes']
                               // ids are either built-in ("mood","water","sleep","steps","tasks",
-                              // "notes","photos", or one of the 7 Journal-bridge ids below) or a
+                              // "notes","photos", or one of the 6 Journal-bridge ids below) or a
                               // custom widget's own id (format "custom:<timestamp><random>")
     customWidgets: {
       id: string,             // "custom:<timestamp><random>"
@@ -345,12 +345,21 @@ another device.
   them defensively. `sanitizeWidgetConfig()` also re-adds either one to `enabled` if it's ever
   found missing (e.g. an account whose data predates this rule), so it self-heals rather than
   requiring a one-time migration.
-- **Journal-bridge ids** (`kind:'journalMoment'`): `momentPhoto`, `momentPlace`, `momentSong`,
-  `momentMovie`, `momentRecipe`, `momentLink`, `momentNote` — one per Journal moment type. These
-  have **no storage of their own** in `wp-widget-daily-v1` below; they read/write straight into
-  `wp-journal-moments-v1` (filtered by date + type), so a moment created from a My Day widget is
-  the exact same record Journal itself shows — never a duplicate. See `genericWidgetHtml`'s
-  `'journalMoment'` branch and `journalOpenMomentForm()` in `index.html`.
+- **Journal-bridge ids** (`kind:'journalMoment'`): `momentPlace`, `momentSong`, `momentMovie`,
+  `momentRecipe`, `momentLink`, `momentNote` — one per Journal moment type **except photo**.
+  These have **no storage of their own** in `wp-widget-daily-v1` below; they read/write straight
+  into `wp-journal-moments-v1` (filtered by date + type), so a moment created from a My Day
+  widget is the exact same record Journal itself shows — never a duplicate. See
+  `genericWidgetHtml`'s `'journalMoment'` branch and `journalOpenMomentForm()` in `index.html`.
+  Deliberately no `momentPhoto` entry: the `photos` widget above (My Day's own daily photo album,
+  `wp-photos-v1`) already covers photos on My Day, with a small "Add to Journal" bridge action on
+  each photo (see `openSaveToJournalPrompt`) that turns one into a real Journal photo moment on
+  request. A second, separate widget that created a Journal photo moment directly would just be
+  an unclear duplicate of the same concept — this id existed briefly and was removed for exactly
+  that reason. An account with `momentPhoto` still in its `enabled` list from before this change
+  gets it silently dropped by `sanitizeWidgetConfig()`'s existing orphaned-id cleanup — no
+  migration needed, no data lost (the photo moments it already created stay exactly where they
+  are, in `wp-journal-moments-v1`).
 - **Removed built-in widgets (this pass):** `gratitude`, `dailyHighlight`, `freeText`, `music`,
   `movie` (the old generic Entertainment one — distinct from the new `momentMovie` Journal-bridge
   widget above), and `favoriteThing`. Same self-healing as the `"vibes"` removal below — any
@@ -389,7 +398,7 @@ another device.
   | `scale`        | number, 1–5 |
   | `timer`        | boolean — "marked done today"; the displayed streak (`widgetStreakLabel`) is never stored, always recomputed fresh from consecutive `true` days via `widgetStreakCount()` |
   | `healthSteps`  | number — the built-in `steps` widget (changed from `kind:'number'` this pass). This is a **cache of the last real Health read**, written by `STEPS_SOURCE.fetchStepsFor()` once permission is granted — never a manually-typed value. See `docs/IOS_READINESS.md`'s Steps/HealthKit section. |
-  | `journalMoment`| **nothing** — the 7 Journal-bridge widgets (`momentPhoto`, ...) never write here at all; see the `wp-widget-config-v1` entry above. |
+  | `journalMoment`| **nothing** — the 6 Journal-bridge widgets (`momentPlace`, ...) never write here at all; see the `wp-widget-config-v1` entry above. |
 
 - **Write:** the whole object re-saved on every widget-value change (except `journalMoment`-kind
   widgets, which never touch this key).
@@ -484,9 +493,8 @@ another device.
   Month's "Total in ___" select — both write this same key.
 
 ### `wp-default-currency-v1` ("Primary Currency")
-- **Purpose:** the currency Initial Balance is denominated in, the currency a brand-new Monthly
-  Budget target defaults to, and the preferred pick in currency dropdowns. Set from
-  **Settings → Currencies** (`currencyPrimarySelect`).
+- **Purpose:** the currency a brand-new Monthly Budget target defaults to, and the preferred pick
+  in currency dropdowns. Set from **Settings → Currencies** (`currencyPrimarySelect`).
 - **Shape:** single currency-code string.
 - **Default:** `"EUR"`.
 - **Invariant:** changing it always ensures the new value is also present in
@@ -497,18 +505,20 @@ another device.
   attribute), so it can't be bypassed by re-enabling the button in devtools. Switch Primary to a
   different active currency first, then the old one becomes removable.
 
-### `wp-initial-balance-v1`
-- **Purpose:** the wallet's one-time starting balance, denominated in Primary Currency
-  (`wp-default-currency-v1`).
-- **Shape:** number.
-- **Default:** `0`.
-- **UI:** moved out of Budget's main screen (it used to sit there permanently as
-  "Initial balance: €0.00 · Edit", which read as confusing clutter) into
-  **Settings → Currencies**, as an optional field. The stored value and the balance formula
-  (`initialBalance + income - expenses`, computed fresh every render, never stored) are
-  unchanged — existing balances keep working exactly as before, just edited from a different
-  screen (`initialBalanceRowHtml()`/`bindInitialBalanceEditor()`, same element ids as before,
-  just rendered inside the Currencies sheet instead of the wallet-balance card).
+### `wp-initial-balance-v1` — retired
+- **Initial Balance no longer exists as a product concept.** The wallet balance is purely
+  `income - expenses`, derived straight from `wp-expenses-v1` — there is no separate starting
+  number to set, edit, or reason about, and no "Initial balance" field anywhere in the UI
+  (Budget or Settings → Currencies). If a user wants their balance to reflect money they already
+  had before using SVOJ, they add a real income transaction for it, like any other transaction.
+- **One-time migration, not a hard delete.** An account that already had a nonzero value under
+  this key gets it converted, once, into a real `expenses` transaction (`type:'income'` if
+  positive, `'expense'` if negative, dated today, `note` = "Starting balance") the first time the
+  app loads after this change (`migrateLegacyInitialBalance()`, right after `defaultCurrency` is
+  established) — so their displayed balance doesn't silently jump. The key is then set back to
+  `0`, which this migration reads as "already migrated, nothing to do" on every later load.
+- This key itself is otherwise dead: nothing reads it for balance math anymore, and nothing
+  writes a new nonzero value into it ever again.
 
 ### `wp-monthly-budget-target-v1`
 - **Purpose:** optional recurring monthly spending goal shown in Budget, in its OWN currency —

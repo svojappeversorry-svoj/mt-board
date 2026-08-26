@@ -1471,6 +1471,13 @@
   .add-btn-outline{ font-family:var(--font-mono); font-weight:700; text-transform:uppercase; font-size:11px; letter-spacing:0.4px; background: var(--paper2); border:2px dashed var(--line); border-radius:100px; padding:7px 14px; cursor:pointer; color: var(--ink-dim); }
   .add-btn-outline:hover{ border-color: var(--rose); color: var(--rose); }
   .add-btn-outline:disabled{ opacity:0.45; cursor:not-allowed; }
+  /* Primary confirm action (Add Income/Add Expense) — same box model as add-btn-outline, but
+     filled with the existing green income accent (#2e9e6d, already used for income amounts and
+     the active Income/Expense toggle) so it reads as the obvious primary action instead of the
+     dashed, muted secondary-button treatment add-btn-outline uses everywhere else. */
+  .add-btn-confirm{ font-family:var(--font-mono); font-weight:700; text-transform:uppercase; font-size:11px; letter-spacing:0.4px; background:#2e9e6d; border:2px solid #2e9e6d; border-radius:100px; padding:7px 14px; cursor:pointer; color:#fff; }
+  .add-btn-confirm:hover{ filter:brightness(1.06); }
+  .add-btn-confirm:disabled{ opacity:0.45; cursor:not-allowed; background:var(--paper2); border-color:var(--line); color:var(--ink-dim); filter:none; }
   .add-btn-outline:disabled:hover{ border-color: var(--line); color: var(--ink-dim); }
 
   /* task mood picker (15 options) */
@@ -2046,6 +2053,10 @@
   .diary-hand{ font-family:var(--font-hand); font-weight:700; font-size:22px; line-height:1.35; color:var(--ink); }
   .diary-body{ font-family:var(--font-ui); font-size:15px; line-height:1.6; color:var(--ink); }
   .diary-body + .diary-body{ margin-top:14px; }
+  /* Same family/color system as diary-body, just heavier and a touch larger — for the ONE
+     explanatory sentence right under a page's headline that needs to read as intentional
+     editorial copy, not secondary body text. Not a replacement for diary-body everywhere. */
+  .diary-body-lead{ font-family:var(--font-ui); font-weight:600; font-size:16.5px; line-height:1.55; color:var(--ink); }
   .diary-highlight{ font-family:var(--font-hand); font-weight:700; font-size:19px; line-height:1.4; color:var(--accent); margin-top:18px; white-space:pre-line; }
   .diary-sub{ font-family:var(--font-ui); font-size:13.5px; color:var(--ink-dim); margin-top:6px; margin-bottom:18px; }
   .diary-spacer{ flex:1; min-height:14px; }
@@ -2286,6 +2297,17 @@
   .journal-moment-provenance{ font-family:var(--font-mono); font-size:10.5px; color:var(--ink-dim); margin-top:10px; }
   .journal-author-link{ background:none; border:none; padding:0; margin:0; font:inherit; font-family:var(--font-ui); font-weight:700; color:var(--accent); cursor:pointer; }
 
+  /* Creator public archive: a small stat row (category counts) + filter chips above the same
+     Explore-style grid — a browsing aid over one creator's public moments, not a loud dashboard. */
+  .journal-archive-stats{ display:flex; flex-wrap:wrap; gap:16px; margin:2px 0 16px; }
+  .journal-archive-stat{ display:flex; flex-direction:column; align-items:center; min-width:40px; }
+  .journal-archive-stat .n{ font-family:var(--font-ui); font-weight:800; font-size:17px; color:var(--ink); line-height:1.1; }
+  .journal-archive-stat .lbl{ font-family:var(--font-mono); font-weight:700; font-size:9.5px; text-transform:uppercase; letter-spacing:0.4px; color:var(--ink-dim); margin-top:2px; }
+  .journal-archive-filters{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+  .journal-archive-filter-chip{ font-family:var(--font-mono); font-weight:700; font-size:11px; letter-spacing:0.3px; text-transform:uppercase; padding:6px 12px; border-radius:100px; border:2px solid var(--line); background:var(--paper); color:var(--ink-dim); cursor:pointer; }
+  .journal-archive-filter-chip:hover{ border-color:var(--accent); color:var(--accent); }
+  .journal-archive-filter-chip.active{ background:var(--accent); border-color:var(--accent); color:var(--paper); }
+
   .journal-explore-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
   @media (min-width:640px){ .journal-explore-grid{ grid-template-columns:repeat(3, 1fr); } }
   .journal-explore-card{ background:var(--paper); border-radius:16px; overflow:hidden; cursor:pointer; box-shadow:0 3px 10px rgba(28,18,22,0.08); display:flex; flex-direction:column; border:none; text-align:left; font:inherit; color:inherit; padding:0; }
@@ -2327,8 +2349,6 @@
   .wallet-balance-value.negative{ color:#c0392b; }
   .wallet-balance-status{ font-family:var(--font-ui); font-size:11.5px; color:var(--ink-dim); margin-top:4px; min-height:14px; }
   .wallet-empty-hint{ font-family:var(--font-ui); font-size:13px; color:var(--ink-dim); margin:6px 0 2px; }
-  .wallet-initial-row{ display:flex; align-items:center; justify-content:center; gap:8px; margin-top:14px; padding-top:14px; border-top:1px dashed var(--line); font-family:var(--font-ui); font-size:13px; color:var(--ink-dim); }
-  .wallet-initial-row .val{ font-weight:800; color:var(--ink); }
   .budget-target-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; font-family:var(--font-ui); font-weight:800; font-size:13.5px; color:var(--ink); }
   .budget-target-value{ font-family:var(--font-ui); font-weight:800; font-size:20px; color:var(--ink); margin-bottom:2px; }
   .budget-target-approx{ font-family:var(--font-mono); font-size:11px; color:var(--ink-dim); margin-bottom:8px; min-height:14px; }
@@ -2576,8 +2596,8 @@
      (bindBottomNav()) so it stays in sync with the localization system. -->
 <nav class="bottom-nav" id="bottomNav">
   <button type="button" class="bottom-nav-btn is-central" id="navBtnToday" data-nav="today"><span class="ic">📔</span><span class="lbl"></span></button>
-  <button type="button" class="bottom-nav-btn" id="navBtnJournal" data-nav="journal"><span class="ic">📖</span><span class="lbl"></span></button>
   <button type="button" class="bottom-nav-btn" id="navBtnBudget" data-nav="budget"><span class="ic">💶</span><span class="lbl"></span></button>
+  <button type="button" class="bottom-nav-btn" id="navBtnJournal" data-nav="journal"><span class="ic">📖</span><span class="lbl"></span></button>
   <button type="button" class="bottom-nav-btn" id="navBtnMedia" data-nav="media"><span class="ic">🖼️</span><span class="lbl"></span></button>
   <button type="button" class="bottom-nav-btn" id="navBtnSettings" data-nav="settings"><span class="ic">⚙️</span><span class="lbl"></span></button>
 </nav>
@@ -2833,9 +2853,9 @@ const STRINGS = {
     incomeSourceLabel:'Source', incomeSourcePlaceholder:'e.g. Salary', saveTransaction:'Save',
     addExpenseAction:'Add Expense', addIncomeAction:'Add Income',
     noTransactionsYet:'No transactions yet this month.', previousMonth:'Previous month', nextMonth:'Next month',
-    walletBalance:'My Balance', initialBalance:'Initial balance', viewInLabel:'View in',
+    walletBalance:'My Balance', viewInLabel:'View in', legacyInitialBalanceNote:'Starting balance',
     spendingByCurrency:'Spending by currency',
-    walletEmptyTitle:'Your wallet is empty for now', walletEmptyHint:'Add your initial balance or your first income.',
+    walletEmptyTitle:'Your wallet is empty for now', walletEmptyHint:'Add your first income or expense to see your balance.',
     monthlyBudgetTargetPrefix:'Monthly budget for', noBudgetTargetYet:'No monthly budget set yet.',
     setTarget:'Set target', removeTarget:'Remove', budgetOverBy:'Over budget by {amount}',
     budgetTargetSpentLabel:'Spent', budgetTargetRemainingLabel:'Remaining',
@@ -2865,13 +2885,11 @@ const STRINGS = {
     journalAddPhoto:'Add photo', journalSave:'Save', journalCancel:'Cancel',
     journalMakePublic:'Make Public', journalMakePrivate:'Make Private',
     journalPublicBadge:'Public · visible in Explore', journalPrivateBadge:'Private',
-    journalPublishMissingIntro:'To make this moment public, add:', journalMissingLink:'a link', journalMissingDescription:'a description',
     journalCopyLink:'Copy link', journalLinkCopied:'Link copied!', journalCopyLinkManually:'Copy this link:',
     publicMomentLoading:'Loading…', publicMomentNotFound:"This moment isn't available — it may have been made private or removed.",
     publicMomentOffline:"Can't reach SVOJ right now — try again in a moment.", publicMomentOpenApp:'Open SVOJ →',
     journalSaveToJournalAction:'Save to Journal', journalSaveToJournalTitle:'Save to Journal',
     journalSaveToJournalHint:'Keep this photo in your Journal too — private or public?',
-    journalSavedAsPrivateNote:'Saved as private for now — add these and tap Make Public from Journal when ready.',
     journalDelete:'Delete', journalEdit:'Edit', journalDeleteConfirm:'Delete this moment?',
     journalOpenLink:'Open link ↗', journalOpenMap:'Open map ↗',
     journalBy:'by',
@@ -2887,7 +2905,7 @@ const STRINGS = {
     journalPublicBadgeShort:'Public', journalSavedBadge:'Saved', journalSavedFromAuthor:'Saved from {name}',
     journalOpenCreatorArchive:'Open creator archive', journalRemoveFromSaved:'Remove from saved',
     journalRemoveSavedConfirm:'Remove this saved moment from your Journal?', journalAlreadySaved:'Saved ✓',
-    journalArchiveEmpty:'This creator has no public moments yet.',
+    journalArchiveEmpty:'This creator has no public moments yet.', journalArchiveAll:'All',
     // Phase 2 — Settings additions
     myProfile:'My Profile', profileName:'Name', profileNamePlaceholder:'Your name', profileAvatar:'Avatar',
     profileUsername:'Username', usernamePlaceholder:'@yourname', usernameHint:'used on Explore and public moments',
@@ -3759,9 +3777,6 @@ function transactionsForMonth(monthKey){ return expenses.filter(e=> e.date && e.
    Day/Budget already read and write), so it can never drift out of sync with the transaction
    history. The only new persisted state here is the two numbers a user actually sets: the
    starting amount they already had, and an optional monthly spending goal. */
-const INITIAL_BALANCE_KEY = 'wp-initial-balance-v1';
-let initialBalance = load(INITIAL_BALANCE_KEY, 0);
-function saveInitialBalance(){ save(INITIAL_BALANCE_KEY, initialBalance); }
 /* Used to be a bare number, implicitly in defaultCurrency (the app's only currency at the
    time) — now { amount, currency } so a target set in RSD stays a real 50,000 RSD goal, never
    silently reinterpreted as 50,000 of whatever currency the user views Budget in today.
@@ -3814,45 +3829,6 @@ async function convertMapToWalletCcy(byCcy, targetCcy){
   });
   return { total, currency:wc, missing };
 }
-/* Initial Balance moved out of the always-visible Budget screen into Settings -> Currencies
-   (see openCurrencySheet below) — it was confusing/wasted space there, but the underlying
-   value/key (initialBalance/INITIAL_BALANCE_KEY) and the "Initial Balance + Income - Expenses"
-   math in renderWalletBalance are untouched, so existing balances keep working exactly as
-   before. initialBalanceRowHtml/bindInitialBalanceEditor are now generic enough to render
-   inside whatever container calls them. */
-function initialBalanceRowHtml(){
-  return `
-    <div class="wallet-initial-row" id="walletInitialRow">
-      <span>${t('initialBalance')}:</span>
-      <span class="val">${fmtMoney(initialBalance, defaultCurrency)}</span>
-      <button type="button" class="expense-edit" id="walletInitialEditBtn">${initialBalance ? t('edit') : t('add')}</button>
-    </div>
-    <div class="expense-edit-form" id="walletInitialEdit" style="display:none; justify-content:center;">
-      <input type="number" class="ee-amount" id="walletInitialInput" step="0.01" value="${initialBalance||''}" placeholder="${t('amountPlaceholder')}">
-      <button type="button" class="add-btn-outline expense-save" id="walletInitialSaveBtn">${t('save')}</button>
-      <button type="button" class="expense-cancel" id="walletInitialCancelBtn">${t('cancel')}</button>
-    </div>`;
-}
-function bindInitialBalanceEditor(onChange){
-  const editBtn = document.getElementById('walletInitialEditBtn');
-  const displayRow = document.getElementById('walletInitialRow');
-  const editRow = document.getElementById('walletInitialEdit');
-  if(editBtn) editBtn.addEventListener('click', ()=>{
-    if(displayRow) displayRow.style.display = 'none';
-    if(editRow){ editRow.style.display = 'flex'; }
-    const input = document.getElementById('walletInitialInput');
-    if(input){ input.focus(); input.select(); }
-  });
-  const saveBtn = document.getElementById('walletInitialSaveBtn');
-  if(saveBtn) saveBtn.addEventListener('click', ()=>{
-    const v = parseFloat(document.getElementById('walletInitialInput').value);
-    initialBalance = isNaN(v) ? 0 : v;
-    saveInitialBalance();
-    onChange();
-  });
-  const cancelBtn = document.getElementById('walletInitialCancelBtn');
-  if(cancelBtn) cancelBtn.addEventListener('click', onChange);
-}
 /* View-in currency picker — one <select> shared by the wallet balance AND the whole "This
    month" hero/ring/target below it (renderBudgetSection/renderBudgetTargetCard all read
    expenseDisplayCcy too), so switching it recalculates every aggregate on the page at once.
@@ -3874,8 +3850,7 @@ async function renderWalletBalance(){
   const el = document.getElementById('walletBalanceCard');
   if(!el) return;
   const net = allTimeNetByCcy();
-  net[defaultCurrency] = (net[defaultCurrency]||0) + initialBalance;
-  const isEmpty = expenses.length === 0 && !initialBalance;
+  const isEmpty = expenses.length === 0;
   el.innerHTML = `
     <div class="wallet-balance-label">💰 ${t('walletBalance')}</div>
     ${isEmpty ? `<div class="wallet-empty-title">${t('walletEmptyTitle')}</div>` : ''}
@@ -4225,8 +4200,8 @@ function addCurrencyFlow(selectId){
    picking blind from a handful of codes. */
 function activeCurrencyChipsHtml(){
   // Two things can never be removed: the last remaining currency (nothing left to transact
-  // in), and the current Primary Currency (it would otherwise keep denominating Initial
-  // Balance/new targets/etc. in a currency no longer offered anywhere) — switch Primary first.
+  // in), and the current Primary Currency (it would otherwise keep denominating new targets/
+  // etc. in a currency no longer offered anywhere) — switch Primary first.
   return expenseCurrencies.map(c=>{
     const isLast = expenseCurrencies.length<=1;
     const isPrimary = c===defaultCurrency;
@@ -4244,8 +4219,6 @@ function renderCurrencySheetBody(){
     <div class="settings-row-label" style="margin:16px 0 8px;">${t('activeCurrencies')}</div>
     <div id="activeCcyChips">${activeCurrencyChipsHtml()}</div>
     <button type="button" class="add-btn-outline" id="openCcyPickerBtn" style="margin-top:10px;">${t('addCurrencyAction')}</button>
-    <div class="settings-row-label" style="margin:18px 0 4px; border-top:1px dashed var(--line); padding-top:14px;">${t('initialBalance')}</div>
-    ${initialBalanceRowHtml()}
   `;
   document.getElementById('currencyPrimarySelect').addEventListener('change', (e)=>{
     defaultCurrency = e.target.value; save('wp-default-currency-v1', defaultCurrency);
@@ -4263,7 +4236,6 @@ function renderCurrencySheetBody(){
     refreshAllExpenseViews();
   }));
   document.getElementById('openCcyPickerBtn').addEventListener('click', openCurrencyPickerSheet);
-  bindInitialBalanceEditor(()=>{ renderCurrencySheetBody(); refreshAllExpenseViews(); });
 }
 function openCurrencySheet(){
   document.getElementById('currencySheetTitle').textContent = t('manageCurrencies');
@@ -4469,14 +4441,14 @@ function setBudgetAddType(type){
     <select id="budgetCurrency" title="${t('expenseCurrencyTooltip')}"></select>
     <input type="date" id="budgetDate">
     <input type="text" id="budgetSource" placeholder="${t('incomeSourcePlaceholder')}">
-    <button type="button" class="add-btn-outline" id="budgetAddBtn" disabled>${actionLabel}</button>
+    <button type="button" class="add-btn-confirm" id="budgetAddBtn" disabled>${actionLabel}</button>
   ` : `
     <input type="number" id="budgetAmount" placeholder="${t('amountPlaceholder')}" step="0.01" min="0">
     <select id="budgetCurrency" title="${t('expenseCurrencyTooltip')}"></select>
     <input type="date" id="budgetDate">
     <select id="budgetCategory"></select>
     <input type="text" id="budgetNote" placeholder="${t('notePlaceholder')}">
-    <button type="button" class="add-btn-outline" id="budgetAddBtn" disabled>${actionLabel}</button>
+    <button type="button" class="add-btn-confirm" id="budgetAddBtn" disabled>${actionLabel}</button>
   `;
   fillCurrencySelect(document.getElementById('budgetCurrency'));
   if(type !== 'income') fillCategorySelect(document.getElementById('budgetCategory'));
@@ -4891,13 +4863,12 @@ function openSaveToJournalPrompt(photo, dateKey){
     document.getElementById('journalSheet').classList.remove('open');
     journalOpenMomentForm('photo', id, ()=>{
       const saved = journalFindMoment(id);
-      if(saved){
-        if(journalCanPublish(saved)){
-          saved.visibility = 'public'; saved.updatedAt = Date.now(); saved.publishedAt = Date.now();
-          saveJournalMoments(); journalSyncPublic(saved);
-        } else {
-          alert(t('journalPublishMissingIntro') + '\n' + journalPublishMissingList(saved).map(x=>'• '+x).join('\n') + '\n\n' + t('journalSavedAsPrivateNote'));
-        }
+      // A photo's required core is just having an image, which it already has by this point —
+      // this always succeeds in practice; the check stays for the same defensive/extensible
+      // reason journalToggleVisibility keeps it.
+      if(saved && journalCanPublish(saved)){
+        saved.visibility = 'public'; saved.updatedAt = Date.now(); saved.publishedAt = Date.now();
+        saveJournalMoments(); journalSyncPublic(saved);
       }
       refreshAfter();
     });
@@ -5170,6 +5141,24 @@ function journalMomentFormHtml(type, m){
       <div class="moment-form-actions"><button type="button" class="add-btn-outline" id="momentSaveBtn">${t('journalSave')}</button></div>
     </div>`;
 }
+/* Every moment type defines its own minimum viable content — there is no single universal rule
+   like "every post needs a link + a description". This is the one source of truth for "is there
+   enough here to stand on its own", reused identically whether creating a moment, editing one,
+   making an existing private moment public, or creating a public moment directly. Extensible: a
+   future moment type just adds its own check here. `m` can be a real moment record or a plain
+   draft object built from unsaved form fields (see journalBindMomentForm's save handler) — both
+   only need the same handful of fields read below. */
+const MOMENT_TYPE_REQUIRED_CORE = {
+  photo:  m => !!(m.image||'').trim(),
+  place:  m => !!(m.title||'').trim(),
+  song:   m => !!(m.title||'').trim(),
+  movie:  m => !!(m.title||'').trim(),
+  recipe: m => !!(m.title||'').trim(),
+  link:   m => !!(m.externalUrl||'').trim(),
+  note:   m => !!(m.description||'').trim(),
+};
+function journalHasRequiredCore(m){ const check = MOMENT_TYPE_REQUIRED_CORE[m.type]; return check ? check(m) : true; }
+function journalCanPublish(m){ return journalHasRequiredCore(m); }
 function journalOpenMomentForm(type, editId, onSaved){
   const m = editId ? journalFindMoment(editId) : null;
   document.getElementById('journalSheetTitle').textContent = t(MOMENT_TYPE_LABEL_KEY[type]);
@@ -5205,10 +5194,7 @@ function journalBindMomentForm(type, m, onSaved){
     const url = document.getElementById('momentUrl')?.value.trim() || '';
     const artist = document.getElementById('momentArtist')?.value.trim() || '';
     const placeUrl = document.getElementById('momentPlaceUrl')?.value.trim() || '';
-    if(type === 'photo' && !pendingPhoto.image) return;
-    if((type === 'place' || type === 'song' || type === 'movie' || type === 'recipe') && !title) return;
-    if(type === 'link' && !url) return;
-    if(type === 'note' && !description) return;
+    if(!journalHasRequiredCore({ type, title, description, externalUrl:url, image:pendingPhoto.image })) return;
 
     const hasOwnPhoto = type === 'photo' || type === 'movie' || type === 'recipe';
     const hasUrl = type === 'photo' || type === 'song' || type === 'movie' || type === 'recipe' || type === 'link' || type === 'note';
@@ -5277,23 +5263,13 @@ function journalOpenMomentDetail(id){
   document.getElementById('momentDeleteBtn').addEventListener('click', ()=> journalDeleteMoment(m.id));
   document.getElementById('journalSheet').classList.add('open');
 }
-// A public moment must always carry a link + description — Explore/the public URL are the
-// only things a stranger sees, so there has to be enough there to make sense on its own.
-function journalMomentLinkValue(m){ return m.type === 'place' ? (m.location && m.location.url) : m.externalUrl; }
-function journalCanPublish(m){ return !!(journalMomentLinkValue(m)||'').trim() && !!(m.description||'').trim(); }
-function journalPublishMissingList(m){
-  const missing = [];
-  if(!(journalMomentLinkValue(m)||'').trim()) missing.push(t('journalMissingLink'));
-  if(!(m.description||'').trim()) missing.push(t('journalMissingDescription'));
-  return missing;
-}
 function journalToggleVisibility(id){
   const m = journalFindMoment(id);
   if(!m) return;
-  if(m.visibility !== 'public' && !journalCanPublish(m)){
-    alert(t('journalPublishMissingIntro') + '\n' + journalPublishMissingList(m).map(x=>'• '+x).join('\n'));
-    return;
-  }
+  // No blocking popup: a moment already contains its type's required core content by the time
+  // it exists at all (journalHasRequiredCore is enforced at save time in journalBindMomentForm),
+  // so this is a defensive no-op guard, not a user-facing gate.
+  if(m.visibility !== 'public' && !journalCanPublish(m)) return;
   m.visibility = m.visibility === 'public' ? 'private' : 'public';
   m.updatedAt = Date.now();
   m.publishedAt = m.visibility === 'public' ? Date.now() : null;
@@ -5404,6 +5380,26 @@ function journalOpenCreatorArchive(userId, username){
   buildJournalView();
   setActiveNavTab('journal');
 }
+// This is a read-only archive of one creator's PUBLIC moments only — never a friends/following
+// system, never anything from that person's private Journal. The counts/filter chips are purely
+// a browsing aid over exactly the same rows Explore itself would show for this user; nothing
+// here queries anything beyond public_journal_moments filtered by user_id.
+function journalArchiveCountsHtml(items){
+  const counts = MOMENT_TYPES.map(type=> ({ type, label:t(MOMENT_TYPE_LABEL_KEY[type]), n: items.filter(i=> i.type===type).length }))
+    .filter(c=> c.n > 0);
+  if(!counts.length) return '';
+  return `<div class="journal-archive-stats">${counts.map(c=>
+    `<div class="journal-archive-stat"><span class="n">${c.n}</span><span class="lbl">${journalEsc(c.label)}</span></div>`
+  ).join('')}</div>`;
+}
+function journalArchiveFiltersHtml(items, activeFilter){
+  const types = MOMENT_TYPES.filter(type=> items.some(i=> i.type===type));
+  if(types.length < 2) return ''; // nothing to filter when every moment is (or could only be) one type
+  const chips = [{ type:'all', label:t('journalArchiveAll') }, ...types.map(type=> ({ type, label:t(MOMENT_TYPE_LABEL_KEY[type]) }))];
+  return `<div class="journal-archive-filters">${chips.map(c=>
+    `<button type="button" class="journal-archive-filter-chip${activeFilter===c.type?' active':''}" data-archive-filter="${c.type}">${journalEsc(c.label)}</button>`
+  ).join('')}</div>`;
+}
 async function buildJournalArchiveView(){
   const el = document.getElementById('journalView');
   el.innerHTML = `
@@ -5428,12 +5424,35 @@ async function buildJournalArchiveView(){
   }
   if(!document.getElementById('journalArchiveBody')) return; // user navigated away while this was loading
   journalExploreCache = items; // reuse journalOpenExploreDetail's rendering/Save/Share path verbatim
-  body.innerHTML = items.length
-    ? `<div class="journal-explore-grid">${items.map(journalExploreCardHtml).join('')}</div>`
-    : `<div class="month-goal-empty">${t('journalArchiveEmpty')}</div>`;
-  body.querySelectorAll('[data-explore-item]').forEach(card=>{
-    card.addEventListener('click', ()=> journalOpenExploreDetail(card.dataset.exploreItem));
-  });
+  if(!items.length){
+    body.innerHTML = `<div class="month-goal-empty">${t('journalArchiveEmpty')}</div>`;
+    return;
+  }
+  let activeFilter = 'all';
+  body.innerHTML = `${journalArchiveCountsHtml(items)}<div id="journalArchiveFilters"></div><div id="journalArchiveGrid"></div>`;
+  function renderFilters(){
+    const filtersEl = document.getElementById('journalArchiveFilters');
+    filtersEl.innerHTML = journalArchiveFiltersHtml(items, activeFilter);
+    filtersEl.querySelectorAll('[data-archive-filter]').forEach(chip=>{
+      chip.addEventListener('click', ()=>{
+        activeFilter = chip.dataset.archiveFilter;
+        renderFilters();
+        renderGrid();
+      });
+    });
+  }
+  function renderGrid(){
+    const shown = activeFilter === 'all' ? items : items.filter(i=> i.type === activeFilter);
+    const gridEl = document.getElementById('journalArchiveGrid');
+    gridEl.innerHTML = shown.length
+      ? `<div class="journal-explore-grid">${shown.map(journalExploreCardHtml).join('')}</div>`
+      : `<div class="month-goal-empty">${t('journalExploreNoResults')}</div>`;
+    gridEl.querySelectorAll('[data-explore-item]').forEach(card=>{
+      card.addEventListener('click', ()=> journalOpenExploreDetail(card.dataset.exploreItem));
+    });
+  }
+  renderFilters();
+  renderGrid();
 }
 
 /* ---- Explore: public discoveries from other users, reached from inside Journal ---- */
@@ -6018,6 +6037,23 @@ const COMMON_TIMEZONES = (()=>{
 function detectTimezone(){ try{ return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; } catch(e){ return 'UTC'; } }
 let currentTimezone = load('wp-timezone-v1', detectTimezone());
 let defaultCurrency = load('wp-default-currency-v1', 'EUR');
+/* Initial Balance no longer exists as a concept — the wallet balance is purely income minus
+   expenses, derived straight from `expenses`. An account that already had a nonzero initial
+   balance from before this change gets it converted, once, into a real transaction (income if
+   positive, expense if negative) dated today, so their displayed balance doesn't silently jump
+   to zero; the legacy key is then cleared so this can never run twice. */
+(function migrateLegacyInitialBalance(){
+  const LEGACY_INITIAL_BALANCE_KEY = 'wp-initial-balance-v1';
+  const legacy = load(LEGACY_INITIAL_BALANCE_KEY, 0);
+  if(!legacy) return;
+  expenses.push({
+    id:newId(), date:dateKeyOf(todayReal), amount:Math.abs(legacy), currency:defaultCurrency,
+    category:'', note:t('legacyInitialBalanceNote'), type: legacy > 0 ? 'income' : 'expense',
+    createdAt:Date.now(), updatedAt:Date.now(),
+  });
+  saveExpenses();
+  save(LEGACY_INITIAL_BALANCE_KEY, 0);
+})();
 
 /* ---- notification preferences: real persisted prefs, no fake notifications are actually sent ---- */
 let notifPrefs = load('wp-notif-prefs-v1', { dailyReminder:false, taskReminders:false, eveningReminder:false });
@@ -6288,8 +6324,11 @@ const SYSTEM_WIDGETS = {
   photos:         { id:'photos',          labelKey:'widgetPhotos',         icon:'📷', category:'Personal' },
   // ---- Journal-type widgets: no storage of their own — they read/write directly into
   // journalMoments via genericWidgetHtml/bindGenericWidget's 'journalMoment' branch, so a
-  // moment created from My Day is the exact same record Journal shows (never duplicated). ----
-  momentPhoto:  { id:'momentPhoto',  labelKey:'journalTypePhoto',  icon:MOMENT_TYPE_ICON.photo,  category:'Journal', kind:'journalMoment', momentType:'photo' },
+  // moment created from My Day is the exact same record Journal shows (never duplicated).
+  // Deliberately no "Photo" entry here — the "photos" widget above (My Day's own daily photo
+  // album) already covers photos on My Day, with "Add to Journal" as the bridge into a real
+  // Journal moment (see openSaveToJournalPrompt). A second, separate Photo widget that created
+  // a Journal photo moment directly would be an unclear duplicate of the same concept. ----
   momentPlace:  { id:'momentPlace',  labelKey:'journalTypePlace',  icon:MOMENT_TYPE_ICON.place,  category:'Journal', kind:'journalMoment', momentType:'place' },
   momentSong:   { id:'momentSong',   labelKey:'journalTypeSong',   icon:MOMENT_TYPE_ICON.song,   category:'Journal', kind:'journalMoment', momentType:'song' },
   momentMovie:  { id:'momentMovie',  labelKey:'journalTypeMovie',  icon:MOMENT_TYPE_ICON.movie,  category:'Journal', kind:'journalMoment', momentType:'movie' },
@@ -7604,8 +7643,8 @@ let onbState = {
    spotlight/tooltip in onbTour* below when passing through these. */
 const TOUR_STEPS = [
   { target:'navBtnToday',    icon:'📔', textKey:'onbTourTodayText' },
-  { target:'navBtnJournal',  icon:'📖', textKey:'onbTourJournalText' },
   { target:'navBtnBudget',   icon:'💶', textKey:'onbTourBudgetText' },
+  { target:'navBtnJournal',  icon:'📖', textKey:'onbTourJournalText' },
   { target:'navBtnMedia',    icon:'🖼️', textKey:'onbTourMediaText' },
   { target:'navBtnSettings', icon:'⚙️', textKey:'onbTourSettingsText' },
 ];
@@ -7775,7 +7814,7 @@ function onbWireAvatar(root){
 /* Only asks about the widgets the user actually chose on the widgets page — an account that
    picked just Photos/Tasks/Notes never sees Mood or Water here. Steps is deliberately excluded:
    it now only ever shows real Health data (never manual entry — see STEPS_SOURCE), so there is
-   nothing to ask for on this page. Journal-type widgets (momentPhoto, momentPlace, ...) are
+   nothing to ask for on this page. Journal-type widgets (momentPlace, momentSong, ...) are
    also excluded — their real form (photo picker, title, etc.) lives in journalMomentFormHtml,
    which a single generic text input can't represent; a first Journal moment can be added from
    My Day any time after onboarding instead. This list is empty until a future custom-widget
@@ -7863,7 +7902,7 @@ function onbRenderIntro(){
   return `
     <div class="diary-eyebrow">SVOJ</div>
     <div class="diary-title">${t('onbIntroTitle')}</div>
-    <div class="diary-body">${t('onbIntroP1')}</div>
+    <div class="diary-body-lead">${t('onbIntroP1')}</div>
     <div class="diary-highlight">${t('onbIntroHighlight')}</div>
   `;
 }
@@ -7920,22 +7959,28 @@ function onbRenderJournalIntro(){
   `;
 }
 
+/* Order follows the intended mental model, front to back: "Who are you?" (name, username,
+   avatar — avatar required, never skippable) -> "What is SVOJ?" (why) -> "What are the main
+   areas, and what is Journal specifically?" (the nav tour, then journalIntro) -> "What do you
+   want in My Day?" (mydayIntro, widgets, appearance) -> "How are you today?" (firstday) ->
+   "Your SVOJ is ready" (done). Nothing configuration-shaped (widgets/theme) appears before the
+   user has seen what the product actually is. */
 const ONB_PAGES = [
   { id:'intro',      render:onbRenderIntro },
   { id:'name',       render:onbRenderName,            canAdvance:()=> onbState.name.trim().length>0 },
   { id:'username',   render:onbRenderUsername,        canAdvance:()=> onbState.usernameStatus === 'available' },
+  { id:'avatar',     render:onbRenderAvatar,          canAdvance:()=> !!onbState.avatar },
   { id:'why',        render:onbRenderWhy },
-  { id:'mydayIntro', render:onbRenderMyDayIntro },
-  { id:'widgets',    render:onbRenderWidgets,         skippable:true },
-  { id:'journalIntro', render:onbRenderJournalIntro },
-  { id:'appearance', render:onbRenderAppearance,      skippable:true },
   { id:'tour1',      render:()=>'', skippable:true, isTour:true, tourStep:0 },
   { id:'tour2',      render:()=>'', skippable:true, isTour:true, tourStep:1 },
   { id:'tour3',      render:()=>'', skippable:true, isTour:true, tourStep:2 },
   { id:'tour4',      render:()=>'', skippable:true, isTour:true, tourStep:3 },
   { id:'tour5',      render:()=>'', skippable:true, isTour:true, tourStep:4 },
+  { id:'journalIntro', render:onbRenderJournalIntro,  skippable:true },
+  { id:'mydayIntro', render:onbRenderMyDayIntro },
+  { id:'widgets',    render:onbRenderWidgets,         skippable:true },
+  { id:'appearance', render:onbRenderAppearance,      skippable:true },
   { id:'firstday',   render:onbRenderFirstDay,        skippable:true },
-  { id:'avatar',     render:onbRenderAvatar,          canAdvance:()=> !!onbState.avatar },
   { id:'done',       render:onbRenderDone,            isFinal:true },
 ];
 function onbWirePage(root, index){
@@ -8058,7 +8103,12 @@ function onbHandleNext(){
 function onbHandleSkip(){
   const page = ONB_PAGES[onbIndex];
   if(page.isTour){
-    onbGoTo(ONB_PAGES.findIndex(p=> p.id==='firstday'), 1);
+    // "Skip Tour" means "I don't want to click through the rest of the tour steps one by one" —
+    // it jumps past the whole run of consecutive tour pages, not to any fixed page id, so this
+    // stays correct regardless of where the tour sits in ONB_PAGES.
+    let next = onbIndex;
+    while(next < ONB_PAGES.length && ONB_PAGES[next].isTour) next++;
+    onbGoTo(next, 1);
   } else {
     onbGoTo(onbIndex + 1, 1);
   }
