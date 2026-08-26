@@ -1,7 +1,7 @@
 # Journal Explore — the `public_journal_moments` table
 
 This is a **required manual step**, not an optional one: until this table exists in the PROD
-Supabase project, "Make Public", Explore, and "Save to My Journal" are inert no-ops (the code
+Supabase project, "Make Public", Explore, and saving a discovery are inert no-ops (the code
 calls Supabase, gets an error because the table doesn't exist, logs a console warning, and
 otherwise does nothing) — every *private* Journal feature works today regardless of this step.
 
@@ -35,7 +35,7 @@ create table if not exists public.public_journal_moments (
   type          text not null,                    -- 'photo' | 'place' | 'song' | 'movie' | 'recipe' | 'link' | 'note'
   title         text not null default '',
   description   text not null default '',
-  image         text,                             -- data URL, same resizeImageJPEG pipeline as the private copy
+  image         text,                             -- data URL, same resizeImageJPEG pipeline as a private moment
   thumb         text,                             -- data URL, small preview — Explore's grid only ever loads this
   external_url  text,                             -- a URL string only, never fetched/mirrored content
   location      jsonb,                             -- { name, url } for type = 'place'
@@ -122,10 +122,10 @@ full setup (creating the account, claiming the username, running the content mig
 - **Why it exists:** so editorial content can later be found, bulk-updated, replaced, or removed
   with one predicate (`where is_editorial = true`), and excluded from any future analytics that
   count real user activity — without needing a special account type or a parallel content table.
-- **`Save to My Journal` never copies it.** `journalSaveExploreItemToMyJournal()` builds the
-  saved local copy from a fixed list of named fields and always sets `visibility:'private'` — it
-  has no code path that could carry `is_editorial` (or anything else non-listed) into a real
-  user's own private Journal data.
+- **Saving never copies it, or anything else non-listed.** `journalSaveBookmark()` (see "Saving a
+  public moment" below) writes only a fixed list of small display-cache fields into
+  `wp-journal-saved-v1` — it has no code path that could carry `is_editorial` (or the full
+  content) into a real user's own Journal data.
 
 ## Storage note
 
@@ -135,10 +135,15 @@ objects — consistent with the app's existing "no Storage bucket" architecture,
 introduced for this feature. Moving all photos (private and public) to real Storage buckets
 remains a real future improvement, and should be done for both at once, not just for this table.
 
-## What "Save to My Journal" does *not* duplicate
+## Saving a public moment creates a bookmark, not a copy
 
-Saving a public moment copies its already-compressed `image`/`thumb` strings by value into the
-saver's own private `wp-journal-moments-v1` row — it does not re-fetch, re-compress, or create
-any new asset. That is an unavoidable full copy of the string under this table's current
-architecture (no Storage bucket to reference by URL instead); switching to Storage buckets
-later would let a saved copy reference the same underlying object instead of duplicating it.
+Tapping Save on an Explore card (or a card in a creator's public archive) does **not** duplicate
+this row into the saver's own Journal data. It creates a small reference in a separate local key,
+`wp-journal-saved-v1` — see that key's full contract in `docs/DATA_CONTRACTS.md` — that points
+back at this row's `id` and caches only a few display fields (type/title/thumb/author) for
+instant list rendering. This table's row remains the sole source of truth for the moment's real
+content: the saver's own detail view for it always re-fetches this row live by `id` rather than
+trusting the cache, so an edit or takedown here is reflected immediately. The saver can never
+edit it, re-publish it under their own account, or remove the original creator's attribution —
+see the "Three-state Journal model" section of `docs/TESTING_CHECKLIST.md` for the full behavior
+this guarantees.

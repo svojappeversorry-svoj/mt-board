@@ -2284,6 +2284,7 @@
   .journal-moment-detail-desc{ font-family:var(--font-ui); font-size:14px; color:var(--ink); white-space:pre-wrap; word-break:break-word; margin:4px 0; }
   .journal-moment-detail-link{ display:inline-block; font-family:var(--font-ui); font-weight:700; font-size:13px; color:var(--accent); word-break:break-all; margin-top:6px; }
   .journal-moment-provenance{ font-family:var(--font-mono); font-size:10.5px; color:var(--ink-dim); margin-top:10px; }
+  .journal-author-link{ background:none; border:none; padding:0; margin:0; font:inherit; font-family:var(--font-ui); font-weight:700; color:var(--accent); cursor:pointer; }
 
   .journal-explore-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
   @media (min-width:640px){ .journal-explore-grid{ grid-template-columns:repeat(3, 1fr); } }
@@ -2873,7 +2874,7 @@ const STRINGS = {
     journalSavedAsPrivateNote:'Saved as private for now — add these and tap Make Public from Journal when ready.',
     journalDelete:'Delete', journalEdit:'Edit', journalDeleteConfirm:'Delete this moment?',
     journalOpenLink:'Open link ↗', journalOpenMap:'Open map ↗',
-    journalSavedFrom:'Saved from SVOJ Explore', journalBy:'by',
+    journalBy:'by',
     journalSaveToMyJournal:'Save to My Journal', journalSavedToJournal:'Saved to your Journal',
     journalExploreEmpty:'No public discoveries yet — be the first to share one.',
     journalExploreSearchPlaceholder:'Search Explore…', journalExploreNoResults:'No matches for that search.',
@@ -2882,6 +2883,11 @@ const STRINGS = {
     journalSourceUnavailableShort:'No longer available', journalSourceUnavailableTitle:'This discovery is no longer available',
     journalSourceUnavailableDetail:'Its author made it private. This saved copy will be removed automatically in a couple of days.',
     journalByAuthor:'by {name}',
+    // Three-state Journal model: private / public / saved-bookmark
+    journalPublicBadgeShort:'Public', journalSavedBadge:'Saved', journalSavedFromAuthor:'Saved from {name}',
+    journalOpenCreatorArchive:'Open creator archive', journalRemoveFromSaved:'Remove from saved',
+    journalRemoveSavedConfirm:'Remove this saved moment from your Journal?', journalAlreadySaved:'Saved ✓',
+    journalArchiveEmpty:'This creator has no public moments yet.',
     // Phase 2 — Settings additions
     myProfile:'My Profile', profileName:'Name', profileNamePlaceholder:'Your name', profileAvatar:'Avatar',
     profileUsername:'Username', usernamePlaceholder:'@yourname', usernameHint:'used on Explore and public moments',
@@ -4726,59 +4732,107 @@ function saveJournalMoments(){ save('wp-journal-moments-v1', journalMoments); }
     if(typeof m.publishedAt !== 'number'){ m.publishedAt = null; }
   });
   if(changed) saveJournalMoments();
-  if(journalPruneExpiredUnavailable()) saveJournalMoments();
 })();
-
-/* ---- Explore provenance check: if I saved someone else's public moment and its author has
-   since made it private again, my local copy must stop carrying their content — this is the
-   privacy guarantee "Make Private" promises them, and it applies retroactively to anyone who
-   already saved a copy, not just to future Explore visitors. Rather than deleting the entry
-   from MY journal without warning (confusing — it's still mine, I did nothing wrong) or
-   leaving it as a full independent copy forever (defeats the author's Make Private), the
-   content itself is scrubbed and replaced with a plain "no longer available" placeholder,
-   keeping only that something was once saved from Explore — and even that placeholder is
-   temporary: 48 hours after being scrubbed, the whole entry is removed for good
-   (journalPruneExpiredUnavailable), so a dead "no longer available" card never lingers
-   indefinitely. Re-checked every time such a moment is actually rendered (Journal is opened,
-   or the moment's own detail is opened) — journalCheckedSourceIds only guards against firing
-   a second, redundant in-flight request for the same id at the same instant; a "still public"
-   result is deliberately NOT cached past that, since the whole point is to keep noticing if
-   the author revokes it later. Never runs on a timer/schedule, and never for moments that
-   aren't saved-from-Explore copies. */
-const JOURNAL_UNAVAILABLE_TTL_MS = 48 * 60 * 60 * 1000;
-const journalCheckedSourceIds = new Set();
-function journalPruneExpiredUnavailable(){
-  const before = journalMoments.length;
-  journalMoments = journalMoments.filter(m=> !(m.sourceUnavailable && m.unavailableSince && (Date.now() - m.unavailableSince) > JOURNAL_UNAVAILABLE_TTL_MS));
-  return journalMoments.length !== before;
-}
-async function journalCheckSavedSource(m){
-  if(!m.savedFrom || m.sourceUnavailable || !sb) return;
-  if(journalCheckedSourceIds.has(m.id)) return; // a check for this id is already in flight
-  journalCheckedSourceIds.add(m.id);
-  try{
-    const { data, error } = await sb.from(JOURNAL_PUBLIC_TABLE).select('id').eq('id', m.savedFrom.momentId).maybeSingle();
-    if(error) throw error;
-    if(!data){
-      m.title = ''; m.description = ''; m.image = ''; m.thumb = ''; m.externalUrl = '';
-      m.location = null; m.artist = ''; m.sourceUnavailable = true; m.unavailableSince = Date.now(); m.updatedAt = Date.now();
-      saveJournalMoments();
-      // Rare compound case: I had re-shared MY saved copy publicly too — push the now-scrubbed
-      // (empty) content up so Explore never shows content I no longer have locally.
-      if(m.visibility === 'public') journalSyncPublic(m);
-      // only refresh the screen if Journal is still showing the date this moment lives on —
-      // otherwise leave it, the next real render already reads the updated data from disk
-      if(journalMode === 'day' && journalViewedDate === m.date) buildJournalDayView();
-    }
-  } catch(err){
-    console.warn('journal saved-source check failed', err);
-  } finally {
-    journalCheckedSourceIds.delete(m.id); // always released — a "still public" result must be re-checked again next time, not cached forever
-  }
-}
 
 function journalMomentsForDate(dateKey){ return journalMoments.filter(m=> m.date===dateKey).sort((a,b)=> a.createdAt-b.createdAt); }
 function journalFindMoment(id){ return journalMoments.find(m=> m.id===id); }
+
+/* ---- Saved Moments: a bookmark/reference into someone else's PUBLIC moment, never a copy of
+   it. This is a deliberately different concept from an owned journalMoments entry: tapping Save
+   on an Explore/creator-archive card must NOT create new content the current user "owns" — the
+   original public_journal_moments row stays the one and only source of truth for its content,
+   title, image, description, link and author, forever. A bookmark only remembers WHICH moment
+   was saved (momentId) plus a small display cache (cachedType/cachedTitle/cachedThumb/username)
+   so the day view can render a card instantly without a network round trip; the live detail view
+   (journalOpenSavedDetail) always re-fetches the real row before showing it, so an edit or
+   takedown by the original creator is reflected immediately, not just eventually. */
+let journalSaved = load('wp-journal-saved-v1', []);
+function saveJournalSaved(){ save('wp-journal-saved-v1', journalSaved); }
+(function sanitizeJournalSaved(){
+  if(!Array.isArray(journalSaved)) journalSaved = [];
+  journalSaved = journalSaved.filter(s=> s && typeof s === 'object' && typeof s.id === 'string' && typeof s.momentId === 'string');
+  let changed = false;
+  journalSaved.forEach(s=>{
+    if(typeof s.date !== 'string'){ s.date = dateKeyOf(todayReal); changed = true; }
+    if(typeof s.username !== 'string'){ s.username = ''; changed = true; }
+    if(typeof s.cachedType !== 'string' || !MOMENT_TYPES.includes(s.cachedType)){ s.cachedType = 'note'; changed = true; }
+    if(typeof s.cachedTitle !== 'string'){ s.cachedTitle = ''; changed = true; }
+    if(typeof s.cachedThumb !== 'string'){ s.cachedThumb = ''; changed = true; }
+    if(typeof s.sourceUnavailable !== 'boolean'){ s.sourceUnavailable = false; changed = true; }
+    if(typeof s.unavailableSince !== 'number'){ s.unavailableSince = null; changed = true; }
+    if(typeof s.createdAt !== 'number'){ s.createdAt = Date.now(); changed = true; }
+  });
+  // One-time migration: an earlier version of "Save to My Journal" duplicated the ENTIRE public
+  // moment into journalMoments (with a savedFrom pointer) as if the saver had created it — that
+  // is exactly the "saved content becomes user content" bug this bookmark model exists to fix.
+  // Convert any such leftover copies into real bookmarks and remove the duplicate content;
+  // idempotent — after the first run, no journalMoments entry ever has savedFrom set again,
+  // since every current creation path (journalBindMomentForm, openSaveToJournalPrompt, and the
+  // new journalSaveBookmark below) either omits it or writes straight into journalSaved instead.
+  const legacy = journalMoments.filter(m=> m.savedFrom && typeof m.savedFrom === 'object');
+  if(legacy.length){
+    legacy.forEach(m=>{
+      journalSaved.push({
+        id:newId(), momentId:m.savedFrom.momentId, username:m.savedFrom.author||'',
+        date:m.date, cachedType:m.type, cachedTitle:m.title||'', cachedThumb:m.thumb||m.image||'',
+        sourceUnavailable:!!m.sourceUnavailable, unavailableSince:m.unavailableSince||null,
+        createdAt:m.createdAt||Date.now(),
+      });
+    });
+    journalMoments = journalMoments.filter(m=> !(m.savedFrom && typeof m.savedFrom === 'object'));
+    saveJournalMoments();
+    changed = true;
+  }
+  if(changed) saveJournalSaved();
+  if(journalPruneExpiredSavedUnavailable()) saveJournalSaved();
+})();
+function journalSavedForDate(dateKey){ return journalSaved.filter(s=> s.date===dateKey); }
+function journalFindSaved(id){ return journalSaved.find(s=> s.id===id); }
+// All Journal items for a day, owned and saved together, sorted the same way owned moments
+// always were — "chronologically, as things I've chosen to keep" (see the three-state spec).
+function journalAllItemsForDate(dateKey){
+  const owned = journalMomentsForDate(dateKey).map(m=> ({ kind:'moment', item:m, createdAt:m.createdAt }));
+  const saved = journalSavedForDate(dateKey).map(s=> ({ kind:'saved', item:s, createdAt:s.createdAt }));
+  return owned.concat(saved).sort((a,b)=> a.createdAt-b.createdAt);
+}
+
+/* ---- Saved-bookmark provenance check: if the moment I saved from Explore/an archive has since
+   been made private or deleted by its creator, my bookmark must stop being able to show any of
+   its content — that is the privacy guarantee "Make Private" promises the creator, and it
+   applies retroactively to anyone who already bookmarked it. Rather than silently deleting the
+   bookmark (confusing — the user chose to save this) or leaving stale cached content visible
+   forever (defeats the creator's Make Private), the bookmark is flagged unavailable and its
+   card/detail show a plain "no longer available" placeholder — and even that is temporary: 48
+   hours after being flagged, the bookmark is removed for good (journalPruneExpiredSavedUnavailable).
+   Re-checked every time a bookmark is actually rendered (Journal day view, or its own detail is
+   opened) — journalCheckedSavedSourceIds only guards against a redundant in-flight request for
+   the same bookmark at the same instant; a "still public" result is deliberately not cached past
+   that, since the whole point is to keep noticing if the creator revokes it later. */
+const JOURNAL_SAVED_UNAVAILABLE_TTL_MS = 48 * 60 * 60 * 1000;
+const journalCheckedSavedSourceIds = new Set();
+function journalPruneExpiredSavedUnavailable(){
+  const before = journalSaved.length;
+  journalSaved = journalSaved.filter(s=> !(s.sourceUnavailable && s.unavailableSince && (Date.now() - s.unavailableSince) > JOURNAL_SAVED_UNAVAILABLE_TTL_MS));
+  return journalSaved.length !== before;
+}
+async function journalCheckSavedBookmarkSource(s){
+  if(s.sourceUnavailable || !sb) return;
+  if(journalCheckedSavedSourceIds.has(s.id)) return; // a check for this bookmark is already in flight
+  journalCheckedSavedSourceIds.add(s.id);
+  try{
+    const { data, error } = await sb.from(JOURNAL_PUBLIC_TABLE).select('id').eq('id', s.momentId).maybeSingle();
+    if(error) throw error;
+    if(!data){
+      s.sourceUnavailable = true; s.unavailableSince = Date.now();
+      saveJournalSaved();
+      if(journalMode === 'day' && journalViewedDate === s.date) buildJournalDayView();
+    }
+  } catch(err){
+    console.warn('journal saved-bookmark source check failed', err);
+  } finally {
+    journalCheckedSavedSourceIds.delete(s.id); // always released — a "still public" result must be re-checked again next time, not cached forever
+  }
+}
 // Public content (Explore, the public moment URL) is attributed to the @username, never the
 // real name/email in wp-user-name-v1 — accounts created before usernames existed fall back to
 // a neutral placeholder rather than leaking a real name into public content.
@@ -4908,7 +4962,7 @@ async function journalFetchExplore(){
 // Which date/mode Journal shows — reset every time the tab is opened via bottom-nav
 // (showJournalView), never persisted: "when Journal is opened again normally, return to TODAY."
 let journalViewedDate = null;
-let journalMode = 'day'; // 'day' | 'explore'
+let journalMode = 'day'; // 'day' | 'explore' | 'archive'
 let journalExploreCache = null; // rows from the last Explore fetch, so tapping a card doesn't refetch
 
 function showJournalView(){
@@ -4921,6 +4975,7 @@ function showJournalView(){
 }
 function buildJournalView(){
   if(journalMode === 'explore') buildJournalExploreView();
+  else if(journalMode === 'archive') buildJournalArchiveView();
   else buildJournalDayView();
 }
 function journalDateHeading(dateKey){
@@ -4956,17 +5011,11 @@ function journalCancelDatePicker(){
   buildJournalView();
   setActiveNavTab('journal');
 }
+// Owned moments only (private, created-by-me; or public, created-by-me-and-shared) — a Saved
+// bookmark into someone else's public moment is a different card entirely (journalSavedCardHtml
+// below), never this one, per the three-state model: private/public/saved must stay visually
+// distinct, not variations of the same card.
 function journalMomentCardHtml(m){
-  if(m.sourceUnavailable){
-    return `
-      <button type="button" class="journal-moment-card journal-moment-unavailable" data-journal-moment="${m.id}">
-        <div class="journal-moment-icon">🚫</div>
-        <div class="journal-moment-body">
-          <div class="journal-moment-type">${t('journalSourceUnavailableShort')}</div>
-          <div class="journal-moment-title">${journalEsc(t('journalSourceUnavailableTitle'))}</div>
-        </div>
-      </button>`;
-  }
   const label = t(MOMENT_TYPE_LABEL_KEY[m.type]);
   const thumb = m.thumb || (m.type==='photo' ? m.image : '');
   return `
@@ -4976,18 +5025,43 @@ function journalMomentCardHtml(m){
         <div class="journal-moment-type">${label}</div>
         <div class="journal-moment-title">${journalEsc(m.title || label)}</div>
       </div>
-      <span class="journal-moment-badge" title="${m.visibility==='public' ? t('journalPublicBadge') : t('journalPrivateBadge')}">${m.visibility==='public' ? '🌍' : '🔒'}</span>
+      <span class="journal-moment-badge" title="${m.visibility==='public' ? t('journalPublicBadge') : t('journalPrivateBadge')}">${m.visibility==='public' ? '🌐 '+t('journalPublicBadgeShort') : '🔒 '+t('journalPrivateBadge')}</span>
+    </button>`;
+}
+// A Saved Moment card: a bookmark into another user's public moment. Deliberately carries no
+// Edit/Make Public affordance anywhere near it — it isn't the saver's content — and always shows
+// who it came from, per the three-state spec ("the author remains @username").
+function journalSavedCardHtml(s){
+  if(s.sourceUnavailable){
+    return `
+      <button type="button" class="journal-moment-card journal-moment-unavailable" data-journal-saved="${s.id}">
+        <div class="journal-moment-icon">🚫</div>
+        <div class="journal-moment-body">
+          <div class="journal-moment-type">${t('journalSourceUnavailableShort')}</div>
+          <div class="journal-moment-title">${journalEsc(t('journalSourceUnavailableTitle'))}</div>
+        </div>
+      </button>`;
+  }
+  const label = t(MOMENT_TYPE_LABEL_KEY[s.cachedType] || 'journalTypeNote');
+  return `
+    <button type="button" class="journal-moment-card" data-journal-saved="${s.id}">
+      ${s.cachedThumb ? `<img class="journal-moment-thumb" src="${s.cachedThumb}" alt="" loading="lazy">` : `<div class="journal-moment-icon">${MOMENT_TYPE_ICON[s.cachedType] || '✨'}</div>`}
+      <div class="journal-moment-body">
+        <div class="journal-moment-type">${s.username ? journalEsc(s.username) : label}</div>
+        <div class="journal-moment-title">${journalEsc(s.cachedTitle || label)}</div>
+      </div>
+      <span class="journal-moment-badge" title="${t('journalSavedFromAuthor',{name:s.username||'—'})}">🔖 ${t('journalSavedBadge')}</span>
     </button>`;
 }
 function buildJournalDayView(){
-  if(journalPruneExpiredUnavailable()) saveJournalMoments();
+  if(journalPruneExpiredSavedUnavailable()) saveJournalSaved();
   const el = document.getElementById('journalView');
   const dateKey = journalViewedDate;
   const isToday = dateKey === dateKeyOf(todayReal);
-  const moments = journalMomentsForDate(dateKey);
+  const items = journalAllItemsForDate(dateKey);
   let promptText = '';
-  if(isToday && !moments.length) promptText = t('journalPrompt');
-  else if(!isToday && !moments.length) promptText = t('journalEmptyOtherDay');
+  if(isToday && !items.length) promptText = t('journalPrompt');
+  else if(!isToday && !items.length) promptText = t('journalEmptyOtherDay');
   el.innerHTML = `
     <h2 class="month-view-title">${t('journalTitle')}</h2>
     <div class="journal-header-row">
@@ -4997,14 +5071,14 @@ function buildJournalDayView(){
         <button type="button" class="journal-icon-btn journal-explore-btn" id="journalExploreToggleBtn">${t('journalExplore')}</button>
       </div>
     </div>
-    ${!moments.length ? `
+    ${!items.length ? `
     <div class="note month-section journal-prompt-card">
       <div class="pin"></div>
       ${promptText ? `<div class="journal-prompt-text">${promptText}</div>` : ''}
       <button type="button" class="add-btn-outline journal-keep-btn" id="journalKeepBtn">${t('journalKeepMoment')}</button>
     </div>
     ` : `
-      <div class="journal-moments-list" id="journalMomentsList">${moments.map(journalMomentCardHtml).join('')}</div>
+      <div class="journal-moments-list" id="journalMomentsList">${items.map(x=> x.kind==='saved' ? journalSavedCardHtml(x.item) : journalMomentCardHtml(x.item)).join('')}</div>
       <button type="button" class="add-btn-outline journal-keep-another" id="journalKeepAnotherBtn">${t('journalKeepAnother')}</button>
     `}
   `;
@@ -5017,7 +5091,10 @@ function buildJournalDayView(){
   el.querySelectorAll('[data-journal-moment]').forEach(card=>{
     card.addEventListener('click', ()=> journalOpenMomentDetail(card.dataset.journalMoment));
   });
-  moments.forEach(m=> journalCheckSavedSource(m));
+  el.querySelectorAll('[data-journal-saved]').forEach(card=>{
+    card.addEventListener('click', ()=> journalOpenSavedDetail(card.dataset.journalSaved));
+  });
+  items.forEach(x=>{ if(x.kind === 'saved') journalCheckSavedBookmarkSource(x.item); });
 }
 
 /* ---- Keep a Moment: type picker → per-type form → save ---- */
@@ -5168,19 +5245,6 @@ function journalBindMomentForm(type, m, onSaved){
 function journalOpenMomentDetail(id){
   const m = journalFindMoment(id);
   if(!m) return;
-  if(m.sourceUnavailable){
-    document.getElementById('journalSheetTitle').textContent = t('journalSourceUnavailableShort');
-    document.getElementById('journalSheetClose').textContent = t('stickerSheetClose');
-    document.getElementById('journalSheetBody').innerHTML = `
-      <div class="journal-moment-detail-desc">${t('journalSourceUnavailableDetail')}</div>
-      <div class="moment-form-actions">
-        <button type="button" class="add-btn-outline" id="momentDeleteBtn">${t('journalDelete')}</button>
-      </div>`;
-    document.getElementById('momentDeleteBtn').addEventListener('click', ()=> journalDeleteMoment(m.id));
-    document.getElementById('journalSheet').classList.add('open');
-    return;
-  }
-  journalCheckSavedSource(m);
   const label = t(MOMENT_TYPE_LABEL_KEY[m.type]);
   document.getElementById('journalSheetTitle').textContent = label;
   document.getElementById('journalSheetClose').textContent = t('stickerSheetClose');
@@ -5191,7 +5255,6 @@ function journalOpenMomentDetail(id){
     <h3 class="month-section-title" style="margin-bottom:2px;">${journalEsc(m.title || label)}</h3>
     ${m.description ? `<div class="journal-moment-detail-desc">${journalEsc(m.description)}</div>` : ''}
     ${linkUrl ? `<a class="journal-moment-detail-link" href="${journalEsc(linkUrl)}" target="_blank" rel="noopener noreferrer">${m.type === 'place' ? t('journalOpenMap') : t('journalOpenLink')}</a>` : ''}
-    ${m.savedFrom ? `<div class="journal-moment-provenance">${t('journalSavedFrom')}${m.savedFrom.author ? ' · '+t('journalByAuthor',{name:journalEsc(m.savedFrom.author)}) : ''}</div>` : ''}
     <div class="moment-visibility-row">
       <span class="moment-visibility-label">${m.visibility === 'public' ? t('journalPublicBadge') : t('journalPrivateBadge')}</span>
       <button type="button" class="add-btn-outline" id="momentToggleVisibilityBtn">${m.visibility === 'public' ? t('journalMakePrivate') : t('journalMakePublic')}</button>
@@ -5249,6 +5312,128 @@ function journalDeleteMoment(id){
   }
   document.getElementById('journalSheet').classList.remove('open');
   buildJournalView();
+}
+
+/* ---- Saved Moment detail: a bookmark into someone else's public moment. The original
+   public_journal_moments row is re-fetched LIVE every time this opens — never trusted from the
+   local cache — so it always reflects the creator's current state, including a since-made-
+   private/deleted source. Deliberately narrow action set: view original, open the creator's
+   public archive, share the ORIGINAL's link, or remove this bookmark — no Edit, no Make Public,
+   no visibility controls, since the current user never owns this content (per the three-state
+   spec: "the original public moment remains the source of truth"). */
+async function journalOpenSavedDetail(id){
+  const s = journalFindSaved(id);
+  if(!s) return;
+  document.getElementById('journalSheetTitle').textContent = t('journalSavedBadge');
+  document.getElementById('journalSheetClose').textContent = t('stickerSheetClose');
+  document.getElementById('journalSheetBody').innerHTML = `<div class="month-goal-empty">…</div>`;
+  document.getElementById('journalSheet').classList.add('open');
+  let row = null, unavailable = s.sourceUnavailable;
+  if(!unavailable && sb){
+    try{
+      const { data, error } = await sb.from(JOURNAL_PUBLIC_TABLE).select('*').eq('id', s.momentId).maybeSingle();
+      if(error) throw error;
+      row = data || null;
+      if(!row){
+        unavailable = true;
+        if(!s.sourceUnavailable){ s.sourceUnavailable = true; s.unavailableSince = Date.now(); saveJournalSaved(); }
+      }
+    } catch(err){ console.warn('journal saved-moment live fetch failed', err); }
+  }
+  if(!document.getElementById('journalSheet').classList.contains('open')) return; // closed while this was loading
+  if(unavailable || !row){
+    document.getElementById('journalSheetBody').innerHTML = `
+      <div class="journal-moment-detail-desc">${t('journalSourceUnavailableDetail')}</div>
+      <div class="moment-form-actions">
+        <button type="button" class="add-btn-outline" id="savedRemoveBtn">${t('journalRemoveFromSaved')}</button>
+      </div>`;
+    document.getElementById('savedRemoveBtn').addEventListener('click', ()=> journalRemoveSaved(s.id));
+    return;
+  }
+  // Refresh the local display cache so the day-view card stays current with any edit the
+  // creator made — the cache is only ever a rendering shortcut, never the source of truth.
+  s.cachedType = row.type; s.cachedTitle = row.title || ''; s.cachedThumb = row.thumb || row.image || '';
+  s.username = row.author || s.username || '';
+  saveJournalSaved();
+  const label = t(MOMENT_TYPE_LABEL_KEY[row.type] || 'journalTypeNote');
+  const linkUrl = journalSafeUrl(row.type === 'place' ? (row.location && row.location.url) : row.external_url);
+  document.getElementById('journalSheetTitle').textContent = label;
+  document.getElementById('journalSheetBody').innerHTML = `
+    <div class="journal-moment-detail-type">${label}${row.artist ? ' · '+journalEsc(row.artist) : ''}</div>
+    ${row.image ? `<img class="journal-moment-detail-img" src="${row.image}" alt="">` : ''}
+    <h3 class="month-section-title" style="margin-bottom:2px;">${journalEsc(row.title || label)}</h3>
+    ${row.description ? `<div class="journal-moment-detail-desc">${journalEsc(row.description)}</div>` : ''}
+    ${linkUrl ? `<a class="journal-moment-detail-link" href="${journalEsc(linkUrl)}" target="_blank" rel="noopener noreferrer">${row.type === 'place' ? t('journalOpenMap') : t('journalOpenLink')}</a>` : ''}
+    <div class="journal-moment-provenance">${t('journalSavedBadge')} · <button type="button" class="journal-author-link" id="savedAuthorLink">${journalEsc(row.author||'—')}</button></div>
+    <div class="moment-form-actions">
+      <button type="button" class="add-btn-outline" id="savedArchiveBtn">${t('journalOpenCreatorArchive')}</button>
+      <button type="button" class="add-btn-outline" id="savedShareBtn">${t('journalCopyLink')}</button>
+    </div>
+    <div class="moment-form-actions">
+      <button type="button" class="add-btn-outline" id="savedRemoveBtn">${t('journalRemoveFromSaved')}</button>
+    </div>`;
+  const openArchive = ()=> journalOpenCreatorArchive(row.user_id, row.author || s.username || '');
+  document.getElementById('savedAuthorLink').addEventListener('click', openArchive);
+  document.getElementById('savedArchiveBtn').addEventListener('click', openArchive);
+  document.getElementById('savedShareBtn').addEventListener('click', (e)=> copyPublicMomentLink(row.id, e.currentTarget));
+  document.getElementById('savedRemoveBtn').addEventListener('click', ()=> journalRemoveSaved(s.id));
+}
+function journalRemoveSaved(id){
+  if(!confirm(t('journalRemoveSavedConfirm'))) return;
+  journalSaved = journalSaved.filter(s=> s.id !== id);
+  saveJournalSaved();
+  document.getElementById('journalSheet').classList.remove('open');
+  buildJournalView();
+}
+
+/* ---- Creator public archive: browsing another user's OTHER public moments, reached by tapping
+   a Saved Moment's attribution or its "Open creator archive" action. Reuses journalExploreCache +
+   journalOpenExploreDetail verbatim (just populated from a per-creator query instead of the
+   general Explore query) so opening an individual moment here behaves identically to Explore,
+   including Save/Share. */
+let journalArchiveUserId = null;
+let journalArchiveUsername = '';
+function journalOpenCreatorArchive(userId, username){
+  if(!userId) return;
+  journalArchiveUserId = userId;
+  journalArchiveUsername = username || '';
+  journalMode = 'archive';
+  document.getElementById('journalSheet').classList.remove('open');
+  hideAllViews();
+  document.getElementById('journalView').classList.add('active');
+  buildJournalView();
+  setActiveNavTab('journal');
+}
+async function buildJournalArchiveView(){
+  const el = document.getElementById('journalView');
+  el.innerHTML = `
+    <h2 class="month-view-title">${journalEsc(journalArchiveUsername || t('journalTitle'))}</h2>
+    <div class="journal-header-row">
+      <button type="button" class="journal-icon-btn" id="journalArchiveBackBtn">${t('journalBackToJournal')}</button>
+    </div>
+    <div id="journalArchiveBody"><div class="month-goal-empty">…</div></div>`;
+  document.getElementById('journalArchiveBackBtn').addEventListener('click', ()=>{ journalMode = 'day'; buildJournalView(); });
+  const body = document.getElementById('journalArchiveBody');
+  if(!sb || !journalArchiveUserId){ body.innerHTML = `<div class="month-goal-empty">${t('journalExploreUnavailable')}</div>`; return; }
+  let items = [];
+  try{
+    const { data, error } = await sb.from(JOURNAL_PUBLIC_TABLE).select('*').eq('user_id', journalArchiveUserId)
+      .order('published_at', { ascending:false }).limit(60);
+    if(error) throw error;
+    items = data || [];
+  } catch(err){
+    console.warn('journal creator archive fetch failed', err);
+    if(document.getElementById('journalArchiveBody')) body.innerHTML = `<div class="month-goal-empty">${t('journalExploreLoadError')}</div>`;
+    return;
+  }
+  if(!document.getElementById('journalArchiveBody')) return; // user navigated away while this was loading
+  journalExploreCache = items; // reuse journalOpenExploreDetail's rendering/Save/Share path verbatim
+  body.innerHTML = items.length
+    ? `<div class="journal-explore-grid">${items.map(journalExploreCardHtml).join('')}</div>`
+    : `<div class="month-goal-empty">${t('journalArchiveEmpty')}</div>`;
+  body.querySelectorAll('[data-explore-item]').forEach(card=>{
+    card.addEventListener('click', ()=> journalOpenExploreDetail(card.dataset.exploreItem));
+  });
 }
 
 /* ---- Explore: public discoveries from other users, reached from inside Journal ---- */
@@ -5319,6 +5504,7 @@ function journalOpenExploreDetail(id){
   if(!row) return;
   const label = t(MOMENT_TYPE_LABEL_KEY[row.type] || 'journalTypeNote');
   const linkUrl = journalSafeUrl(row.type === 'place' ? (row.location && row.location.url) : row.external_url);
+  const alreadySaved = journalSaved.some(s=> s.momentId === row.id);
   document.getElementById('journalSheetTitle').textContent = label;
   document.getElementById('journalSheetClose').textContent = t('stickerSheetClose');
   document.getElementById('journalSheetBody').innerHTML = `
@@ -5329,29 +5515,28 @@ function journalOpenExploreDetail(id){
     ${linkUrl ? `<a class="journal-moment-detail-link" href="${journalEsc(linkUrl)}" target="_blank" rel="noopener noreferrer">${row.type === 'place' ? t('journalOpenMap') : t('journalOpenLink')}</a>` : ''}
     <div class="journal-moment-provenance">${t('journalByAuthor',{name:journalEsc(row.author||'—')})}</div>
     <div class="moment-form-actions">
-      <button type="button" class="add-btn-outline" id="exploreSaveBtn">${t('journalSaveToMyJournal')}</button>
+      <button type="button" class="add-btn-outline" id="exploreSaveBtn" ${alreadySaved ? 'disabled' : ''}>${alreadySaved ? t('journalAlreadySaved') : t('journalSaveToMyJournal')}</button>
       <button type="button" class="add-btn-outline" id="exploreShareBtn">${t('journalCopyLink')}</button>
     </div>`;
-  document.getElementById('exploreSaveBtn').addEventListener('click', ()=> journalSaveExploreItemToMyJournal(row));
+  if(!alreadySaved) document.getElementById('exploreSaveBtn').addEventListener('click', ()=> journalSaveBookmark(row));
   document.getElementById('exploreShareBtn').addEventListener('click', (e)=> copyPublicMomentLink(row.id, e.currentTarget));
   document.getElementById('journalSheet').classList.add('open');
 }
-function journalSaveExploreItemToMyJournal(row){
-  const todayKey = dateKeyOf(todayReal);
-  // Always private on arrival, per spec — saving someone else's public moment must never
-  // auto-publish it again. Reuses the already-compressed image/thumb strings as-is rather
-  // than re-processing them (no redundant recompression of the same bytes).
-  journalMoments.push({
-    id:newId(), date:todayKey, type:row.type, title:row.title||'', description:row.description||'',
-    image:row.image||'', thumb:row.thumb||'', externalUrl:row.external_url||'',
-    location:row.location||null, artist:row.artist||'',
-    visibility:'private', savedFrom:{ momentId:row.id, author:row.author||'' },
-    createdAt:Date.now(), updatedAt:Date.now(), publishedAt:null,
+// Saving someone else's public moment creates a BOOKMARK, never a copy — the original stays the
+// sole owner/source of truth for its content (see the journalSaved block above for why). This
+// replaces the older journalSaveExploreItemToMyJournal, which duplicated the entire moment into
+// the saver's own journalMoments as if they had created it.
+function journalSaveBookmark(row){
+  if(journalSaved.some(s=> s.momentId === row.id)) return; // guard a double-tap race — never duplicate the same bookmark
+  journalSaved.push({
+    id:newId(), momentId:row.id, username:row.author||'',
+    date:dateKeyOf(todayReal), cachedType:row.type, cachedTitle:row.title||'', cachedThumb:row.thumb||row.image||'',
+    sourceUnavailable:false, unavailableSince:null, createdAt:Date.now(),
   });
-  saveJournalMoments();
+  saveJournalSaved();
   document.getElementById('journalSheet').classList.remove('open');
   journalMode = 'day';
-  journalViewedDate = todayKey;
+  journalViewedDate = dateKeyOf(todayReal);
   buildJournalView();
 }
 

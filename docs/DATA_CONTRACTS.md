@@ -215,9 +215,9 @@ another device.
   | `location`    | object \| `null`  | `place` only: `{ name: string, url: string }` (`url` optional — a pasted external map link, never map content itself). For `place`, this `url` (not `externalUrl`) is what the public-visibility link requirement checks — see `journalMomentLinkValue()` |
   | `artist`      | string            | `song` only, optional, default `""` |
   | `visibility`  | string            | `'private' \| 'public'` — **always starts `'private'`**; flipped only by the explicit Make Public/Make Private action, and only when `journalCanPublish(m)` passes: both a link (`externalUrl`, or `location.url` for `place`) and a non-empty `description` must be present. Saving privately has no such requirement — only going public gates on it. Editing an already-public moment down to missing either one automatically demotes it back to `'private'` (`journalBindMomentForm`'s save handler) rather than leaving an invalid public state |
-  | `savedFrom`   | object \| `null`  | set only when this moment was copied in via Explore's "Save to My Journal": `{ momentId: string (the public row's id), author: string }` — provenance only, this copy is fully independent afterward |
-  | `sourceUnavailable` | boolean     | `savedFrom`-only. `false` until `journalCheckSavedSource()` confirms the original public row is gone (the author made it private/deleted it), at which point `true` and every content field above (`title`/`description`/`image`/`thumb`/`externalUrl`/`location`/`artist`) is wiped to `''`/`null` — see "Revoking a saved copy" below |
-  | `unavailableSince` | number \| `null` | `Date.now()` at the moment `sourceUnavailable` flipped to `true`; `null` otherwise. Drives the 48-hour auto-removal below |
+  | `savedFrom`   | object \| `null`  | **legacy, always `null` on any moment created after the three-state Journal model landed.** Earlier versions of "Save to My Journal" duplicated a public moment's entire content into this key with `savedFrom: { momentId, author }` as provenance — that duplicated-content design is exactly what the bookmark model (`wp-journal-saved-v1`, below) replaced, because a saved discovery must never become the saver's own content. A one-time migration (inside `sanitizeJournalSaved()`) converts any pre-existing `savedFrom`-tagged entry into a real bookmark and removes it from this array the first time the app loads after the update; this field is only read at all to support that migration |
+  | `sourceUnavailable` | boolean     | **legacy**, same status as `savedFrom` above — only ever meaningful on a pre-migration entry, which the migration removes from this array entirely. Never set on any moment created going forward |
+  | `unavailableSince` | number \| `null` | **legacy**, same status as `savedFrom` above |
   | `createdAt`   | number            | `Date.now()` at save time; also the ordering key for moments on the same `date` |
   | `updatedAt`   | number            | bumped on every edit or visibility change |
   | `publishedAt` | number \| `null`  | `Date.now()` when last made public, `null` while private — this is what Explore sorts by |
@@ -237,7 +237,7 @@ another device.
   own row only" (see docs/SUPABASE_ENVIRONMENTS.md), so no row there can ever be visible to
   another signed-in user. See **docs/JOURNAL_PUBLIC_TABLE.md** for the table's exact shape, the
   SQL to create it, and why this session cannot run that SQL for you. Until that table exists in
-  your Supabase project, Make Public/Explore/Save-to-My-Journal are inert no-ops (fail silently,
+  your Supabase project, Make Public/Explore/saving a discovery are inert no-ops (fail silently,
   logged to the console) — every private Journal feature above works today regardless.
 - **`author` field (on the public row, not this key):** now the publisher's `@username`
   (`journalAuthorName()`, see `wp-username-v1` above) instead of the real name/email prefix it
@@ -250,21 +250,9 @@ another device.
   works for a signed-out visitor). "Copy link"/"Share" (Explore, and a moment's own detail view
   when public) just builds this URL client-side (`publicMomentUrl(id)`) — no server-issued token.
   See docs/JOURNAL_PUBLIC_TABLE.md's "Shareable public URL" section.
-- **Revoking a saved copy:** Make Private must actually revoke access, including from anyone who
-  already ran "Save to My Journal" on it — not just remove it from *future* Explore visitors.
-  `journalCheckSavedSource(m)` re-checks (by id, against `public_journal_moments`) every time a
-  `savedFrom` moment is actually rendered — opening Journal, or opening that moment's own detail
-  — whether its source still exists. A "still public" result is deliberately **not** cached past
-  that single check (only concurrent duplicate in-flight requests for the same id are
-  suppressed), so a later revocation is always eventually noticed the next time the moment is
-  viewed. Once confirmed gone, the local copy's content is wiped (see `sourceUnavailable` above)
-  and the card/detail show a plain "no longer available" placeholder instead of silently
-  deleting the entry (which would look like a bug to whoever saved it) or leaving a full
-  independent copy forever (which would defeat the author's Make Private). `journalMomentCardHtml()`/
-  `journalOpenMomentDetail()` special-case `sourceUnavailable` to render that placeholder; the
-  only action left on it is Delete. 48 hours after `unavailableSince`,
-  `journalPruneExpiredUnavailable()` (run on every sanitize pass and every `buildJournalDayView()`)
-  removes the entry outright, so a dead placeholder never lingers indefinitely either.
+- **Saving another user's public moment no longer duplicates it here.** See `wp-journal-saved-v1`
+  below for the current (bookmark-based) design, and "legacy" notes on `savedFrom` above for the
+  one-time migration away from the old duplicate-content design.
 - **Calendar navigation:** the 📅 button next to the date opens the app's own Month view
   (`showMonthView(monthIdx, year, pickCallback)`) in a trimmed "pick mode" — a module-level
   `monthViewPickCallback` set only for this call — showing just the header/weekday row/day grid
@@ -274,6 +262,62 @@ another device.
   a Year-view month tile) passes no callback and behaves exactly as it always did — pick mode is
   never left dangling across unrelated navigation since `showMonthView()` always resets
   `monthViewPickCallback` explicitly on entry, never leaves it from a previous call.
+
+### `wp-journal-saved-v1`
+- **Purpose:** the three-state Journal model's third state — a **bookmark/reference** into
+  another user's public moment, created by tapping Save from Explore or a creator's public
+  archive. This is a deliberately different concept from `wp-journal-moments-v1` above: a Saved
+  Moment is never content the current user owns, edits, or can re-publish under their own name —
+  the original `public_journal_moments` row remains the sole source of truth for its content,
+  title, image, description, link and author, forever. Saving only ever creates a small local
+  reference plus a display cache here, never a duplicate of the actual content.
+- **Shape:** a flat array of:
+
+  | field           | type              | notes |
+  |-----------------|-------------------|-------|
+  | `id`            | string            | this bookmark's own id (`newId()`) — distinct from `momentId` below |
+  | `momentId`      | string            | the id of the original row in `public_journal_moments` — the only thing that actually identifies what was saved |
+  | `username`      | string            | display cache of the original's `author` (`@handle`) at save time, refreshed every time the bookmark's detail is opened (`journalOpenSavedDetail`) — never treated as authoritative between opens |
+  | `date`          | string            | `dateKey` the bookmark appears under in the Journal day view — set once, at save time, to today |
+  | `cachedType`    | string            | display cache of the original's `type`, same refresh behavior as `username` |
+  | `cachedTitle`   | string            | display cache of the original's `title`, same refresh behavior |
+  | `cachedThumb`   | string            | display cache of the original's `thumb`/`image`, same refresh behavior — reused by value, never re-compressed |
+  | `sourceUnavailable` | boolean       | `false` until a check against `public_journal_moments` (by `momentId`) finds the row gone — the creator made it private or deleted it. Once `true`, the bookmark's card/detail show a plain "no longer available" placeholder instead of any cached content, and the only action left is Remove |
+  | `unavailableSince`  | number \| `null` | `Date.now()` when `sourceUnavailable` flipped to `true`; drives the 48-hour auto-removal below |
+  | `createdAt`     | number            | `Date.now()` at save time — the ordering key alongside owned moments on the same `date` (see `journalAllItemsForDate()`) |
+
+- **Default:** `[]`.
+- **Write:** the whole array is re-saved on save, on a live-detail refresh of the cache fields,
+  on an unavailable-source flip, and on removal — same whole-array-rewrite pattern as every other
+  Journal key.
+- **Merge-on-first-sign-in:** no (same as `wp-journal-moments-v1`).
+- **Never duplicates content.** `journalSaveBookmark(row)` (Explore/archive's Save action) writes
+  only the fields listed above — never `description`, never the full-size `image`, never
+  `externalUrl`/`location`/`artist`. `journalOpenSavedDetail(id)` re-fetches the real row from
+  `public_journal_moments` by `momentId` **live, every time it opens** — the detail view a saved
+  moment shows is never rendered from this key's cache alone, only its card is (for a
+  no-network-round-trip list).
+- **No edit/publish surface.** A Saved Moment's detail view offers exactly: view original (its
+  own public link), open the creator's public archive, share the original's link, and remove this
+  bookmark. There is deliberately no Edit, no Make Public, no visibility toggle — the current user
+  never owns this content, so none of those actions are meaningful on it.
+- **Migration from the old duplicate-content design:** see the `savedFrom` "legacy" note on
+  `wp-journal-moments-v1` above — `sanitizeJournalSaved()` runs this once, automatically, the
+  first time the app loads after the update.
+- **Revoking access:** identical intent to the old `sourceUnavailable` mechanism, just retargeted
+  at bookmarks instead of duplicated content, since bookmarks are now the only place a "source
+  went away" state can exist. `journalCheckSavedBookmarkSource(s)` re-checks (by `momentId`,
+  against `public_journal_moments`) every time a bookmark is actually rendered — opening Journal,
+  or opening the bookmark's own detail. A "still public" result is deliberately **not** cached
+  past that single check, so a later revocation is always eventually noticed. 48 hours after
+  `unavailableSince`, `journalPruneExpiredSavedUnavailable()` (run on every sanitize pass and
+  every `buildJournalDayView()`) removes the bookmark outright.
+- **Creator public archive:** tapping a Saved Moment's `@username` attribution, or its "Open
+  creator archive" action, opens a read-only grid of that creator's *other* public moments
+  (`journalMode = 'archive'`, `buildJournalArchiveView()`) — a live `public_journal_moments` query
+  filtered by `user_id`, reusing `journalExploreCardHtml()`/`journalOpenExploreDetail()` verbatim
+  (just populated from this query instead of Explore's general one), so opening a moment from the
+  archive behaves identically to opening one from Explore, Save button included.
 
 ### `wp-widget-config-v1`
 - **Purpose:** which optional widgets appear on the **My Day** detail page, in what order, plus

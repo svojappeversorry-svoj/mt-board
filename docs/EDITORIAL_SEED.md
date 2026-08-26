@@ -198,20 +198,21 @@ What this *doesn't* verify (needs the real project, once you complete the 3 step
   app to begin with.
 - **Author displays as `@svoj`.** Same `author` field, same rendering path as every other public
   moment (`t('journalByAuthor', {name: row.author})` → "by @svoj").
-- **Save to My Journal already does exactly what was asked.** `journalSaveExploreItemToMyJournal()`
-  builds the saved copy from a fixed list of named fields (never a wildcard copy of the row) and
-  unconditionally sets `visibility: 'private'` — an editorial moment saved by a real user becomes
-  a fully independent, private copy in their own Journal, with `savedFrom: { momentId, author }`
-  provenance (so their own moment can show "originally by @svoj"), exactly like saving from any
-  other user's public moment. The user can later make their own saved copy public again through
-  the normal Make Public flow (which still requires a link + description, already satisfied since
-  it's copied from the original).
-- **No duplicate media created.** The saved copy reuses the already-compressed `image`/`thumb`
-  strings by value (there are none for these entries, since no `photo`-type moments exist in the
-  seed set) — same "no re-compression" behavior as saving from a real user's public photo moment.
+- **Saving an editorial moment creates a bookmark, exactly like saving from any other user.**
+  `journalSaveBookmark()` writes only a fixed list of small display-cache fields
+  (type/title/thumb/`@svoj`) into `wp-journal-saved-v1` — never a copy of the actual content. The
+  saved card in the user's Journal shows a 🔖 Saved badge and "@svoj" as its attribution; opening
+  it re-fetches the real row from `public_journal_moments` live, the same as for any other saved
+  moment. See `docs/DATA_CONTRACTS.md`'s `wp-journal-saved-v1` section and
+  `docs/TESTING_CHECKLIST.md`'s "Three-state Journal model" section for the full behavior this
+  guarantees (no Edit, no Make Public, no re-attribution — @svoj remains the source of truth).
+- **No duplicate media created.** The bookmark's display cache reuses the already-compressed
+  `image`/`thumb` strings by value (there are none for these entries, since no `photo`-type
+  moments exist in the seed set) — same "no re-compression" behavior as bookmarking a real user's
+  public photo moment.
 - **Private data isolation is unaffected.** Editorial content only ever exists in
-  `public_journal_moments` — a real user's private Journal (`app_data`) has no code path that
-  reads from or writes to it except through the existing, unmodified Save-to-My-Journal flow.
+  `public_journal_moments` — a real user's own Journal data has no code path that reads from or
+  writes to it except through the existing, unmodified Save/bookmark flow.
 
 ## Verification checklist (mapped to the original 11 points)
 
@@ -224,9 +225,10 @@ What this *doesn't* verify (needs the real project, once you complete the 3 step
    show a mix of types immediately, even signed in as a brand-new account.
 5. **Users can open them** → tap any card; the detail sheet should show title/description/link
    exactly like any other public moment.
-6. **Save to My Journal works** → tap it from an @svoj moment's detail view.
-7. **Saved moments become private** → open the saved copy in your own Journal; it should show the
-   "Private" badge, and `savedFrom` should read "originally by @svoj".
+6. **Saving works** → tap Save from an @svoj moment's detail view.
+7. **Saved moments show as bookmarks, not copies** → open the saved item in your own Journal; it
+   should show the 🔖 Saved badge with "@svoj" as the attribution — never a "Private" badge, an
+   Edit button, or a Make Public option, since it is not the saver's own content.
 8. **Images load correctly and are optimized** → N/A by design for this seed set (no `photo`-type
    entries, see "Content design decisions" above) — every entry renders the existing type-icon
    fallback, which requires no image data at all.

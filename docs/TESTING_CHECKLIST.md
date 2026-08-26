@@ -434,6 +434,46 @@ errors.
       needs server-side infrastructure (Edge Function, pgvector) this environment can't build or
       test against.
 
+## Three-state Journal model (private / public / saved-bookmark)
+
+Rearchitects "Save to My Journal" from a full-content duplicate into a real bookmark/reference,
+so a saved discovery never becomes the saver's own content — verified with an ad-hoc Playwright
+script against a stubbed `window.supabase` client (real Chromium, real app code, same approach as
+the editorial-seed pass); not checked into the repo.
+
+- [ ] **Three states are visually distinct in the day view**: a private moment shows a 🔒 badge
+      ("Private"), a public moment shows a 🌐 badge ("Public"), and a saved moment shows a 🔖
+      badge ("Saved") with the original creator's `@username` as its subtitle line — never a type
+      label in that spot. All three remain readable (not relying on color alone) in all 4 themes.
+- [ ] **Saving from Explore (or a creator archive) creates a bookmark, not a copy**: after tapping
+      Save, the new item in the day view is a 🔖 Saved card, not a 🔒 Private one. Tapping Save
+      again on the same moment shows a disabled "Saved ✓" button instead of creating a second
+      bookmark.
+- [ ] **A Saved Moment has no ownership actions**: opening one shows View original info, "Open
+      creator archive", "Copy link" (of the *original*), and "Remove from saved" — and nothing
+      else. There is **no Edit button, no Make Public button, and no visibility toggle** anywhere
+      on a Saved Moment's detail view.
+- [ ] **Saved Moment detail is live, not cached**: opening a Saved Moment re-fetches the original
+      row from `public_journal_moments` (by id) every time, rather than only ever showing what was
+      cached at save time — editing the original elsewhere and reopening the bookmark should show
+      the update.
+- [ ] **Tappable attribution opens the creator's public archive**: tapping the `@username` on a
+      Saved Moment (or its "Open creator archive" action) opens a read-only grid of that creator's
+      *other* public moments (not the saver's own Journal). Opening a moment from inside the
+      archive behaves exactly like opening one from Explore, Save button included.
+- [ ] **Revoked source shows "no longer available", not stale content**: if the original creator
+      makes the saved moment private (or it's removed), the bookmark's card and detail switch to a
+      "no longer available" placeholder instead of continuing to show cached title/image — the
+      only action left on it is "Remove from saved".
+- [ ] **Migration from the old duplicate-content design**: an account with pre-existing
+      `journalMoments` entries carrying the old `savedFrom` field (from before this rearchitecture)
+      has them converted into real bookmarks and removed from `journalMoments` automatically on
+      next load — no duplicate/leftover entries in either place afterward, verified idempotent
+      (loading twice doesn't create a second bookmark for the same migrated entry).
+- [ ] **Owned moments are unaffected**: a private or public moment the user created themself still
+      shows Edit/Delete/Make Public-or-Private exactly as before — none of the new Saved-Moment
+      restrictions apply to content the user actually owns.
+
 ## Regression checks worth re-running specifically after future CSS/theme changes
 
 - Onboarding avatar picker: all 10 avatars should render as clean circles (no visible
