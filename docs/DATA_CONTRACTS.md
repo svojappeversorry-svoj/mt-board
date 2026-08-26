@@ -336,7 +336,7 @@ another device.
   | `id`        | string            | `crypto.randomUUID()` or fallback |
   | `date`      | string            | `"YYYY-MM-DD"` |
   | `amount`    | number            | |
-  | `currency`  | string            | currency code |
+  | `currency`  | string            | currency code, always the ORIGINAL currency the transaction was entered in — never rewritten when "View in" changes elsewhere in Budget. `ensureExpenseCurrencies()` (called once per Budget render) backfills `defaultCurrency` onto any record missing this field, so nothing crashes or gets dropped; it never touches a record that already has one |
   | `category`  | string            | free text / select value, may be `""` |
   | `note`      | string            | may be `""` |
   | `createdAt` | number            | `Date.now()` |
@@ -358,35 +358,81 @@ another device.
   first time this key doesn't exist yet, the code scans `localStorage` for old
   `wp-month-expenses-v1-<monthKey>` keys and folds them in. Nothing for iOS to redo.
 
-### `wp-expense-currencies-v1`
-- **Purpose:** which currencies are currently tracked in Budget.
+### `wp-expense-currencies-v1` ("Active Currencies")
+- **Purpose:** which currencies the user has actually opted into tracking — the only ones
+  offered when picking a transaction's currency, and what "Spending by Currency" lists on
+  Budget. Managed from **Settings → Currencies** (`openCurrencySheet()`), which is now the one
+  dedicated place for this — Month/Day/Budget's own inline "+ currency" quick-adds still exist
+  for convenience but write to this exact same array, not a parallel one.
 - **Shape:** `string[]` of currency codes.
 - **Default:** `["EUR","RSD"]`.
-- **Current selectable domain:** the "+ Currency" picker only offers
-  `["EUR","RUB","USD","RSD","GEL"]` (`ALLOWED_CURRENCIES`) — this is a UI constraint, not
-  something storage enforces, so don't assume every stored currency code is necessarily one of
-  these five (older/edited records could in principle hold anything).
-- **Write:** on "+ Currency".
+- **Selectable domain:** picked from `WORLD_CURRENCIES`, a static list of ~150 real ISO 4217
+  currency codes (searchable by code or name in the Currencies sheet) — no longer the old
+  hardcoded 5 (`ALLOWED_CURRENCIES` is now *derived from* `WORLD_CURRENCIES.map(w=>w.c)`, kept
+  under that name purely so every existing call site that filtered against it
+  (`currencyOptionsHtml`/`fillCurrencySelect`/`renderCurrencyChipsInto`/`addCurrencyFlow`/
+  `editCurrencyOptionsHtml`) needed zero changes). An older/edited record can in principle still
+  hold a code outside even this larger list — nothing enforces it retroactively.
+- **Invariant:** the UI never lets this shrink to zero — removing the last remaining currency
+  chip is a no-op (button disabled).
+- **Write:** on add/remove, from the Currencies sheet or any inline "+ currency" quick-add.
 
-### `wp-expense-display-ccy-v1`
-- **Purpose:** which currency Budget's month total is converted into for display.
+### `wp-expense-display-ccy-v1` ("View in")
+- **Purpose:** the ONE currency Budget's aggregates (My Balance, Income/Spent/Net, the spending
+  ring, and the Monthly Budget progress bar's *comparison*) are converted into for display —
+  and also what the Month view's own "Total in ___" row still uses, unchanged. This is the
+  fix for the old screen showing "Spent EUR / Income EUR / Spent RSD / Income RSD" all at once:
+  now there is exactly one converted total on screen at a time, chosen here, plus a separate
+  compact **original-currency** breakdown (see `wp-expenses-v1` below) that never converts
+  anything.
 - **Shape:** single currency-code string.
 - **Default:** the first entry of `wp-expense-currencies-v1` (or `"EUR"` if that's empty).
+- **Write:** the "View in" select on Budget's wallet-balance card (`walletViewInSelect`), or
+  Month's "Total in ___" select — both write this same key.
 
-### `wp-default-currency-v1`
-- **Purpose:** currency pre-filled on new-expense forms.
+### `wp-default-currency-v1` ("Primary Currency")
+- **Purpose:** the currency Initial Balance is denominated in, the currency a brand-new Monthly
+  Budget target defaults to, and the preferred pick in currency dropdowns. Set from
+  **Settings → Currencies** (`currencyPrimarySelect`).
 - **Shape:** single currency-code string.
 - **Default:** `"EUR"`.
+- **Invariant:** changing it always ensures the new value is also present in
+  `wp-expense-currencies-v1` (pushed in if missing) — a Primary Currency you can't otherwise
+  transact in would be a broken state. Conversely, the currency currently set here can never be
+  removed from Active Currencies while it's still Primary — its delete chip is disabled and the
+  removal handler re-checks `removed===defaultCurrency` at runtime (not just the disabled
+  attribute), so it can't be bypassed by re-enabling the button in devtools. Switch Primary to a
+  different active currency first, then the old one becomes removable.
 
 ### `wp-initial-balance-v1`
-- **Purpose:** the wallet's one-time starting balance.
+- **Purpose:** the wallet's one-time starting balance, denominated in Primary Currency
+  (`wp-default-currency-v1`).
 - **Shape:** number.
 - **Default:** `0`.
+- **UI:** moved out of Budget's main screen (it used to sit there permanently as
+  "Initial balance: €0.00 · Edit", which read as confusing clutter) into
+  **Settings → Currencies**, as an optional field. The stored value and the balance formula
+  (`initialBalance + income - expenses`, computed fresh every render, never stored) are
+  unchanged — existing balances keep working exactly as before, just edited from a different
+  screen (`initialBalanceRowHtml()`/`bindInitialBalanceEditor()`, same element ids as before,
+  just rendered inside the Currencies sheet instead of the wallet-balance card).
 
 ### `wp-monthly-budget-target-v1`
-- **Purpose:** optional monthly spending cap shown in Budget.
-- **Shape:** number.
-- **Default:** `0` (treated as "no target set").
+- **Purpose:** optional recurring monthly spending goal shown in Budget, in its OWN currency —
+  a target set as €2,000 stays €2,000 even while Budget is being viewed in RSD; only a small
+  "≈ converted" line changes, never the stored goal itself.
+- **Shape:** `{ amount: number, currency: string }`.
+- **Default:** `{ amount:0, currency:"EUR" }` (`amount:0` means "no target set", same meaning
+  the old bare `0` had).
+- **Migration:** this key used to be a bare `number`, implicitly in whatever `defaultCurrency`
+  was at the time (the app had no other currency concept for it then). `ensureMonthlyBudgetTargetShape()`
+  — called at the top of every Budget render — converts an old numeric value into
+  `{ amount: <that number>, currency: defaultCurrency }` the first time it's encountered,
+  preserving the exact goal a user already had; nothing is lost.
+- **Comparison currency:** the progress bar/spent-vs-remaining text always compares spending
+  converted into the target's OWN currency
+  (`convertMapToWalletCcy(spentByCcy, monthlyBudgetTarget.currency)`), never into "View in" —
+  so the goal means the same thing regardless of what the rest of the page is currently showing.
 
 ### `wp-fx-rates-v1-<BASE>` (one row per base currency actually used, e.g. `wp-fx-rates-v1-EUR`)
 - **Purpose:** a **cache**, not user data — currency conversion rates for Budget.

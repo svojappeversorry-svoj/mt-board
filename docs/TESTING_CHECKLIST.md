@@ -303,6 +303,60 @@ independent copy forever, which doesn't actually respect the author's choice to 
   unaffected either way. Recommended: once that table is created, repeat this with two real
   accounts on the deployed site before considering Explore done.
 
+## Budget/Currency redesign (Active Currencies, Primary Currency, View in, Spending by Currency)
+
+A functional-only rework of Budget's currency handling — no visual/layout/theme changes outside
+what the new controls required. Verified with ad-hoc Playwright scripts against a real Chromium
+browser (same approach as above); not checked into the repo.
+
+- [ ] **Active Currencies picker (Settings → Currencies)**: opens a searchable list covering the
+      full `WORLD_CURRENCIES` set (~150 ISO 4217 currencies), not just the old hardcoded 5.
+      Search matches by code (`"TRY"`) and by name (`"yen"` → Japanese Yen). Adding a currency
+      makes it appear as a chip immediately; a currency already active shows its picker row as
+      "Already active" and disabled instead of being addable twice.
+- [ ] **Primary Currency**: changing it in Settings → Currencies updates `defaultCurrency`
+      immediately, and if the new Primary wasn't already in Active Currencies it's auto-added
+      (never left orphaned/inactive while being Primary).
+- [ ] **Primary Currency can't be removed while active**: with 3+ active currencies, the current
+      Primary's chip delete button is visually disabled with an explanatory tooltip, AND clicking
+      it (even by bypassing the `disabled` attribute) is a no-op — the runtime guard checks
+      `removed===defaultCurrency`, not just the last-currency-remaining case. Switch Primary to a
+      different currency first, then the old Primary's chip becomes removable normally.
+- [ ] **Last remaining currency can't be removed**: pre-existing guard, still works — with exactly
+      one active currency left, its delete button is disabled regardless of Primary status.
+- [ ] **Per-transaction currency preserved**: adding an expense/income picks its currency from
+      Active Currencies at creation time; it is never auto-converted or overwritten later, and
+      keeps displaying in its original currency in the transaction list even after switching
+      "View in" or Primary Currency.
+- [ ] **Add Expense / Add Income button**: labeled "Add Expense" or "Add Income" (not a generic
+      "Save"), matching the selected type toggle; stays disabled until both amount (>0) and date
+      are filled in, then enables.
+- [ ] **"View in" selector on Budget's main screen**: a single selector (defaults to Primary
+      Currency) replaces the old simultaneous per-currency hero cards. Switching it recalculates
+      the whole aggregate (Income/Spent/Net stats, the spending ring, My Balance) into the chosen
+      currency — no other per-currency hero cards appear alongside it.
+- [ ] **Spending by Currency**: a compact card lists each active currency's real (non-converted)
+      spend for the month, separate from the "View in" aggregate — verify the numbers match the
+      sum of that currency's own transactions, not a converted figure.
+- [ ] **Initial Balance relocated**: no longer shown/edited on Budget's main screen; still
+      editable from Settings → Currencies. My Balance = Initial Balance + Income − Expenses (0
+      when unset), converted into the "View in" currency.
+- [ ] **Monthly Budget Target has its own currency**: creating/editing a target lets you pick
+      Amount + Currency (no longer assumes EUR); the stored target keeps that currency. If "View
+      in" differs from the target's currency, an "≈ converted" line appears next to it, but the
+      stored target itself is never physically converted — the progress bar always compares
+      spend-converted-into-the-target's-currency against the raw target amount.
+- [ ] **Legacy data migration**: an existing account with a bare-number `monthlyBudgetTarget` (the
+      old shape) loads without error — `ensureMonthlyBudgetTargetShape()` upgrades it in place to
+      `{amount, currency: defaultCurrency}` the first time Budget or the target card renders,
+      never losing the stored amount.
+- [ ] **Legacy expenses without a `currency` field**: on load, `ensureExpenseCurrencies()` fills
+      in the current Primary/default currency for any old expense missing one — no data loss, no
+      crash, and it displays correctly in the transaction list and in Spending by Currency.
+- [ ] **Existing/old transactions keep working**: single-currency users (nothing added beyond the
+      default) see no behavior change — one "View in" value, one Spending-by-Currency row, normal
+      Income/Spent/Net.
+
 ## Regression checks worth re-running specifically after future CSS/theme changes
 
 - Onboarding avatar picker: all 10 avatars should render as clean circles (no visible
