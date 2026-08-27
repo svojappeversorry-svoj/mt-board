@@ -13,9 +13,10 @@
 <!-- iOS Safari's "Add to Home Screen" reads ONLY this apple-touch-icon link (never the web
      manifest's icons list) and has historically unreliable support for SVG here — a PNG is
      required for it to reliably pick up the real SVOJ artwork instead of falling back to a
-     screenshot of the page. This is the Digital Chrome app icon (a glass sphere holding dark
-     crystal shards) — see applyThemeAppIcon() further down for why every theme currently
-     points at the same file, and what a future paid theme needs to add its own. -->
+     screenshot of the page. This is the Digital Chrome (berry) app icon by default; the actual
+     theme's icon is swapped in at boot/theme-switch by applyThemeAppIcon() further down, which
+     also drives the native iOS home-screen icon (see THEME_NATIVE_APP_ICONS) and the in-app
+     SVOJ badges (.portal-badge), so all three always show the same per-theme artwork. -->
 <link rel="apple-touch-icon" href="icon-180.png" id="appleTouchIconLink">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" id="favicon192Link">
 <link rel="icon" type="image/png" sizes="32x32" href="icon-32.png" id="favicon32Link">
@@ -2684,16 +2685,18 @@ function applyTheme(key){
   document.body.classList.add('theme-'+key);
   applyThemeAppIcon(key);
 }
-/* ---- Per-theme app icon (favicon / apple-touch-icon) — FUTURE FEATURE ----
-   Only Digital Chrome has real icon artwork today (the glass-sphere-with-shards icon), so
-   every theme currently resolves to the same files. When a paid theme ships its own icon set
-   (its own icon-32/180/192.png), give it an entry here — applyThemeAppIcon() already runs on
-   every app load and every theme switch (via applyTheme() above), so the <link> tags in <head>
-   will start swapping automatically with no other code changes. The PWA install manifest
-   (manifest.webmanifest) can't swap icons at runtime, so it stays pinned to Digital Chrome's
-   icons — acceptable while Digital Chrome is the only theme offered at signup/install. */
+/* ---- Per-theme app icon (favicon / apple-touch-icon / in-app SVOJ badges) ----
+   Each theme has its own real icon artwork (same source images used for the native iOS
+   alternate icons — see THEME_NATIVE_APP_ICONS and ios/App/App/Assets.xcassets).
+   applyThemeAppIcon() runs on every app load and every theme switch (via applyTheme() above),
+   so the <link> tags in <head> and every .portal-badge <img> swap automatically. The PWA
+   install manifest (manifest.webmanifest) can't swap icons at runtime, so it stays pinned to
+   Digital Chrome's icons — acceptable since Digital Chrome is the default theme at signup. */
 const THEME_APP_ICONS = {
   berry: { icon32:'icon-32.png', icon180:'icon-180.png', icon192:'icon-192.png' },
+  pop: { icon32:'icon-32-pop.png', icon180:'icon-180-pop.png', icon192:'icon-192-pop.png' },
+  forest: { icon32:'icon-32-forest.png', icon180:'icon-180-forest.png', icon192:'icon-192-forest.png' },
+  botanical: { icon32:'icon-32-botanical.png', icon180:'icon-180-botanical.png', icon192:'icon-192-botanical.png' },
 };
 const DEFAULT_APP_ICON = THEME_APP_ICONS.berry;
 function applyThemeAppIcon(key){
@@ -2704,6 +2707,9 @@ function applyThemeAppIcon(key){
   if(f32) f32.href = set.icon32;
   if(f192) f192.href = set.icon192;
   if(touch) touch.href = set.icon180;
+  /* The header/auth-screen SVOJ badges (.portal-badge) show the same artwork as the app's
+     home-screen icon, so they must stay in lockstep with whichever theme is active. */
+  document.querySelectorAll('.portal-badge').forEach(el=>{ el.src = set.icon192; });
 }
 /* Digital Chrome ('berry') is the default for a brand-new install — this only affects an
    account that has never saved a theme choice; anyone with an existing 'wp-theme-v5' value
