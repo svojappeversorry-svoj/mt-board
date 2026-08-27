@@ -16,8 +16,13 @@
 Thumbs.db
 *.swp
 
+# Node tooling for the Capacitor iOS wrapper (see package.json) — never committed, reinstalled
+# from package-lock.json via `npm install`.
+node_modules/
+
 # Common iOS/Xcode build output, in case the future Capacitor project lives in this same repo
 xcuserdata/
 DerivedData/
 build/
 Pods/
+ios/App/App/public/
