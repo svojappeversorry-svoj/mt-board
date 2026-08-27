@@ -4,7 +4,7 @@
   "private": true,
   "description": "SVOJ — a private planner/journal app. This package.json exists only to host the Capacitor iOS wrapper's tooling; the app itself is the single index.html file, which is copied verbatim into www/ as Capacitor's web asset directory.",
   "scripts": {
-    "build:web": "cp index.html www/index.html",
+    "build:web": "cp index.html www/index.html && mkdir -p www/assets && cp -R assets/. www/assets/",
     "cap:sync": "npm run build:web && cap sync ios",
     "cap:open": "cap open ios"
   },

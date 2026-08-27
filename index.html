@@ -1189,10 +1189,15 @@
   }
   body.theme-berry.appearance-light .onboarding-screen.onb-tour-mode{ background: transparent; }
   *{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color: transparent; }
-  html{ height:100%; }
+  /* overscroll-behavior:none stops the page from rubber-banding/bouncing past its own top or
+     bottom edge. On the Web this is a minor nicety; inside a native WKWebView (the iOS app) it's
+     load-bearing — without it, scrolling to either end makes the WHOLE page (including the
+     fixed .bottom-nav) visibly swim/detach during the elastic bounce, which reads as "the screen
+     wanders" rather than a normal, stable scroll. */
+  html{ height:100%; overscroll-behavior:none; }
   body{
     position:relative; min-height:100%; background: var(--board);
-    font-family:var(--font-ui); color: var(--ink);
+    font-family:var(--font-ui); color: var(--ink); overscroll-behavior:none;
   }
   body::before{
     content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
@@ -1210,10 +1215,17 @@
        in-flow static content per CSS painting order, so at z-index:0 this opaque photo was
        rendering ON TOP of every static-positioned header/button/text in the app — invisible
        to clicks (pointer-events:none skips hit-testing) but fully hiding them visually.
-       Negative z-index paints before static content, restoring the intended "very back" layer. */
-    position:fixed; inset:0; z-index:-1; pointer-events:none;
+       Negative z-index paints before static content, restoring the intended "very back" layer.
+       inset:-24px (rather than 0) overshoots the viewport on every side so the blur below has
+       room to fall off outside the visible area, instead of showing a soft/cut-off edge right at
+       the screen boundary. */
+    position:fixed; inset:-24px; z-index:-1; pointer-events:none;
     background-image: var(--theme-photo-bg, none);
     background-size: cover; background-position: center top; background-repeat: no-repeat;
+    /* A softly blurred backdrop reads as intentional atmosphere; the same photo at full
+       sharpness reads as a cheap stock texture — this is the one shared rule behind all 4
+       themes' background art, so it fixes every theme at once. */
+    filter: blur(10px) saturate(105%);
   }
   ::selection{ background: var(--rose); color:#fff; }
   a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible, [tabindex]:focus-visible{ outline: 3px solid var(--sky); outline-offset: 2px; }
@@ -2222,8 +2234,15 @@
     background:none; border:none; cursor:pointer; padding:6px 2px; min-height:44px; min-width:44px;
     font-family:var(--font-ui); font-weight:700; font-size:10px; color:var(--ink-dim);
   }
-  .bottom-nav-btn .ic{ font-size:19px; line-height:1; }
+  .bottom-nav-btn .ic{
+    font-size:19px; line-height:1; display:inline-flex; align-items:center; justify-content:center;
+    padding:4px 12px; border-radius:12px; transition:background-color 0.15s ease;
+  }
   .bottom-nav-btn.active{ color:var(--accent); }
+  /* A color change alone was too easy to miss at a glance — a soft accent-tinted pill behind the
+     active tab's icon makes "where am I" unmistakable without adding a loud new visual element;
+     color-mix keeps it exactly on each theme's own accent, no new colors introduced. */
+  .bottom-nav-btn.active .ic{ background: color-mix(in srgb, var(--accent) 16%, transparent); }
   .bottom-nav-btn.is-central .ic{ font-size:23px; } /* My Day: "central and visually prominent" per spec, kept minimal for now */
 
   /* ---- BUDGET (reuses .note/.month-section/.expense-*/.month-expense-* verbatim — same
