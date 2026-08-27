@@ -2725,10 +2725,25 @@ applyTheme(currentTheme);
     document.body.classList.add(isDark ? 'appearance-dark' : 'appearance-light');
   } catch(e){}
 })();
+/* Maps each theme to its native iOS alternate app icon name (see ios/App/App/Assets.xcassets
+   and Info.plist's CFBundleIcons). 'berry' has no entry because it's the app's PRIMARY icon
+   (AppIcon), reset to via AppIcon.reset() rather than AppIcon.change(). */
+const THEME_NATIVE_APP_ICONS = { pop:'AppIcon-Pop', forest:'AppIcon-Forest', botanical:'AppIcon-Botanical' };
+function applyThemeNativeAppIcon(key){
+  try{
+    if(!window.Capacitor || !window.Capacitor.isNativePlatform || !window.Capacitor.isNativePlatform()) return;
+    const AppIcon = window.Capacitor.Plugins && window.Capacitor.Plugins.AppIcon;
+    if(!AppIcon) return;
+    const name = THEME_NATIVE_APP_ICONS[key];
+    if(name) AppIcon.change({ name, suppressNotification:true }).catch(()=>{});
+    else AppIcon.reset({ suppressNotification:true }).catch(()=>{});
+  } catch(e){}
+}
 function setTheme(key){
   currentTheme = key;
   applyTheme(key);
   save('wp-theme-v5', key);
+  applyThemeNativeAppIcon(key);
   document.querySelectorAll('.theme-swatch').forEach(el=> el.classList.toggle('active', el.dataset.theme===key));
 }
 

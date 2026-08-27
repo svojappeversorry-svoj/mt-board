@@ -22,6 +22,64 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<!-- Per-theme app icon (see @capacitor-community/app-icon, called from index.html's theme
+	     switch). AppIcon (Digital Chrome/berry, the app's default theme) is the primary icon;
+	     the other 3 themes are alternates, switched to at runtime via
+	     UIApplication.setAlternateIconName under the hood. Requires
+	     ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS / _ALTERNATE_APPICON_NAMES in the
+	     target's Build Settings (see project.pbxproj) so these actually get compiled in. -->
+	<key>CFBundleIcons</key>
+	<dict>
+		<key>CFBundlePrimaryIcon</key>
+		<dict>
+			<key>CFBundleIconName</key>
+			<string>AppIcon</string>
+		</dict>
+		<key>CFBundleAlternateIcons</key>
+		<dict>
+			<key>AppIcon-Pop</key>
+			<dict>
+				<key>CFBundleIconName</key>
+				<string>AppIcon-Pop</string>
+			</dict>
+			<key>AppIcon-Forest</key>
+			<dict>
+				<key>CFBundleIconName</key>
+				<string>AppIcon-Forest</string>
+			</dict>
+			<key>AppIcon-Botanical</key>
+			<dict>
+				<key>CFBundleIconName</key>
+				<string>AppIcon-Botanical</string>
+			</dict>
+		</dict>
+	</dict>
+	<key>CFBundleIcons~ipad</key>
+	<dict>
+		<key>CFBundlePrimaryIcon</key>
+		<dict>
+			<key>CFBundleIconName</key>
+			<string>AppIcon</string>
+		</dict>
+		<key>CFBundleAlternateIcons</key>
+		<dict>
+			<key>AppIcon-Pop</key>
+			<dict>
+				<key>CFBundleIconName</key>
+				<string>AppIcon-Pop</string>
+			</dict>
+			<key>AppIcon-Forest</key>
+			<dict>
+				<key>CFBundleIconName</key>
+				<string>AppIcon-Forest</string>
+			</dict>
+			<key>AppIcon-Botanical</key>
+			<dict>
+				<key>CFBundleIconName</key>
+				<string>AppIcon-Botanical</string>
+			</dict>
+		</dict>
+	</dict>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>
