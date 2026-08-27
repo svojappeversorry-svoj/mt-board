@@ -20,8 +20,8 @@ date whenever an environment changes.
   see "What you need to do" below.
 - **Will be used by:** the future iOS/Capacitor codebase during development, and by any local
   testing of new data-layer code, so real Web user data is never at risk.
-- **Project URL:** _TODO — paste here once created_
-- **Anon public key:** _TODO — paste here once created (safe to store in a client app/this repo;
+- **Project URL:** _https://gtwbkixtadfevajhaylt.supabase.co — paste here once created_
+- **Anon public key:** _eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0d2JraXh0YWRmZXZhamhheWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4MzI2NzYsImV4cCI6MjEwMzQwODY3Nn0.pnmxv8WlMfTrLnKdTnulsKtvzROPkSKNyPPGhVUgBO4 — paste here once created (safe to store in a client app/this repo;
   it is a public, RLS-restricted key, the same kind already hardcoded in `index.html` for PROD)_
 - **Contains:** only test/development data you create yourself.
 
