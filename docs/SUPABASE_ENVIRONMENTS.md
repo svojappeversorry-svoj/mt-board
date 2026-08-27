@@ -15,14 +15,16 @@ date whenever an environment changes.
 
 ## DEV (for iOS development and testing — safe to experiment on)
 
-- **Status as of this document: not created yet.** Creating a Supabase project requires an
-  account action in the Supabase dashboard that this session cannot perform on your behalf —
-  see "What you need to do" below.
+- **Status as of this document: created.** `app_data` + its RLS policies have been run against
+  it (confirmed by the project owner; this session's network policy blocks outbound calls to
+  Supabase, so it could not be verified directly from here — see
+  `docs/SUPABASE_ENVIRONMENTS.md`'s own checklist below if anything seems off later).
 - **Will be used by:** the future iOS/Capacitor codebase during development, and by any local
   testing of new data-layer code, so real Web user data is never at risk.
-- **Project URL:** _TODO — paste here once created_
-- **Anon public key:** _TODO — paste here once created (safe to store in a client app/this repo;
-  it is a public, RLS-restricted key, the same kind already hardcoded in `index.html` for PROD)_
+- **Project URL:** `https://gtwbkixtadfevajhaylt.supabase.co`
+- **Anon public key:** `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0d2JraXh0YWRmZXZhamhheWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4MzI2NzYsImV4cCI6MjEwMzQwODY3Nn0.pnmxv8WlMfTrLnKdTnulsKtvzROPkSKNyPPGhVUgBO4`
+  (safe to store in a client app/this repo; it is a public, RLS-restricted key, the same kind
+  already hardcoded in `index.html` for PROD)
 - **Contains:** only test/development data you create yourself.
 
 `index.html` is **not** changed by this preparation — it keeps using PROD directly, exactly as
@@ -202,13 +204,14 @@ project gives iOS development a completely isolated place to break things safely
 When you come back to this after creating the project, you're fully set up once all of these
 are true:
 
-- [ ] DEV project created in the Supabase dashboard
-- [ ] Its Project URL and anon key are pasted into the "DEV" section at the top of this file
-- [ ] The `app_data` table + its 4 RLS policies exist in DEV (step 3)
-- [ ] Auth → Email provider is enabled in DEV (step 4)
+- [x] DEV project created in the Supabase dashboard
+- [x] Its Project URL and anon key are pasted into the "DEV" section at the top of this file
+- [x] The `app_data` table + its 4 RLS policies exist in DEV (step 3) — confirmed by the project
+      owner; not independently verified from this session (network policy blocks Supabase)
+- [ ] Auth → Email provider is enabled in DEV (step 4) — check this in the dashboard; it's the
+      default, so likely already true, but worth a quick look
 - [ ] (Optional) A test account exists in DEV (step 5)
 - [ ] (Optional) That test account has some seeded data (step 6)
 
-At that point, come back and share this session the DEV Project URL + anon key, and the actual
-iOS/Capacitor work can begin against a fully working, isolated environment — with
+DEV credentials are in place — the actual iOS/Capacitor work can now begin, with
 `docs/DATA_CONTRACTS.md` already telling that work exactly what shape to read and write.
