@@ -1,0 +1,24 @@
+{
+  "name": "svoj",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SVOJ — a private planner/journal app. This package.json exists only to host the Capacitor iOS wrapper's tooling; the app itself is the single index.html file, which is copied verbatim into www/ as Capacitor's web asset directory.",
+  "scripts": {
+    "build:web": "mkdir -p www/assets && cp index.html manifest.webmanifest icon-*.png www/ && cp -R assets/. www/assets/",
+    "cap:sync": "npm run build:web && cap sync ios",
+    "cap:open": "cap open ios"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/svojappeversorry-svoj/mt-board.git"
+  },
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.0"
+  },
+  "dependencies": {
+    "@capacitor-community/app-icon": "^7.0.0",
+    "@capacitor/core": "^8.5.0",
+    "@capacitor/ios": "^8.5.0"
+  }
+}

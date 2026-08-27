@@ -1,0 +1,13 @@
+# Netlify reads this file automatically at deploy time — no build step, no netlify.toml
+# required. These are conservative, zero-risk headers: none of them restrict anything this
+# app actually uses (no camera/microphone/geolocation calls exist in the code today; nothing
+# needs to embed this app in another site's iframe). A real Content-Security-Policy is
+# deliberately NOT included here yet — this app loads scripts/styles from several CDNs
+# (jsdelivr, Google Fonts) plus Supabase and the currency-rate APIs, and a CSP needs to be
+# tested against all of them together before going live, not guessed at. See
+# docs/SECURITY.md for what a correct CSP for this app would need to allow.
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: SAMEORIGIN
+  Permissions-Policy: geolocation=(), microphone=(), camera=()
